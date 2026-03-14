@@ -19,28 +19,37 @@
 
 ---
 
-# Use Cases détaillés
+# Use cases détaillés
+
+## UC02 : Démarrer une partie
+
+**Acteurs :** Joueur (clavier ou ESP32).  
+**Préconditions :** Serveur WebSocket démarré, au moins le playfield connecté.
+
+**Scénario nominal :**
+1. Le joueur appuie sur Start (ex. touche « D » ou bouton).
+2. Le Playfield envoie `start_game` au serveur.
+3. Le serveur réinitialise score à 0, ballsLeft à 3, state à "playing".
+4. Le serveur broadcast `game_started` aux trois écrans.
+5. Playfield crée la bille sur la rampe, attend 2 s, lance la bille ; Backglass affiche score 0 et billes 3/3 ; DMD affiche "BALL 1" / "READY".
+
+**Extensions :**
+- Partie déjà en cours : demander confirmation avant réinitialisation (ou refuser).
+
+**Postconditions :** Partie en état "playing", une bille en jeu, les 3 écrans à jour.
 
 ---
 
 ## UC07 : Détecter les différents types de collisions
 
-### Scénario nominal
+**Scénario nominal :**
+1. La bille se déplace sur le playfield.
+2. Le système détecte une collision (bumper, batteur, mur, trou).
+3. Le système identifie le type, déclenche l’événement associé (points, animation, message) et envoie l’info aux écrans (Backglass/DMD).
 
-1. La bille se déplace sur le playfield.  
-2. Le système détecte une collision (avec un bumper, un batteur, un mur ou un trou).  
-3. Le système identifie le type de collision.  
-4. Le système déclenche l’événement associé (ex : ajout de points, animation, message).  
-5. Le système envoie l’information nécessaire aux écrans pour affichage (Backglass/DMD).  
+**Extensions :**
+- Collisions multiples très rapides : regrouper ou limiter les événements.
+- Collision non reconnue : ignorer ou logger sans bloquer.
+- État Game Over : ignorer la collision.
 
-### Extensions
-
-1. Collisions multiples très rapides : le système regroupe ou limite les événements pour éviter le spam.  
-2. Collision non reconnue : le système ignore l’événement ou log l’erreur sans bloquer le jeu.  
-3. Collision dans un état non valide (Game Over) : le système ignore la collision.  
-
-### Postconditions
-
-1. La collision est traitée.  
-2. Les événements associés (score/affichage/feedback) sont déclenchés.  
-3. L’état du jeu reste cohérent.
+**Postconditions :** Collision traitée, événements (score/affichage) déclenchés, état du jeu cohérent.
