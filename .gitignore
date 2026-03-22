@@ -11,3 +11,8 @@ dmd/dist/
 .env.local
 *.log
 .DS_Store
+/.claude
+/docs/plan-codage-mvp.md
+/docs/plan-implementation-mvp.md
+/.gitignore
+/CLAUDE.md
