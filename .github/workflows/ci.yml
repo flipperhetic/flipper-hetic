@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: server
+            command: "node --check src/index.js"
+          - dir: playfield
+            command: "npm run build"
+          - dir: backglass
+            command: "npm run build"
+          - dir: dmd
+            command: "npm run build"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.dir }}
+        run: npm ci
+
+      - name: Run checks / build
+        working-directory: ${{ matrix.dir }}
+        run: ${{ matrix.command }}
+
