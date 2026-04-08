@@ -1,6 +1,6 @@
 /**
- * Playfield — Scene Three.js (etape 4 du plan MVP)
- * Plateau, murs, drain. Pas de physique ni de Socket.io.
+ * Playfield — Scene Three.js + monde Cannon-es (etapes 4 et 5 du plan MVP).
+ * Plateau, murs, drain cote rendu + leurs contreparties physiques statiques.
  */
 import * as THREE from "three";
 import {
@@ -11,10 +11,22 @@ import {
   WALL_THICKNESS,
   DRAIN_OPENING_WIDTH,
 } from "./constants.js";
+import {
+  createPhysicsWorld,
+  createStaticBoxBody,
+  syncMeshesWithBodies,
+  FIXED_TIME_STEP,
+  MAX_SUB_STEPS,
+} from "./physics.js";
 
 // ── Scene ──────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a2e);
+
+// ── Monde physique ─────────────────────────────────────
+const world = createPhysicsWorld();
+// Couples (mesh, body) a synchroniser a chaque frame.
+const syncPairs = [];
 
 // ── Camera (vue top-down pour ecran vertical 9:16) ────
 const camera = new THREE.PerspectiveCamera(
@@ -56,11 +68,28 @@ const table = new THREE.Mesh(
 table.position.y = -TABLE_THICKNESS / 2;
 scene.add(table);
 
+const tableBody = createStaticBoxBody(world, {
+  width: TABLE_WIDTH,
+  height: TABLE_THICKNESS,
+  depth: TABLE_DEPTH,
+  position: table.position,
+});
+syncPairs.push({ mesh: table, body: tableBody });
+
 // ── Murs ───────────────────────────────────────────────
 function createWall(w, h, d, x, y, z) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
   mesh.position.set(x, y, z);
   scene.add(mesh);
+
+  const body = createStaticBoxBody(world, {
+    width: w,
+    height: h,
+    depth: d,
+    position: { x, y, z },
+  });
+  syncPairs.push({ mesh, body });
+
   return mesh;
 }
 
@@ -115,9 +144,19 @@ window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// ── Boucle de rendu ────────────────────────────────────
+// ── Boucle de rendu + physique ─────────────────────────
+let lastTime = performance.now();
 function animate() {
   requestAnimationFrame(animate);
+
+  const now = performance.now();
+  // Clamp pour eviter un gros step apres un onglet en arriere-plan.
+  const delta = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+
+  world.step(FIXED_TIME_STEP, delta, MAX_SUB_STEPS);
+  syncMeshesWithBodies(syncPairs);
+
   renderer.render(scene, camera);
 }
 
