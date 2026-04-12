@@ -11,6 +11,7 @@ import {
   PLUNGER_SPAWN_X,
   PLUNGER_SPAWN_Y,
   PLUNGER_SPAWN_Z,
+  PLUNGER_IMPULSE_FORCE,
 } from "./constants.js";
 import { MATERIALS } from "./physics.js";
 
@@ -55,6 +56,9 @@ export function createBall(scene, world) {
   return ball;
 }
 
+// Flag anti double-lancement : true apres un lancement, false apres resetBall.
+let launched = false;
+
 /**
  * Replace la bille au spawn plunger et remet ses vitesses a zero.
  * Reutilisable par l'etape 7 (plunger) et l'etape 10 (perte de bille).
@@ -65,4 +69,18 @@ export function resetBall({ body }) {
   body.angularVelocity.set(0, 0, 0);
   body.quaternion.set(0, 0, 0, 1);
   body.wakeUp();
+  launched = false;
+}
+
+/**
+ * Lance la bille depuis le spawn plunger.
+ * Applique une impulsion en Z negatif (vers le haut du plateau).
+ * Refuse le lancement si la bille a deja ete lancee (anti double-lancement).
+ * Retourne true si le lancement a eu lieu, false sinon.
+ */
+export function launchBall({ body }) {
+  if (launched) return false;
+  body.applyImpulse(new CANNON.Vec3(0, 0, -PLUNGER_IMPULSE_FORCE));
+  launched = true;
+  return true;
 }

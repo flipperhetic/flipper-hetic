@@ -18,7 +18,8 @@ import {
   FIXED_TIME_STEP,
   MAX_SUB_STEPS,
 } from "./physics.js";
-import { createBall } from "./ball.js";
+import { createBall, launchBall, resetBall } from "./ball.js";
+import { initNetwork, emitStartGame, emitLaunchBall, gameState } from "./network.js";
 
 // ── Scene ──────────────────────────────────────────────
 const scene = new THREE.Scene();
@@ -141,6 +142,38 @@ createWall(
 // ── Bille ──────────────────────────────────────────────
 const ball = createBall(scene, world);
 syncPairs.push(ball);
+
+// ── Reseau Socket.io ──────────────────────────────────
+const socket = initNetwork({
+  onGameStarted() {
+    resetBall(ball);
+    console.log("[main] game started — bille au spawn");
+  },
+  onGameOver(data) {
+    console.log("[main] game over — score final :", data.score);
+  },
+});
+
+// ── Clavier : plunger (Espace), start (S), debug reset (R) ──
+window.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (gameState.status === "playing" && launchBall(ball)) {
+      emitLaunchBall(socket);
+    }
+  }
+
+  if (e.code === "KeyS") {
+    console.log("[main] touche S — emit start_game, status actuel :", gameState.status);
+    emitStartGame(socket);
+  }
+
+  if (e.code === "KeyR") {
+    resetBall(ball);
+  }
+});
 
 // ── Resize ─────────────────────────────────────────────
 window.addEventListener("resize", () => {
