@@ -24,3 +24,6 @@ export const DRAIN_OPENING_WIDTH = 2.5;
 export const PLUNGER_SPAWN_X = TABLE_WIDTH / 2 - 0.8;
 export const PLUNGER_SPAWN_Y = 0.5;
 export const PLUNGER_SPAWN_Z = TABLE_DEPTH / 2 - 1;
+
+// Plunger — force d'impulsion (Z negatif = vers le haut du plateau)
+export const PLUNGER_IMPULSE_FORCE = 10;
