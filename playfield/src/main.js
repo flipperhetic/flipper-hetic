@@ -18,7 +18,11 @@ import {
   FIXED_TIME_STEP,
   MAX_SUB_STEPS,
 } from "./physics.js";
-import { createBall } from "./ball.js";
+import { createBall, launchBall, resetBall, clampBall } from "./ball.js";
+import { initNetwork, emitStartGame, emitLaunchBall, emitFlipperLeftDown, emitFlipperLeftUp, emitFlipperRightDown, emitFlipperRightUp, gameState } from "./network.js";
+import { createFlippers, setFlipperActive, updateFlippers } from "./flippers.js";
+import { createBumpers } from "./bumpers.js";
+import { setupCollisionListeners, checkDrain, resetDrainFlag } from "./collisions.js";
 
 // ── Scene ──────────────────────────────────────────────
 const scene = new THREE.Scene();
@@ -74,6 +78,8 @@ const tableBody = createStaticBoxBody(world, {
   height: TABLE_THICKNESS,
   depth: TABLE_DEPTH,
   position: table.position,
+  material: "table",
+  type: "table",
 });
 syncPairs.push({ mesh: table, body: tableBody });
 
@@ -142,6 +148,71 @@ createWall(
 const ball = createBall(scene, world);
 syncPairs.push(ball);
 
+// ── Flippers ──────────────────────────────────────────
+const flippers = createFlippers(scene, world);
+syncPairs.push(flippers.left, flippers.right);
+
+// ── Bumpers ─────────────────────────────────────────
+const bumperPairs = createBumpers(scene, world);
+syncPairs.push(...bumperPairs);
+
+// ── Reseau Socket.io ──────────────────────────────────
+const socket = initNetwork({
+  onGameStarted() {
+    resetBall(ball);
+    resetDrainFlag();
+    console.log("[main] game started — bille au spawn");
+  },
+  onGameOver(data) {
+    console.log("[main] game over — score final :", data.score);
+  },
+});
+
+// ── Collisions ────────────────────────────────────────
+setupCollisionListeners(socket, ball.body);
+
+// ── Clavier : plunger (Espace), start (S), flippers (fleches), debug (R) ──
+window.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (gameState.status === "playing" && launchBall(ball)) {
+      emitLaunchBall(socket);
+    }
+  }
+
+  if (e.code === "KeyS") {
+    emitStartGame(socket);
+  }
+
+  if (e.code === "ArrowLeft") {
+    e.preventDefault();
+    setFlipperActive(flippers, "left", true);
+    emitFlipperLeftDown(socket);
+  }
+  if (e.code === "ArrowRight") {
+    e.preventDefault();
+    setFlipperActive(flippers, "right", true);
+    emitFlipperRightDown(socket);
+  }
+
+  if (e.code === "KeyR") {
+    resetBall(ball);
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.code === "ArrowLeft") {
+    setFlipperActive(flippers, "left", false);
+    emitFlipperLeftUp(socket);
+  }
+  if (e.code === "ArrowRight") {
+    setFlipperActive(flippers, "right", false);
+    emitFlipperRightUp(socket);
+  }
+});
+
 // ── Resize ─────────────────────────────────────────────
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -159,7 +230,16 @@ function animate() {
   const delta = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
 
+  updateFlippers(flippers, delta);
   world.step(FIXED_TIME_STEP, delta, MAX_SUB_STEPS);
+  clampBall(ball);
+
+  // Verifier si la bille est dans le drain apres le step physique.
+  if (checkDrain(socket, ball.body, gameState.status)) {
+    resetBall(ball);
+    resetDrainFlag();
+  }
+
   syncMeshesWithBodies(syncPairs);
 
   renderer.render(scene, camera);
