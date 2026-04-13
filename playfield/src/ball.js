@@ -19,6 +19,8 @@ export const BALL_RADIUS = 0.25;
 export const BALL_MASS = 1;
 export const BALL_RESTITUTION = 0.5;
 export const BALL_FRICTION = 0.3;
+// Hauteur fixe : centre de la bille juste au-dessus du plateau (y=0).
+const BALL_FIXED_Y = BALL_RADIUS + 0.01;
 
 /**
  * Cree le mesh + body de la bille, ajoute le ContactMaterial ball<->static
@@ -41,6 +43,7 @@ export function createBall(scene, world) {
     shape: new CANNON.Sphere(BALL_RADIUS),
     material: MATERIALS.ball,
   });
+  body.userData = { type: "ball" };
   world.addBody(body);
 
   // Contact bille <-> surfaces statiques (plateau, murs).
@@ -54,6 +57,16 @@ export function createBall(scene, world) {
   const ball = { mesh, body };
   resetBall(ball);
   return ball;
+}
+
+/**
+ * Verrouille la bille sur le plan du plateau (Y fixe).
+ * Appeler chaque frame APRES world.step().
+ */
+export function clampBall({ body }) {
+  // Verrouiller la bille sur le plan du plateau — pas de physique Y.
+  body.position.y = BALL_FIXED_Y;
+  body.velocity.y = 0;
 }
 
 // Flag anti double-lancement : true apres un lancement, false apres resetBall.

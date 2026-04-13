@@ -104,3 +104,11 @@ export function emitFlipperRightDown(socket) {
 export function emitFlipperRightUp(socket) {
   socket.emit(CLIENT_EVENTS.FLIPPER_RIGHT_UP);
 }
+
+export function emitBallLost(socket) {
+  socket.emit(CLIENT_EVENTS.BALL_LOST);
+}
+
+export function emitCollision(socket, type) {
+  socket.emit(CLIENT_EVENTS.COLLISION, { type });
+}

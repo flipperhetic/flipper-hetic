@@ -15,6 +15,7 @@ import {
   FLIPPER_PIVOT_X,
   FLIPPER_PIVOT_Z,
   FLIPPER_PIVOT_Y,
+  FLIPPER_SPEED,
 } from "./constants.js";
 import { MATERIALS } from "./physics.js";
 
@@ -50,6 +51,7 @@ function createOneFlipper(scene, world, side) {
   );
   body.addShape(shape, new CANNON.Vec3(shapeOffsetX, 0, 0));
   body.position.set(pivotX, FLIPPER_PIVOT_Y, FLIPPER_PIVOT_Z);
+  body.userData = { type: "flipper" };
   world.addBody(body);
 
   // Angles : au repos la batte pointe vers le drain (+Z),
@@ -63,7 +65,13 @@ function createOneFlipper(scene, world, side) {
 function applyFlipperAngle(flipper, dt) {
   const target = flipper.active ? flipper.activeAngle : flipper.restAngle;
   const prev = flipper.currentAngle;
-  flipper.currentAngle = target;
+
+  // Interpolation vers la cible au lieu d'un snap instantane.
+  // Cannon-es voit le balayage et repousse la bille.
+  const diff = target - prev;
+  const maxStep = FLIPPER_SPEED * dt;
+  const step = Math.sign(diff) * Math.min(Math.abs(diff), maxStep);
+  flipper.currentAngle = prev + step;
 
   // Quaternion depuis l'angle autour de Y.
   const q = new CANNON.Quaternion();
@@ -71,7 +79,7 @@ function applyFlipperAngle(flipper, dt) {
   flipper.body.quaternion.copy(q);
 
   // Vitesse angulaire pour que Cannon-es calcule la reponse de collision.
-  const angVel = dt > 0 ? (target - prev) / dt : 0;
+  const angVel = dt > 0 ? step / dt : 0;
   flipper.body.angularVelocity.set(0, angVel, 0);
 }
 

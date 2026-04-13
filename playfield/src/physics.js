@@ -7,16 +7,16 @@
  * Convention d'axes (cf. constants.js) :
  *   X = gauche / droite, Y = hauteur (gravite), Z = longueur du plateau.
  *
- * Le plateau reste a plat dans Three.js. L'inclinaison (~6°) est simulee
+ * Le plateau reste a plat dans Three.js. L'inclinaison (~12°) est simulee
  * en ajoutant une composante Z a la gravite (vers Z+ = vers le drain).
  */
 import * as CANNON from "cannon-es";
 
-const TILT_DEG = 6;
+const TILT_DEG = 12;
 const GRAVITY = 9.82;
 
-export const FIXED_TIME_STEP = 1 / 60;
-export const MAX_SUB_STEPS = 3;
+export const FIXED_TIME_STEP = 1 / 120;
+export const MAX_SUB_STEPS = 10;
 
 /**
  * Materiaux physiques partages. Les `ContactMaterial` entre paires
@@ -26,7 +26,9 @@ export const MAX_SUB_STEPS = 3;
 export const MATERIALS = {
   ball: new CANNON.Material("ball"),
   static: new CANNON.Material("static"),
+  table: new CANNON.Material("table"),
   flipper: new CANNON.Material("flipper"),
+  bumper: new CANNON.Material("bumper"),
 };
 
 /**
@@ -41,7 +43,7 @@ export function createPhysicsWorld() {
     GRAVITY * Math.sin(tilt),
   );
   world.broadphase = new CANNON.NaiveBroadphase();
-  world.solver.iterations = 10;
+  world.solver.iterations = 15;
   return world;
 }
 
@@ -51,15 +53,16 @@ export function createPhysicsWorld() {
  * (pas les half-extents). `position` est un objet { x, y, z } (compatible
  * avec THREE.Vector3).
  */
-export function createStaticBoxBody(world, { width, height, depth, position }) {
+export function createStaticBoxBody(world, { width, height, depth, position, material, type = "wall" }) {
   const halfExtents = new CANNON.Vec3(width / 2, height / 2, depth / 2);
   const shape = new CANNON.Box(halfExtents);
   const body = new CANNON.Body({
     mass: 0,
     shape,
-    material: MATERIALS.static,
+    material: MATERIALS[material] || MATERIALS.static,
   });
   body.position.set(position.x, position.y, position.z);
+  body.userData = { type };
   world.addBody(body);
   return body;
 }
