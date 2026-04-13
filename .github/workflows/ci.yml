@@ -22,17 +22,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install dependencies
         working-directory: ${{ matrix.dir }}
-        run: npm ci
+        run: npm install
 
       - name: Run checks / build
         working-directory: ${{ matrix.dir }}
