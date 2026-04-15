@@ -115,8 +115,8 @@ export function createFlippers(scene, world) {
 
   world.addContactMaterial(
     new CANNON.ContactMaterial(MATERIALS.flipper, MATERIALS.ball, {
-      friction: 0.28,
-      restitution: 0.22,
+      friction: 0.3,
+      restitution: 0.8,
     }),
   );
 

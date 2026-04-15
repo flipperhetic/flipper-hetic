@@ -16,7 +16,7 @@ import { MATERIALS } from "./physics.js";
 
 const BUMPER_COLOR = 0xff2266;
 const BALL_BUMPER_FRICTION = 0.1;
-const BALL_BUMPER_RESTITUTION = 0.35;
+const BALL_BUMPER_RESTITUTION = 0.8;
 
 /**
  * Cree tous les bumpers (mesh + body statique) et ajoute le
