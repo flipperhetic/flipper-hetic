@@ -4,6 +4,10 @@ const app = document.createElement("main");
 app.className = "dmd";
 app.innerHTML = `
   <section class="dmd__screen" aria-live="polite">
+    <div class="dmd__meta">
+      <span id="socketStatus">socket: connecting...</span>
+      <span id="stateStatus">state: idle</span>
+    </div>
     <canvas id="dmdCanvas" class="dmd__canvas" aria-label="Dot matrix display"></canvas>
   </section>
 `;
@@ -39,6 +43,16 @@ styles.textContent = `
     box-shadow: 0 0 24px rgba(255, 90, 31, 0.25) inset;
   }
 
+  .dmd__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin: 0 0 0.6rem;
+    font-size: 0.9rem;
+    color: #ffb48f;
+    opacity: 0.95;
+  }
+
   .dmd__canvas {
     width: 100%;
     height: auto;
@@ -59,6 +73,8 @@ const DISPLAY_BG = "#0d0401";
 
 const canvas = document.getElementById("dmdCanvas");
 const ctx = canvas.getContext("2d");
+const socketStatus = document.getElementById("socketStatus");
+const stateStatus = document.getElementById("stateStatus");
 
 canvas.width = DOT_COLS * DOT_PITCH;
 canvas.height = DOT_ROWS * DOT_PITCH;
@@ -71,18 +87,84 @@ const rasterCtx = rasterCanvas.getContext("2d", { willReadFrequently: true });
 const dmdState = {
   message: "PRESS START",
   score: 0,
+  status: "idle",
 };
 
-function writeCenteredText(text, y, font) {
-  rasterCtx.font = font;
-  rasterCtx.textAlign = "center";
-  rasterCtx.textBaseline = "middle";
-  rasterCtx.fillStyle = "#ffffff";
-  rasterCtx.fillText(text, DOT_COLS / 2, y);
+const FONT_5X7 = {
+  " ": ["00000", "00000", "00000", "00000", "00000", "00000", "00000"],
+  "!": ["00100", "00100", "00100", "00100", "00100", "00000", "00100"],
+  "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+  "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
+  "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+  "3": ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+  "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+  "5": ["11111", "10000", "10000", "11110", "00001", "00001", "11110"],
+  "6": ["01110", "10000", "10000", "11110", "10001", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  "9": ["01110", "10001", "10001", "01111", "00001", "00001", "01110"],
+  "A": ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  "B": ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+  "C": ["01110", "10001", "10000", "10000", "10000", "10001", "01110"],
+  "D": ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  "E": ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+  "F": ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  "G": ["01110", "10001", "10000", "10111", "10001", "10001", "01110"],
+  "H": ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+  "I": ["01110", "00100", "00100", "00100", "00100", "00100", "01110"],
+  "J": ["00001", "00001", "00001", "00001", "10001", "10001", "01110"],
+  "K": ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  "L": ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+  "M": ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+  "N": ["10001", "10001", "11001", "10101", "10011", "10001", "10001"],
+  "O": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
+  "P": ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+  "Q": ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
+  "R": ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  "S": ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+  "T": ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  "U": ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+  "V": ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+  "W": ["10001", "10001", "10001", "10101", "10101", "10101", "01010"],
+  "X": ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
+  "Y": ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+  "Z": ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
+};
+
+function drawBitmapText(text, originX, originY, opts = {}) {
+  const pixelOn = opts.pixelOn ?? 1;
+  const spacing = opts.spacing ?? 1;
+  let xCursor = originX;
+  for (const ch of text) {
+    const glyph = FONT_5X7[ch] ?? FONT_5X7[" "];
+    for (let row = 0; row < glyph.length; row += 1) {
+      const bits = glyph[row];
+      for (let col = 0; col < bits.length; col += 1) {
+        if (bits[col] === "1") {
+          rasterCtx.fillRect(xCursor + col, originY + row, pixelOn, pixelOn);
+        }
+      }
+    }
+    xCursor += 5 + spacing;
+  }
+}
+
+function drawCenteredBitmapText(text, y) {
+  const normalized = text.trim();
+  const width = normalized.length > 0 ? normalized.length * 5 + (normalized.length - 1) : 0;
+  const startX = Math.max(0, Math.floor((DOT_COLS - width) / 2));
+  drawBitmapText(normalized, startX, y, { spacing: 1 });
+}
+
+function normalizeMessage(input) {
+  const src = typeof input === "string" ? input : "";
+  const up = src.trim().toUpperCase();
+  if (!up) return "READY";
+  return up.slice(0, 16);
 }
 
 function renderMessage(text) {
-  dmdState.message = typeof text === "string" && text.trim() ? text.toUpperCase() : "READY";
+  dmdState.message = normalizeMessage(text);
   renderDotMatrix();
 }
 
@@ -93,10 +175,11 @@ function renderScore(score) {
 
 function renderDotMatrix() {
   rasterCtx.clearRect(0, 0, DOT_COLS, DOT_ROWS);
+  rasterCtx.fillStyle = "#ffffff";
 
-  // Ligne principale DMD + ligne score lisible en bas.
-  writeCenteredText(dmdState.message, 8, "bold 9px monospace");
-  writeCenteredText(`PTS ${dmdState.score}`, 19, "bold 7px monospace");
+  // Police bitmap 5x7 lisible sur grille dot-matrix.
+  drawCenteredBitmapText(dmdState.message, 3);
+  drawCenteredBitmapText(`PTS ${String(dmdState.score).slice(0, 8)}`, 14);
 
   const pixels = rasterCtx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
 
@@ -126,12 +209,34 @@ function renderDotMatrix() {
 
 const socket = io("http://localhost:3000");
 
+socket.on("connect", () => {
+  socketStatus.textContent = "socket: connected";
+});
+
+socket.on("disconnect", () => {
+  socketStatus.textContent = "socket: disconnected";
+});
+
 socket.on("dmd_message", (payload) => {
   renderMessage(payload?.text);
 });
 
 socket.on("state_updated", (nextState) => {
   renderScore(nextState?.score);
+  dmdState.status = nextState?.status ?? "idle";
+  stateStatus.textContent = `state: ${dmdState.status}`;
+});
+
+socket.on("game_started", () => {
+  dmdState.status = "playing";
+  stateStatus.textContent = "state: playing";
+  renderMessage("BALL 1");
+});
+
+socket.on("game_over", () => {
+  dmdState.status = "game_over";
+  stateStatus.textContent = "state: game_over";
+  renderMessage("GAME OVER");
 });
 
 renderDotMatrix();

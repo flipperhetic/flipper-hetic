@@ -8,7 +8,7 @@
     "playfield": "npm run dev --prefix playfield",
     "backglass": "npm run dev --prefix backglass",
     "dmd": "npm run dev --prefix dmd",
-    "dev:all": "concurrently \"npm run server\" \"npm run playfield\" \"npm run backglass\" \"npm run dmd\""
+    "dev:all": "concurrently \"npm run server:dev\" \"npm run playfield\" \"npm run backglass\" \"npm run dmd\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

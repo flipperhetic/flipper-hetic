@@ -185,7 +185,15 @@ window.addEventListener("keydown", (e) => {
     }
   }
 
-  if (e.code === "KeyS" || e.code === "Enter") {
+  if (
+    e.code === "KeyS"
+    || e.code === "KeyD"
+    || e.code === "Enter"
+    || e.code === "NumpadEnter"
+    || e.key === "Enter"
+  ) {
+    e.preventDefault();
+    console.log("[main] emit start_game");
     emitStartGame(socket);
   }
 
