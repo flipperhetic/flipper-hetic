@@ -24,6 +24,7 @@ import { createFlippers, setFlipperActive, updateFlippers, postStepFlippers } fr
 import { createBumpers } from "./bumpers.js";
 import { createSlingshots } from "./slingshots.js";
 import { setupCollisionListeners, checkDrain, resetDrainFlag } from "./collisions.js";
+import { createGameInputController, bindKeyboardInput } from "./input.js";
 
 // ── Scene ──────────────────────────────────────────────
 const scene = new THREE.Scene();
@@ -174,55 +175,38 @@ const socket = initNetwork({
 // ── Collisions ────────────────────────────────────────
 setupCollisionListeners(socket, ball.body);
 
-// ── Clavier : plunger (Espace), start (S), flippers (fleches), debug (R) ──
-window.addEventListener("keydown", (e) => {
-  if (e.repeat) return;
-
-  if (e.code === "Space") {
-    e.preventDefault();
+const inputController = createGameInputController({
+  onStart() {
+    console.log("[input] emit start_game");
+    emitStartGame(socket);
+  },
+  onLaunch() {
     if (gameState.status === "playing" && launchBall(ball)) {
       emitLaunchBall(socket);
     }
-  }
-
-  if (
-    e.code === "KeyS"
-    || e.code === "KeyD"
-    || e.code === "Enter"
-    || e.code === "NumpadEnter"
-    || e.key === "Enter"
-  ) {
-    e.preventDefault();
-    console.log("[main] emit start_game");
-    emitStartGame(socket);
-  }
-
-  if (e.code === "ArrowLeft") {
-    e.preventDefault();
+  },
+  onLeftFlipperDown() {
     setFlipperActive(flippers, "left", true);
     emitFlipperLeftDown(socket);
-  }
-  if (e.code === "ArrowRight") {
-    e.preventDefault();
-    setFlipperActive(flippers, "right", true);
-    emitFlipperRightDown(socket);
-  }
-
-  if (e.code === "KeyR") {
-    resetBall(ball);
-  }
-});
-
-window.addEventListener("keyup", (e) => {
-  if (e.code === "ArrowLeft") {
+  },
+  onLeftFlipperUp() {
     setFlipperActive(flippers, "left", false);
     emitFlipperLeftUp(socket);
-  }
-  if (e.code === "ArrowRight") {
+  },
+  onRightFlipperDown() {
+    setFlipperActive(flippers, "right", true);
+    emitFlipperRightDown(socket);
+  },
+  onRightFlipperUp() {
     setFlipperActive(flippers, "right", false);
     emitFlipperRightUp(socket);
-  }
+  },
+  onDebugResetBall() {
+    resetBall(ball);
+  },
 });
+
+bindKeyboardInput(inputController);
 
 // ── Resize ─────────────────────────────────────────────
 window.addEventListener("resize", () => {
