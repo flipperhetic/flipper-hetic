@@ -26,7 +26,7 @@ export const PLUNGER_SPAWN_Y = 0.26;
 export const PLUNGER_SPAWN_Z = TABLE_DEPTH / 2 - 0.5;
 
 // Plunger — force d'impulsion (Z negatif = vers le haut du plateau)
-export const PLUNGER_IMPULSE_FORCE = 18;
+export const PLUNGER_IMPULSE_FORCE = 22;
 
 // Flippers (battes)
 export const FLIPPER_LENGTH = 2.0;
@@ -44,7 +44,7 @@ export const SLINGSHOT_TOP_OFFSET = 2.4; // distance Z entre l'extremite haute e
 // Bumpers
 export const BUMPER_RADIUS = 0.5;
 export const BUMPER_HEIGHT = 0.6;
-export const BUMPER_REPULSE_FORCE = 3;
+export const BUMPER_REPULSE_FORCE = 4;
 export const BUMPER_POSITIONS = [
   { x: -3.1, z: -3.4 },
   { x: 2.6, z: -6.8 },

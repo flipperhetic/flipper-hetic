@@ -33,9 +33,24 @@ function cloneInitialState() {  return JSON.parse(JSON.stringify(INITIAL_STATE))
 }
 
 let state = cloneInitialState();
+// Dernier message DMD envoye — re-emis a la connexion d'un client pour resync.
+let lastDmdMessage = null;
+
+/**
+ * Remet l'etat a zero (utilise par les tests pour l'isolation).
+ */
+export function resetState() {
+  state = cloneInitialState();
+  lastDmdMessage = null;
+}
 
 function emitStateUpdated(io) {
   io.emit(SERVER_EVENTS.STATE_UPDATED, { ...state });
+}
+
+function emitDmdMessage(io, text) {
+  lastDmdMessage = text;
+  io.emit(SERVER_EVENTS.DMD_MESSAGE, { text });
 }
 
 /**
@@ -44,6 +59,10 @@ function emitStateUpdated(io) {
 export function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
     socket.emit(SERVER_EVENTS.STATE_UPDATED, { ...state });
+    // Re-emettre le dernier message DMD pour resync apres refresh/reconnexion.
+    if (lastDmdMessage) {
+      socket.emit(SERVER_EVENTS.DMD_MESSAGE, { text: lastDmdMessage });
+    }
 
     socket.on(CLIENT_EVENTS.START_GAME, () => {
       if (state.status === "playing") return;
@@ -59,7 +78,7 @@ export function registerSocketHandlers(io) {
         currentBall: state.currentBall,
       });
       emitStateUpdated(io);
-      io.emit(SERVER_EVENTS.DMD_MESSAGE, { text: "BALL 1" });
+      emitDmdMessage(io, "BALL 1");
     });
     socket.on(CLIENT_EVENTS.LAUNCH_BALL, () => {
       if (state.status !== "playing") return;
@@ -102,6 +121,9 @@ export function registerSocketHandlers(io) {
     });
     socket.on(CLIENT_EVENTS.BALL_LOST, () => {
       if (state.status !== "playing") return;
+      // Guard contre double-emission reseau : ignorer si le dernier event
+      // etait deja ball_lost (la bille n'a pas ete relancee entre-temps).
+      if (state.lastEvent === CLIENT_EVENTS.BALL_LOST) return;
 
       state.ballsLeft -= 1;
       state.currentBall += 1;
@@ -110,7 +132,7 @@ export function registerSocketHandlers(io) {
       if (state.ballsLeft === 0) {
         state.status = "game_over";
         emitStateUpdated(io);
-        io.emit(SERVER_EVENTS.DMD_MESSAGE, { text: "GAME OVER" });
+        emitDmdMessage(io, "GAME OVER");
         io.emit(SERVER_EVENTS.GAME_OVER, {
           status: state.status,
           score: state.score,
@@ -120,9 +142,7 @@ export function registerSocketHandlers(io) {
         return;      }
 
       emitStateUpdated(io);
-      io.emit(SERVER_EVENTS.DMD_MESSAGE, {
-        text: `BALL ${state.currentBall}`,
-      });
+      emitDmdMessage(io, `BALL ${state.currentBall}`);
     });
   });
 }

@@ -230,13 +230,11 @@ socket.on("state_updated", (nextState) => {
 socket.on("game_started", () => {
   dmdState.status = "playing";
   stateStatus.textContent = "state: playing";
-  renderMessage("BALL 1");
 });
 
 socket.on("game_over", () => {
   dmdState.status = "game_over";
   stateStatus.textContent = "state: game_over";
-  renderMessage("GAME OVER");
 });
 
 renderDotMatrix();

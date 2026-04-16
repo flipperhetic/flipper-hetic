@@ -41,8 +41,6 @@ export function setupCollisionListeners(socket, ballBody) {
     const type = event.body.userData?.type;
     if (!type || type === "ball" || type === "table") return;
 
-    console.log("[collision] bille →", type);
-
     if (canEmit(type)) {
       emitCollision(socket, type);
     }
@@ -95,4 +93,15 @@ export function checkDrain(socket, ballBody, gameStatus) {
  */
 export function resetDrainFlag() {
   ballLostEmitted = false;
+}
+
+/**
+ * Remet a zero les cooldowns de collision (a appeler au start/restart de partie).
+ * Evite qu'un cooldown residuel de la partie precedente bloque
+ * la premiere collision de la nouvelle partie.
+ */
+export function resetCollisionCooldowns() {
+  for (const key of Object.keys(lastEmitByType)) {
+    delete lastEmitByType[key];
+  }
 }

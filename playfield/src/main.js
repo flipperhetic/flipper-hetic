@@ -23,7 +23,7 @@ import { initNetwork, emitStartGame, emitLaunchBall, emitFlipperLeftDown, emitFl
 import { createFlippers, setFlipperActive, updateFlippers, postStepFlippers } from "./flippers.js";
 import { createBumpers } from "./bumpers.js";
 import { createSlingshots } from "./slingshots.js";
-import { setupCollisionListeners, checkDrain, resetDrainFlag } from "./collisions.js";
+import { setupCollisionListeners, checkDrain, resetDrainFlag, resetCollisionCooldowns } from "./collisions.js";
 import { createGameInputController, bindKeyboardInput } from "./input.js";
 
 // ── Scene ──────────────────────────────────────────────
@@ -165,6 +165,10 @@ const socket = initNetwork({
   onGameStarted() {
     resetBall(ball);
     resetDrainFlag();
+    resetCollisionCooldowns();
+    // Remettre les flippers au repos au demarrage d'une nouvelle partie.
+    setFlipperActive(flippers, "left", false);
+    setFlipperActive(flippers, "right", false);
     console.log("[main] game started — bille au spawn");
   },
   onGameOver(data) {
@@ -175,9 +179,9 @@ const socket = initNetwork({
 // ── Collisions ────────────────────────────────────────
 setupCollisionListeners(socket, ball.body);
 
+// ── Input (clavier / futurs peripheriques) ────────────
 const inputController = createGameInputController({
   onStart() {
-    console.log("[input] emit start_game");
     emitStartGame(socket);
   },
   onLaunch() {

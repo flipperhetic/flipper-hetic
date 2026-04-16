@@ -17,10 +17,13 @@ import { MATERIALS } from "./physics.js";
 
 export const BALL_RADIUS = 0.25;
 export const BALL_MASS = 1;
-export const BALL_RESTITUTION = 0.5;
+export const BALL_RESTITUTION = 0.35;
 export const BALL_FRICTION = 0.3;
+export const BALL_LINEAR_DAMPING = 0.1;
 // Hauteur fixe : centre de la bille juste au-dessus du plateau (y=0).
 const BALL_FIXED_Y = BALL_RADIUS + 0.01;
+// Vitesse max pour eviter le tunneling a travers les murs.
+const MAX_BALL_SPEED = 25;
 
 /**
  * Cree le mesh + body de la bille, ajoute le ContactMaterial ball<->static
@@ -42,6 +45,7 @@ export function createBall(scene, world) {
     mass: BALL_MASS,
     shape: new CANNON.Sphere(BALL_RADIUS),
     material: MATERIALS.ball,
+    linearDamping: BALL_LINEAR_DAMPING,
   });
   body.userData = { type: "ball" };
   world.addBody(body);
@@ -60,13 +64,24 @@ export function createBall(scene, world) {
 }
 
 /**
- * Verrouille la bille sur le plan du plateau (Y fixe).
+ * Verrouille la bille sur le plan du plateau (Y fixe) et
+ * plafonne sa vitesse pour eviter le tunneling.
  * Appeler chaque frame APRES world.step().
  */
 export function clampBall({ body }) {
   // Verrouiller la bille sur le plan du plateau — pas de physique Y.
   body.position.y = BALL_FIXED_Y;
   body.velocity.y = 0;
+
+  // Plafonner la vitesse pour eviter le tunneling.
+  const vx = body.velocity.x;
+  const vz = body.velocity.z;
+  const speed = Math.sqrt(vx * vx + vz * vz);
+  if (speed > MAX_BALL_SPEED) {
+    const scale = MAX_BALL_SPEED / speed;
+    body.velocity.x *= scale;
+    body.velocity.z *= scale;
+  }
 }
 
 // Flag anti double-lancement : true apres un lancement, false apres resetBall.
