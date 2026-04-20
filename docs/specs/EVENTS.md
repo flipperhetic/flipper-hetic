@@ -24,7 +24,7 @@ Ce document centralise les noms d'événements Socket.IO et les payloads attendu
 - `flipper_right_down`: payload optionnel (relay tel quel aux autres clients)
 - `flipper_right_up`: payload optionnel (relay tel quel aux autres clients)
 - `ball_lost`: pas de payload
-- `collision`: payload obligatoire `{ "type": "bumper" | "wall" | "flipper" | "drain" }`
+- collision: payload obligatoire { "type": "bumper" | "wall" | "flipper" | "drain" | "slingshot" }
 
 ## SERVER_EVENTS (serveur -> clients)
 

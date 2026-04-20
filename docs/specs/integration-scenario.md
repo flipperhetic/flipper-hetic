@@ -5,27 +5,20 @@ reste synchronisee sur les 4 apps (server, playfield, backglass, DMD).
 
 ## Procedure de lancement (copier-coller)
 
-Depuis la racine du repo, installer une fois puis tout lancer :
+L'ordre de lancement est important : commencez par le serveur.
+Ouvrez 4 terminaux distincts a la racine du projet et lancez les commandes suivantes :
 
-```bash
-# Install dependencies (une seule fois)
-npm install --prefix server
-npm install --prefix playfield
-npm install --prefix backglass
-npm install --prefix dmd
+**Terminal 1 : Serveur (Port 3000)**
+`cd server && npm install && npm run dev`
 
-# Lancer les 4 apps en parallele
-npm run dev:all
-```
+**Terminal 2 : Playfield (Port 5173)**
+`cd playfield && npm install && npm run dev`
 
-URLs des ecrans :
+**Terminal 3 : Backglass (Port 5174)**
+`cd backglass && npm install && npm run dev`
 
-- Playfield : http://localhost:5173 (focus clavier obligatoire)
-- Backglass : http://localhost:5174
-- DMD : http://localhost:5175
-- Serveur Socket.IO : http://localhost:3000
-
-Astuce multi-ecran : 3 fenetres cote a cote (playfield focus clavier, backglass, DMD).
+**Terminal 4 : DMD (Port 5175)**
+`cd dmd && npm install && npm run dev`
 
 ## Controles clavier (playfield)
 
