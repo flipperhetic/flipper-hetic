@@ -1,11 +1,12 @@
 /**
- * Étape 3 du plan MVP : point d’entrée HTTP + Socket.io.
- * La logique d’état et les handlers sont dans `events.js` (INITIAL_STATE, registerSocketHandlers).
+ * Composition root du serveur.
+ * Monte le HTTP + Socket.IO et delegue aux handlers de la couche adapters.
+ * Logique metier : `domain/GameState`. Orchestration : `usecases/`. Transport : `adapters/socketHandlers`.
  */
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { PORT, getSocketIoCors } from "./config.js";
-import { registerSocketHandlers } from "./events.js";
+import { registerSocketHandlers } from "./adapters/socketHandlers.js";
 
 const httpServer = createServer((req, res) => {
   res.writeHead(200, { "Content-Type": "text/plain" });

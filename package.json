@@ -2,13 +2,16 @@
   "name": "flipper-hetic",
   "version": "0.0.1",
   "private": true,
+  "workspaces": ["shared", "server", "playfield", "backglass", "dmd"],
   "scripts": {
-    "server": "npm run start --prefix server",
-    "server:dev": "npm run dev --prefix server",
-    "playfield": "npm run dev --prefix playfield",
-    "backglass": "npm run dev --prefix backglass",
-    "dmd": "npm run dev --prefix dmd",
-    "dev:all": "concurrently \"npm run server:dev\" \"npm run playfield\" \"npm run backglass\" \"npm run dmd\""
+    "server": "npm run start -w server",
+    "server:dev": "npm run dev -w server",
+    "playfield": "npm run dev -w playfield",
+    "backglass": "npm run dev -w backglass",
+    "dmd": "npm run dev -w dmd",
+    "dev:all": "concurrently \"npm run dev -w server\" \"npm run dev -w playfield\" \"npm run dev -w backglass\" \"npm run dev -w dmd\"",
+    "test:all": "npm test --workspaces --if-present",
+    "build:all": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

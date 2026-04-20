@@ -12,7 +12,7 @@
  */
 import * as CANNON from "cannon-es";
 
-const TILT_DEG = 12;
+const TILT_DEG = 16;
 const GRAVITY = 9.82;
 
 export const FIXED_TIME_STEP = 1 / 120;
@@ -43,7 +43,7 @@ export function createPhysicsWorld() {
     GRAVITY * Math.sin(tilt),
   );
   world.broadphase = new CANNON.NaiveBroadphase();
-  world.solver.iterations = 15;
+  world.solver.iterations = 20;
   return world;
 }
 

@@ -1,8 +1,8 @@
 /**
- * Playfield — Scene Three.js + monde Cannon-es (etapes 4 et 5 du plan MVP).
- * Plateau, murs, drain cote rendu + leurs contreparties physiques statiques.
+ * Playfield — Composition root.
+ * Instancie les adaptateurs (renderer, physics, network, input)
+ * et les connecte entre eux.
  */
-import * as THREE from "three";
 import {
   TABLE_WIDTH,
   TABLE_DEPTH,
@@ -10,160 +10,151 @@ import {
   WALL_HEIGHT,
   WALL_THICKNESS,
   DRAIN_OPENING_WIDTH,
-} from "./constants.js";
+} from "./domain/constants.js";
+
+// Renderer
+import { createScene } from "./adapters/renderer/scene.js";
+import { createTableMeshes } from "./adapters/renderer/tableMesh.js";
+import { createBallMesh } from "./adapters/renderer/ballMesh.js";
+import { createFlipperMeshes } from "./adapters/renderer/flipperMesh.js";
+import { createBumperMeshes } from "./adapters/renderer/bumperMesh.js";
+import { createSlingshotMeshes } from "./adapters/renderer/slingshotMesh.js";
+
+// Physics
 import {
   createPhysicsWorld,
   createStaticBoxBody,
   syncMeshesWithBodies,
   FIXED_TIME_STEP,
   MAX_SUB_STEPS,
-} from "./physics.js";
-import { createBall, launchBall, resetBall, clampBall } from "./ball.js";
-import { initNetwork, emitStartGame, emitLaunchBall, emitFlipperLeftDown, emitFlipperLeftUp, emitFlipperRightDown, emitFlipperRightUp, gameState } from "./network.js";
-import { createFlippers, setFlipperActive, updateFlippers, postStepFlippers } from "./flippers.js";
-import { createBumpers } from "./bumpers.js";
-import { createSlingshots } from "./slingshots.js";
-import { setupCollisionListeners, checkDrain, resetDrainFlag } from "./collisions.js";
+} from "./adapters/physics/world.js";
+import { createBallBody, launchBallBody, resetBallBody, clampBallBody } from "./adapters/physics/ballBody.js";
+import { createFlipperBodies, setFlipperActive, updateFlippers, postStepFlippers } from "./adapters/physics/flipperBody.js";
+import { createBumperBodies } from "./adapters/physics/bumperBody.js";
+import { createSlingshotBodies } from "./adapters/physics/slingshotBody.js";
+import { attachCollisionListener } from "./adapters/physics/collisionListener.js";
 
-// ── Scene ──────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
+// Network
+import {
+  initNetwork,
+  emitStartGame,
+  emitLaunchBall,
+  emitFlipperLeftDown,
+  emitFlipperLeftUp,
+  emitFlipperRightDown,
+  emitFlipperRightUp,
+  emitCollision,
+  emitBallLost,
+  gameState,
+} from "./adapters/network.js";
 
-// ── Monde physique ─────────────────────────────────────
+// Use cases
+import { createCollisionHandler } from "./usecases/collisionHandler.js";
+
+// Input
+import { createGameInputController, bindKeyboardInput } from "./adapters/input.js";
+
+// ── Scene + Renderer ──────────────────────────────────
+const { scene, camera, renderer } = createScene();
+
+// ── Monde physique ────────────────────────────────────
 const world = createPhysicsWorld();
-// Couples (mesh, body) a synchroniser a chaque frame.
 const syncPairs = [];
 
-// ── Camera (vue top-down pour ecran vertical 9:16) ────
-const camera = new THREE.PerspectiveCamera(
-  60,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  100,
-);
-// Camera directement au-dessus du plateau, regard vers le bas
-camera.position.set(0, 20, 0);
-camera.lookAt(0, 0, 0);
-// Rotation pour que Z+ (bas du plateau / joueur) = bas de l'ecran
-camera.up.set(0, 0, -1);
+// ── Plateau (meshes + bodies) ─────────────────────────
+const tableMeshes = createTableMeshes(scene);
 
-// ── Renderer ───────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-document.body.style.margin = "0";
-document.body.style.overflow = "hidden";
-document.body.appendChild(renderer.domElement);
-
-// ── Lumieres ───────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(5, 15, 5);
-scene.add(dirLight);
-
-// ── Materiaux ──────────────────────────────────────────
-const tableMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27 });
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-
-// ── Plateau ────────────────────────────────────────────
-const table = new THREE.Mesh(
-  new THREE.BoxGeometry(TABLE_WIDTH, TABLE_THICKNESS, TABLE_DEPTH),
-  tableMat,
-);
-table.position.y = -TABLE_THICKNESS / 2;
-scene.add(table);
-
+// Body du plateau
 const tableBody = createStaticBoxBody(world, {
   width: TABLE_WIDTH,
   height: TABLE_THICKNESS,
   depth: TABLE_DEPTH,
-  position: table.position,
+  position: { x: 0, y: -TABLE_THICKNESS / 2, z: 0 },
   material: "table",
   type: "table",
 });
-syncPairs.push({ mesh: table, body: tableBody });
+syncPairs.push({ mesh: tableMeshes[0], body: tableBody });
 
-// ── Murs ───────────────────────────────────────────────
-function createWall(w, h, d, x, y, z) {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
-  mesh.position.set(x, y, z);
-  scene.add(mesh);
-
-  const body = createStaticBoxBody(world, {
-    width: w,
-    height: h,
-    depth: d,
+// Bodies des murs
+function createWallBody(w, h, d, x, y, z) {
+  return createStaticBoxBody(world, {
+    width: w, height: h, depth: d,
     position: { x, y, z },
   });
-  syncPairs.push({ mesh, body });
-
-  return mesh;
 }
 
 // Mur gauche
-createWall(
+const wallLeftBody = createWallBody(
   WALL_THICKNESS, WALL_HEIGHT, TABLE_DEPTH,
-  -TABLE_WIDTH / 2 - WALL_THICKNESS / 2,
-  WALL_HEIGHT / 2,
-  0,
+  -TABLE_WIDTH / 2 - WALL_THICKNESS / 2, WALL_HEIGHT / 2, 0,
 );
+syncPairs.push({ mesh: tableMeshes[1], body: wallLeftBody });
 
 // Mur droit
-createWall(
+const wallRightBody = createWallBody(
   WALL_THICKNESS, WALL_HEIGHT, TABLE_DEPTH,
-  TABLE_WIDTH / 2 + WALL_THICKNESS / 2,
-  WALL_HEIGHT / 2,
-  0,
+  TABLE_WIDTH / 2 + WALL_THICKNESS / 2, WALL_HEIGHT / 2, 0,
 );
+syncPairs.push({ mesh: tableMeshes[2], body: wallRightBody });
 
-// Mur haut (fond du plateau)
-createWall(
+// Mur haut
+const wallTopBody = createWallBody(
   TABLE_WIDTH + WALL_THICKNESS * 2, WALL_HEIGHT, WALL_THICKNESS,
-  0,
-  WALL_HEIGHT / 2,
-  -TABLE_DEPTH / 2 - WALL_THICKNESS / 2,
+  0, WALL_HEIGHT / 2, -TABLE_DEPTH / 2 - WALL_THICKNESS / 2,
 );
+syncPairs.push({ mesh: tableMeshes[3], body: wallTopBody });
 
-// Mur bas — deux segments avec ouverture drain au centre
+// Murs bas (drain)
 const bottomWallWidth = (TABLE_WIDTH - DRAIN_OPENING_WIDTH) / 2;
 const bottomZ = TABLE_DEPTH / 2 + WALL_THICKNESS / 2;
 
-// Segment bas-gauche
-createWall(
+const wallBottomLeftBody = createWallBody(
   bottomWallWidth, WALL_HEIGHT, WALL_THICKNESS,
-  -(DRAIN_OPENING_WIDTH / 2 + bottomWallWidth / 2),
-  WALL_HEIGHT / 2,
-  bottomZ,
+  -(DRAIN_OPENING_WIDTH / 2 + bottomWallWidth / 2), WALL_HEIGHT / 2, bottomZ,
 );
+syncPairs.push({ mesh: tableMeshes[4], body: wallBottomLeftBody });
 
-// Segment bas-droit
-createWall(
+const wallBottomRightBody = createWallBody(
   bottomWallWidth, WALL_HEIGHT, WALL_THICKNESS,
-  (DRAIN_OPENING_WIDTH / 2 + bottomWallWidth / 2),
-  WALL_HEIGHT / 2,
-  bottomZ,
+  (DRAIN_OPENING_WIDTH / 2 + bottomWallWidth / 2), WALL_HEIGHT / 2, bottomZ,
 );
+syncPairs.push({ mesh: tableMeshes[5], body: wallBottomRightBody });
 
-// ── Bille ──────────────────────────────────────────────
-const ball = createBall(scene, world);
-syncPairs.push(ball);
+// ── Bille ─────────────────────────────────────────────
+const ballMesh = createBallMesh(scene);
+const ballBody = createBallBody(world);
+syncPairs.push({ mesh: ballMesh, body: ballBody });
 
 // ── Flippers ──────────────────────────────────────────
-const flippers = createFlippers(scene, world);
-syncPairs.push(flippers.left, flippers.right);
+const flipperMeshes = createFlipperMeshes(scene);
+const flipperBodies = createFlipperBodies(world);
+syncPairs.push(
+  { mesh: flipperMeshes.left, body: flipperBodies.left.body },
+  { mesh: flipperMeshes.right, body: flipperBodies.right.body },
+);
 
 // ── Slingshots ────────────────────────────────────────
-syncPairs.push(...createSlingshots(scene, world));
+const slingshotMeshes = createSlingshotMeshes(scene);
+const slingshotBodies = createSlingshotBodies(world);
+for (let i = 0; i < slingshotMeshes.length; i++) {
+  syncPairs.push({ mesh: slingshotMeshes[i], body: slingshotBodies[i] });
+}
 
-// ── Bumpers ─────────────────────────────────────────
-syncPairs.push(...createBumpers(scene, world));
+// ── Bumpers ───────────────────────────────────────────
+const bumperMeshes = createBumperMeshes(scene);
+const bumperBodies = createBumperBodies(world);
+for (let i = 0; i < bumperMeshes.length; i++) {
+  syncPairs.push({ mesh: bumperMeshes[i], body: bumperBodies[i] });
+}
 
-// ── Reseau Socket.io ──────────────────────────────────
+// ── Reseau Socket.IO ──────────────────────────────────
 const socket = initNetwork({
   onGameStarted() {
-    resetBall(ball);
-    resetDrainFlag();
+    resetBallBody(ballBody);
+    collisionHandler.resetDrainFlag();
+    collisionHandler.resetCollisionCooldowns();
+    setFlipperActive(flipperBodies, "left", false);
+    setFlipperActive(flipperBodies, "right", false);
     console.log("[main] game started — bille au spawn");
   },
   onGameOver(data) {
@@ -171,89 +162,67 @@ const socket = initNetwork({
   },
 });
 
-// ── Collisions ────────────────────────────────────────
-setupCollisionListeners(socket, ball.body);
+// ── Collisions (use case pur + adapter Cannon-es) ─────
+const collisionHandler = createCollisionHandler({
+  onCollision: (type) => emitCollision(socket, type),
+  onBallLost: () => emitBallLost(socket),
+});
+attachCollisionListener(ballBody, collisionHandler);
 
-// ── Clavier : plunger (Espace), start (S), flippers (fleches), debug (R) ──
-window.addEventListener("keydown", (e) => {
-  if (e.repeat) return;
-
-  if (e.code === "Space") {
-    e.preventDefault();
-    if (gameState.status === "playing" && launchBall(ball)) {
+// ── Input ─────────────────────────────────────────────
+const inputController = createGameInputController({
+  onStart() {
+    emitStartGame(socket);
+  },
+  onLaunch() {
+    if (gameState.status === "playing" && launchBallBody(ballBody)) {
       emitLaunchBall(socket);
     }
-  }
-
-  if (
-    e.code === "KeyS"
-    || e.code === "KeyD"
-    || e.code === "Enter"
-    || e.code === "NumpadEnter"
-    || e.key === "Enter"
-  ) {
-    e.preventDefault();
-    console.log("[main] emit start_game");
-    emitStartGame(socket);
-  }
-
-  if (e.code === "ArrowLeft") {
-    e.preventDefault();
-    setFlipperActive(flippers, "left", true);
+  },
+  onLeftFlipperDown() {
+    setFlipperActive(flipperBodies, "left", true);
     emitFlipperLeftDown(socket);
-  }
-  if (e.code === "ArrowRight") {
-    e.preventDefault();
-    setFlipperActive(flippers, "right", true);
-    emitFlipperRightDown(socket);
-  }
-
-  if (e.code === "KeyR") {
-    resetBall(ball);
-  }
-});
-
-window.addEventListener("keyup", (e) => {
-  if (e.code === "ArrowLeft") {
-    setFlipperActive(flippers, "left", false);
+  },
+  onLeftFlipperUp() {
+    setFlipperActive(flipperBodies, "left", false);
     emitFlipperLeftUp(socket);
-  }
-  if (e.code === "ArrowRight") {
-    setFlipperActive(flippers, "right", false);
+  },
+  onRightFlipperDown() {
+    setFlipperActive(flipperBodies, "right", true);
+    emitFlipperRightDown(socket);
+  },
+  onRightFlipperUp() {
+    setFlipperActive(flipperBodies, "right", false);
     emitFlipperRightUp(socket);
-  }
+  },
+  onDebugResetBall() {
+    resetBallBody(ballBody);
+  },
 });
 
-// ── Resize ─────────────────────────────────────────────
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+bindKeyboardInput(inputController);
 
-// ── Boucle de rendu + physique ─────────────────────────
+// ── Boucle de rendu + physique ────────────────────────
 let lastTime = performance.now();
+
 function animate() {
   requestAnimationFrame(animate);
 
   const now = performance.now();
-  // Clamp pour eviter un gros step apres un onglet en arriere-plan.
   const delta = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
 
-  updateFlippers(flippers);
+  updateFlippers(flipperBodies);
   world.step(FIXED_TIME_STEP, delta, MAX_SUB_STEPS);
-  postStepFlippers(flippers);
-  clampBall(ball);
+  postStepFlippers(flipperBodies);
+  clampBallBody(ballBody);
 
-  // Verifier si la bille est dans le drain apres le step physique.
-  if (checkDrain(socket, ball.body, gameState.status)) {
-    resetBall(ball);
-    resetDrainFlag();
+  if (collisionHandler.checkDrain(ballBody.position.z, gameState.status)) {
+    resetBallBody(ballBody);
+    collisionHandler.resetDrainFlag();
   }
 
   syncMeshesWithBodies(syncPairs);
-
   renderer.render(scene, camera);
 }
 

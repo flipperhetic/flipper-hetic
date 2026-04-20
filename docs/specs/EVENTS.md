@@ -103,3 +103,51 @@ Autres valeurs observees en MVP: `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`.
 - Si `collision` a un `type` invalide, le serveur ignore.
 - Si `ball_lost` est envoye hors partie (`status !== "playing"`), le serveur ignore.
 - Les events flippers (`flipper_*`) sont relays en broadcast aux autres clients.
+
+## Couche d'input Playfield (clavier / futur IoT)
+
+Le playfield utilise une couche d'abstraction d'inputs dans `playfield/src/input.js`.
+
+But :
+- decoupler la logique de jeu des peripheriques concrets,
+- garder le clavier comme source actuelle,
+- permettre plus tard de brancher un ESP32/Arduino sans refactor majeur.
+
+### Actions exposees par la couche input
+
+- `start()`
+- `launch()`
+- `leftFlipperDown()`
+- `leftFlipperUp()`
+- `rightFlipperDown()`
+- `rightFlipperUp()`
+- `debugResetBall()`
+
+### Mapping clavier actuel
+
+- Start : `S`, `D`, `Enter`, `NumpadEnter`
+- Launch : `Space`
+- Flipper gauche : `ArrowLeft`
+- Flipper droit : `ArrowRight`
+- Reset debug : `R`
+
+### Integration future ESP32 / Arduino
+
+Quand les inputs physiques seront disponibles, ils ne devront pas appeler
+directement la logique du playfield ou les emits Socket.
+
+Ils devront uniquement appeler les actions de la couche input, par exemple :
+
+```js
+controller.start();
+controller.leftFlipperDown();
+controller.leftFlipperUp();
+controller.rightFlipperDown();
+controller.rightFlipperUp();
+controller.launch();
+```
+
+Ainsi :
+- le clavier et l'IoT partagent exactement le meme chemin logique,
+- les regles de jeu restent centralisees,
+- le branchement materiel futur se fait sans dupliquer la logique.

@@ -1,32 +1,13 @@
 /**
- * Playfield — Couche reseau Socket.io (etape 8 du plan MVP).
+ * Playfield — Couche reseau Socket.IO.
  *
  * Connexion au serveur, ecoute des evenements serveur,
  * helpers d'emission pour les evenements client.
- * Les noms d'evenements sont alignes sur server/src/events.js.
  */
 import { io } from "socket.io-client";
+import { CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
 const SERVER_URL = "http://localhost:3000";
-
-// Noms d'evenements (miroir de server/src/events.js).
-const CLIENT_EVENTS = {
-  START_GAME: "start_game",
-  LAUNCH_BALL: "launch_ball",
-  FLIPPER_LEFT_DOWN: "flipper_left_down",
-  FLIPPER_LEFT_UP: "flipper_left_up",
-  FLIPPER_RIGHT_DOWN: "flipper_right_down",
-  FLIPPER_RIGHT_UP: "flipper_right_up",
-  BALL_LOST: "ball_lost",
-  COLLISION: "collision",
-};
-
-const SERVER_EVENTS = {
-  STATE_UPDATED: "state_updated",
-  GAME_STARTED: "game_started",
-  GAME_OVER: "game_over",
-  DMD_MESSAGE: "dmd_message",
-};
 
 // Etat local synchronise avec le serveur.
 export const gameState = {
