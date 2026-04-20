@@ -108,3 +108,43 @@ export function bindKeyboardInput(controller, target = window) {
     target.removeEventListener("keyup", onKeyUp);
   };
 }
+
+/**
+ * Point d'entree generique pour brancher une source d'input externe
+ * (ESP32 / Arduino / bridge local).
+ *
+ * `subscribe` doit etre une fonction qui recoit un callback `(actionName) => {}`
+ * et retourne une fonction d'unsubscribe.
+ *
+ * Exemple d'actionName attendu :
+ * - start
+ * - launch
+ * - leftFlipperDown
+ * - leftFlipperUp
+ * - rightFlipperDown
+ * - rightFlipperUp
+ * - debugResetBall
+ */
+export function bindExternalInputSource(subscribe, controller) {
+  if (typeof subscribe !== "function") {
+    throw new Error("bindExternalInputSource: subscribe must be a function");
+  }
+  if (!controller || typeof controller !== "object") {
+    throw new Error("bindExternalInputSource: controller is required");
+  }
+
+  const validActions = new Set([
+    "start",
+    "launch",
+    "leftFlipperDown",
+    "leftFlipperUp",
+    "rightFlipperDown",
+    "rightFlipperUp",
+    "debugResetBall",
+  ]);
+
+  return subscribe((actionName) => {
+    if (!validActions.has(actionName)) return;
+    controller[actionName]?.();
+  });
+}

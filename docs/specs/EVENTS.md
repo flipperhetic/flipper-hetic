@@ -136,7 +136,11 @@ But :
 Quand les inputs physiques seront disponibles, ils ne devront pas appeler
 directement la logique du playfield ou les emits Socket.
 
-Ils devront uniquement appeler les actions de la couche input, par exemple :
+Ils devront uniquement appeler les actions de la couche input, soit :
+- directement via `controller.<action>()`,
+- ou via `bindExternalInputSource(subscribe, controller)` dans `playfield/src/input.js`.
+
+Exemple :
 
 ```js
 controller.start();
