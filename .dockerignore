@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.git
+.github
+**/.DS_Store
+*.log
+npm-debug.log*
+coverage
+.nyc_output
+.vscode
+.idea

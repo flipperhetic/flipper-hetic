@@ -1,0 +1,34 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+    ports:
+      - "3000:3000"
+
+  playfield:
+    build:
+      context: .
+      dockerfile: docker/playfield.Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+
+  backglass:
+    build:
+      context: .
+      dockerfile: docker/backglass.Dockerfile
+    ports:
+      - "5174:5174"
+    depends_on:
+      - server
+
+  dmd:
+    build:
+      context: .
+      dockerfile: docker/dmd.Dockerfile
+    ports:
+      - "5175:5175"
+    depends_on:
+      - server
