@@ -2,33 +2,49 @@ services:
   server:
     build:
       context: .
-      dockerfile: docker/server.Dockerfile
+      dockerfile: server/Dockerfile
     ports:
       - "3000:3000"
+    healthcheck:
+      # wget absent sur node:alpine — vérification HTTP via Node
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000',(res)=>process.exit(res.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
   playfield:
     build:
       context: .
-      dockerfile: docker/playfield.Dockerfile
+      dockerfile: playfield/Dockerfile
     ports:
       - "5173:5173"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   backglass:
     build:
       context: .
-      dockerfile: docker/backglass.Dockerfile
+      dockerfile: backglass/Dockerfile
     ports:
       - "5174:5174"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   dmd:
     build:
       context: .
-      dockerfile: docker/dmd.Dockerfile
+      dockerfile: dmd/Dockerfile
     ports:
       - "5175:5175"
     depends_on:
-      - server
+      server:
+        condition: service_healthy

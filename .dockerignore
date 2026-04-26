@@ -1,12 +1,8 @@
 node_modules
-dist
-build
+*/node_modules
+*/dist
 .git
-.github
-**/.DS_Store
+.gitignore
 *.log
-npm-debug.log*
-coverage
-.nyc_output
-.vscode
-.idea
+.env*
+docs/

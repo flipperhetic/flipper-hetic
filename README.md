@@ -41,22 +41,45 @@ L'ordre de lancement est important : commencez par le serveur.
 
 ## Docker
 
-**Prérequis** : [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ou moteur Docker + Compose v2) installé et démarré.
+Lancement de l’ensemble du projet sans installer Node globalement sur la machine (hors moteur Docker). Chaque service a un `Dockerfile` à la racine du workspace (`server/`, `playfield/`, etc.) : `npm ci` ciblé sur ce workspace + copie minimale de `shared/`, pour des images plus légères que la copie complète du dépôt.
 
-Les `Dockerfile` utilisent le contexte **à la racine** du dépôt pour que les workspaces `npm` (dont `shared`) soient correctement installés : `npm ci` à la racine, puis le mode dev du workspace ciblé.
+### Prérequis
 
-- **Build** : `docker compose build`
-- **Démarrage** : `docker compose up` (les frontends `depends_on` le serveur pour l’ordre de lancement, pas un healthcheck)
-- **Arrêt** : `docker compose down` (ou `Ctrl+C` puis `down` si besoin)
-- **Logs (suivre)** : `docker compose logs -f` ; pour un service : `docker compose logs -f server` (ou `playfield`, `backglass`, `dmd`)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ou moteur Docker + Compose v2) installé et démarré
 
-**Ports (hôte)** :
+### Commandes
 
-| Service   | Port |
-| -------- | ---- |
-| server    | 3000 |
-| playfield | 5173 |
-| backglass | 5174 |
-| dmd       | 5175 |
+```bash
+# Build des images
+docker compose build
 
-Ouvrez les apps Vite sur `http://localhost:<port>`. L’ordre reste logique côté usage : le **serveur** doit répondre sur le port 3000 avant d’utiliser pleinement le WebSocket depuis les frontends (les vues se chargent quand le serveur est prêt).
+# Build et démarrage de tous les services
+docker compose up --build
+
+# Démarrage en arrière-plan
+docker compose up --build -d
+
+# Arrêt des services
+docker compose down
+
+# Logs en temps réel
+docker compose logs -f
+
+# Logs d'un service spécifique
+docker compose logs -f server
+```
+
+Les frontends ne passent `healthy` qu’une fois le serveur prêt (healthcheck HTTP sur le port 3000).
+
+### Accès aux interfaces
+
+| Interface | URL |
+| :--- | :--- |
+| Serveur (WebSocket) | http://localhost:3000 |
+| Playfield (3D) | http://localhost:5173 |
+| Backglass (Score) | http://localhost:5174 |
+| DMD (Dot Matrix) | http://localhost:5175 |
+
+### Flux MVP à vérifier
+
+Une fois les 4 services démarrés, ouvrir les URLs des trois Vite + vérifier la connexion au serveur. Le flux complet `start_game → collision → ball_lost → game_over` doit fonctionner sans régression en conteneurs (même comportement qu’en local hors Docker).
