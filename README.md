@@ -41,7 +41,7 @@ L'ordre de lancement est important : commencez par le serveur.
 
 ## 🐳 Docker
 
-Lancement de l'ensemble du projet en une seule commande, sans rien installer localement (hors Docker).
+Lancement de l'ensemble du projet en une seule commande, sans rien installer localement (hors Docker). Chaque app a un `Dockerfile` dans son workspace : `npm ci` ciblé + copie minimale de `shared/`, plutôt que d’imager tout le monorepo.
 
 ### Prérequis
 
@@ -65,6 +65,8 @@ docker compose logs -f
 # Logs d'un service spécifique
 docker compose logs -f server
 ```
+
+Les frontends ne démarrent qu’après le serveur **healthy** (vérification HTTP sur le port 3000, sans dépendre de `wget` sur l’image Alpine).
 
 ### Accès aux interfaces
 
