@@ -3,7 +3,7 @@
 | Couche        | Technologie        | Rôle principal                                   | Justification |
 |--------------|-------------------|--------------------------------------------------|---------------|
 | Frontend 3D  | Three.js          | Affichage du flipper en 3D dans le navigateur    | Web-native, compatible navigateurs, large documentation |
-| Physique     | Rapier (`@dimforge/rapier3d-compat`) | Gestion des collisions, gravité, rebonds | Moteur Rust/WASM moderne, performant, EventQueue de collisions, swap derrière `adapters/physics/` (Cannon-es retiré) |
+| Physique     | Rapier (`@dimforge/rapier3d-compat`) | Collisions, gravité, rebonds | Le sujet HETIC cite **Cannon.js / Ammo.js** ; ce dépôt couvre le même objectif (« physique interactive ») avec **Rapier (WASM)**, derrière `adapters/physics/` et `PhysicsPort.js` (section *Alternatives écartées* ci-dessous). |
 | Backend      | Node.js           | Gestion de l'état du jeu et synchronisation     | Même langage (JS), adapté au temps réel |
 | Communication| WebSocket (Socket.io) | Synchronisation temps réel multi-écran       | Connexion persistante, reconnexion auto, broadcast natif |
 | Hardware     | ESP32             | Lecture boutons physiques                        | WiFi intégré, simple à programmer |

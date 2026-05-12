@@ -1,6 +1,6 @@
 # MVP et critères
 
-Ce projet est un flipper virtuel qui combine simulation physique (Three.js/Cannon.js) et contrôle clavier/ESP32, jouable sur 3 écrans synchronisés en temps réel, pour une expérience arcade moderne.
+Ce projet est un flipper virtuel qui combine simulation physique (Three.js / Rapier) et contrôle clavier/ESP32, jouable sur 3 écrans synchronisés en temps réel, pour une expérience arcade moderne.
 
 **MVP — 5 points clés :**
 - Démarrer une partie puis lancer la bille (bouton).
@@ -11,7 +11,7 @@ Ce projet est un flipper virtuel qui combine simulation physique (Three.js/Canno
 
 **Écrans :** Playfield (gameplay), Backglass (ambiance + high score), DMD (messages courts).
 
-**Contrôles :** Espace = lancer bille ; flèche gauche/droite = batte gauche/droite.
+**Contrôles (sujet HETIC — annexe IoT) :** `D` = start ; `F` = pièce entrée (MVP : même effet que start) ; `X` / `C` = flippers ; `Space` = lancer la bille. Raccourcis dev : `Enter` pour start, flèches pour flippers.
 
 **Critères de succès :** Latence synchro < 50 ms ; collisions et gravité détectées ; PR avec au moins 1 review.
 

@@ -2,7 +2,9 @@
 
 Flipper virtuel multi-écran : **Playfield** (3D), **Backglass**, **DMD**, synchronisés en temps réel via WebSocket.
 
-## Architecture
+Documentation (index unique) : [`docs/README.md`](docs/README.md). Alignement sur le sujet officiel **HETIC Web3** (barème, IoT, livrables) : [`docs/hetic/referentiel-sujet-hetic-web3.md`](docs/hetic/referentiel-sujet-hetic-web3.md).
+
+## Arborescence des packages
 
 ```
 ├── server/
@@ -13,17 +15,21 @@ Flipper virtuel multi-écran : **Playfield** (3D), **Backglass**, **DMD**, synch
 ├── playfield/
 │   ├── package.json
 │   └── src/
-│       └── main.js           # Three.js + Cannon-es (écran 3D)
+│       ├── main.js           # Composition (réseau, input, callbacks)
+│       └── composition/      # buildLevel (plateau) + runGameLoop (animation)
 │
 ├── backglass/
 │   ├── package.json
 │   └── src/
-│       └── main.js           # Écran arrière (score, infos)
+│       ├── main.js           # Composition
+│       └── renderer/         # mount.js + view.js (DOM)
 │
 └── dmd/
     ├── package.json
     └── src/
-        └── main.js           # Affichage type dot-matrix
+        ├── main.js           # Composition
+        ├── composition/      # wireDmdNetwork (Socket → vue)
+        └── renderer/         # mount, dot-matrix, font
 ```
 
 ## Lancement du projet
@@ -93,22 +99,12 @@ npm test --workspace=server
 npm test --workspace=playfield
 ```
 
-## Moteur physique (Cannon-es / Rapier)
+## Moteur physique (Rapier)
 
-Le moteur physique est isolé derrière un port `playfield/src/adapters/physics/ports/PhysicsPort.js`.
+Le moteur physique est **Rapier** (WASM, `@dimforge/rapier3d-compat`), isolé derrière le port `playfield/src/adapters/physics/ports/PhysicsPort.js` et le barrel `playfield/src/adapters/physics/index.js`. Historique et détails : `playfield/src/adapters/physics/rapier/MIGRATION.md`.
 
-- **Backend par défaut** : Cannon-es (stable, MVP validé).
-- **Backend alternatif** : Rapier (WASM, plus rapide, scaffold prêt).
+## Architecture logicielle
 
-Le switch se fait dans `playfield/src/adapters/physics/index.js`. Voir
-`playfield/src/adapters/physics/rapier/MIGRATION.md` pour les étapes d'activation
-(install dépendance, init async, validation gameplay).
+Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (vision globale du monorepo) et [`docs/hetic/clean-architecture.md`](docs/hetic/clean-architecture.md) (guide d’application des couches sur ce repo). Cartographie composants : [`docs/CARTOGRAPHIE.md`](docs/CARTOGRAPHIE.md).
 
-## Architecture
-
-Voir `docs/specs/cdc-technique/clean-architecture.md` et
-`docs/architecture/architecture.md` pour le détail des couches
-domaine / use-cases / adapters / infrastructure.
-
-Contrat Socket : `shared/src/eventNames.js` (source de vérité) +
-`docs/specs/EVENTS.md` (référence documentaire).
+Contrat Socket : `shared/src/eventNames.js` (source de vérité) et [`docs/EVENTS.md`](docs/EVENTS.md) (référence documentaire). Index de toute la doc : [`docs/README.md`](docs/README.md).

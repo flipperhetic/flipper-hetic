@@ -2,7 +2,7 @@
  * Rapier — Bodies des flippers (kinematic).
  *
  * Note migration : Rapier expose `KinematicPositionBased` et `KinematicVelocityBased`.
- * On utilise Velocity-based pour preserver la logique angulaire de Cannon-es.
+ * On utilise une approche velocity-based pour conserver un ressenti de flipper reactif.
  */
 import {
   FLIPPER_LENGTH,

@@ -31,11 +31,13 @@ Astuce multi-ecran : 3 fenetres cote a cote (playfield focus clavier, backglass,
 
 | Touche | Action |
 |--------|--------|
-| `Enter` ou `S` | `start_game` |
+| `D`, `F` (pièce), `Enter`, `NumpadEnter` | `start_game` |
 | `Space` | `launch_ball` (plunger) |
-| `ArrowLeft` | flipper gauche (down/up) |
-| `ArrowRight` | flipper droit (down/up) |
+| `X` ou `ArrowLeft` | flipper gauche (down/up) |
+| `C` ou `ArrowRight` | flipper droit (down/up) |
 | `R` | reset local de la bille (debug) |
+
+Référence sujet HETIC : annexe **Contrôleurs — IoT 2** (`X` / `C` / `D` / `F`). Voir [referentiel-sujet-hetic-web3.md](hetic/referentiel-sujet-hetic-web3.md).
 
 ## Scenario nominal
 
@@ -47,7 +49,7 @@ Checks attendus a chaque etape sur les 3 ecrans.
 - DMD : `PRESS START`, `PTS 0`
 - Playfield : bille visible au spawn plunger, etat idle (Space sans effet)
 
-### 2. `Enter` (ou `S`) — `start_game`
+### 2. `D`, `F` ou `Enter` — `start_game`
 
 - Server → `game_started` + `state_updated` + `dmd_message: "BALL 1"`
 - Backglass : `status=playing`, `score=0`, `billes=3`
@@ -62,7 +64,7 @@ Checks attendus a chaque etape sur les 3 ecrans.
 
 ### 4. Jeu — flippers + collisions + bumpers
 
-- `ArrowLeft` / `ArrowRight` : flippers repondent immediatement
+- `X` / `C` (ou flèches) : flippers repondent immediatement
 - Bumper touche (`collision { type: "bumper" }`) : +100 au score
 - `wall` / `flipper` : relayes sans score
 - Backglass et DMD refletent le score serveur en direct
@@ -82,14 +84,14 @@ Checks attendus a chaque etape sur les 3 ecrans.
 - DMD : `GAME OVER` (le score final reste affiche)
 - Playfield : Space desactive (status != playing), flippers relayes mais sans scoring
 
-### 7. Restart — `Enter` apres `game_over`
+### 7. Restart — `D`, `F` ou `Enter` apres `game_over`
 
 - Server : reinitialise (score=0, billes=3, currentBall=1), emet `game_started` + `dmd_message: "BALL 1"`
 - Les 3 ecrans repartent dans l'etat du pas (2)
 
 ## Edge-cases a verifier
 
-- `Enter` pendant `playing` : ignore par le serveur (pas de reset).
+- `D` / `F` / `Enter` pendant `playing` : ignore par le serveur (pas de reset).
 - `Space` hors partie : ignore cote client (guard `gameState.status === "playing"`).
 - `collision` avec `type` invalide : ignore par le serveur.
 - `ball_lost` hors partie : ignore par le serveur.

@@ -2,6 +2,14 @@
  * Playfield — Scene Three.js, camera, lumieres, renderer.
  */
 import * as THREE from "three";
+import {
+  MAX_RENDERER_PIXEL_RATIO,
+  RENDERER_ANTIALIAS,
+} from "../../domain/constants.js";
+
+function effectivePixelRatio() {
+  return Math.min(window.devicePixelRatio || 1, MAX_RENDERER_PIXEL_RATIO);
+}
 
 export function createScene() {
   const scene = new THREE.Scene();
@@ -19,9 +27,12 @@ export function createScene() {
   camera.up.set(0, 0, -1);
 
   // Renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    antialias: RENDERER_ANTIALIAS,
+    powerPreference: "high-performance",
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(effectivePixelRatio());
   document.body.style.margin = "0";
   document.body.style.overflow = "hidden";
   document.body.appendChild(renderer.domElement);
@@ -37,6 +48,7 @@ export function createScene() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(effectivePixelRatio());
   });
 
   return { scene, camera, renderer };

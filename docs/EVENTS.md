@@ -123,13 +123,19 @@ But :
 - `rightFlipperUp()`
 - `debugResetBall()`
 
-### Mapping clavier actuel
+### Mapping clavier (playfield)
 
-- Start : `S`, `D`, `Enter`, `NumpadEnter`
-- Launch : `Space`
-- Flipper gauche : `ArrowLeft`
-- Flipper droit : `ArrowRight`
-- Reset debug : `R`
+Aligné sur l’**annexe IoT** du sujet HETIC Web3 (simulation clavier matériel) :
+
+- Flipper gauche : **`X`**
+- Flipper droit : **`C`**
+- Start : **`D`**
+- Pièce entrée : **`F`** (MVP : équivalent **Start** côté client)
+
+Raccourcis supplémentaires : **Start** aussi `Enter` / `NumpadEnter` ; flippers aussi **`ArrowLeft`** / **`ArrowRight`** (dev / accessibilité).
+
+- Launch : **`Space`**
+- Reset debug : **`R`**
 
 ### Integration future ESP32 / Arduino
 
@@ -138,7 +144,7 @@ directement la logique du playfield ou les emits Socket.
 
 Ils devront uniquement appeler les actions de la couche input, soit :
 - directement via `controller.<action>()`,
-- ou via `bindExternalInputSource(subscribe, controller)` dans `playfield/src/input.js`.
+- ou via `bindExternalInputSource(subscribe, controller)` dans `playfield/src/adapters/input.js`.
 
 Exemple :
 

@@ -2,10 +2,12 @@
  * Backglass — Composition root.
  */
 import "./styles.css";
-import { createBackglassDOM } from "./renderer/dom.js";
+import { mountBackglassRoot } from "./renderer/mount.js";
+import { createBackglassView } from "./renderer/view.js";
 import { initNetwork } from "./adapters/network.js";
 
-const { renderState } = createBackglassDOM();
+const refs = mountBackglassRoot();
+const { renderState } = createBackglassView(refs);
 
 initNetwork({
   onStateUpdated: renderState,

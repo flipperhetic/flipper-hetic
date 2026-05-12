@@ -7,7 +7,7 @@
  *   - onBallLost()           : declenche emit ball_lost / actuator
  *   - onBumperImpulse(vec3)  : applique une force radiale a la bille (regle bumper)
  *
- * Les adapters physiques (cannon / rapier) appellent `handleCollision` en passant
+ * Les adapters physiques (Rapier) appellent `handleCollision` en passant
  * la position de la bille et de l'objet impacte dans `ctx`. Le calcul du vecteur
  * de repulsion est fait ici (regle de gameplay), l'application est deleguee a la
  * composition root via `onBumperImpulse`.

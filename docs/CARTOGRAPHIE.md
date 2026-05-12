@@ -12,7 +12,7 @@ Vue d'ensemble des composants du système, des technologies et des flux de commu
 | **Playfield** | Three.js + Rapier (`@dimforge/rapier3d-compat`) | Écran principal 3D : scène du flipper, physique (gravité, collisions), bille, battes. Reçoit l'état et envoie les inputs (plunger, batteur gauche/droit). Le moteur physique est swappable via `adapters/physics/index.js`. |
 | **Backglass** | (Frontend) | Écran arrière : ambiance, score, nombre de balles, meilleur score. Affichage piloté par l'état reçu du serveur. |
 | **DMD** | (Frontend) | Affichage type dot-matrix : messages courts (PRESS START, SCORE, BALL 2, GAME OVER). Piloté par l'état serveur. |
-| **ESP32** (optionnel) | WiFi / WebSocket | Lecture des boutons physiques (battes, plunger) et envoi des événements au serveur. |
+| **ESP32** (optionnel) | WiFi / WebSocket / simulation clavier | Annexe HETIC : boutons physiques ou **X / C / D / F** côté playfield ; évolution possible vers envoi d’événements réseau. |
 
 ---
 

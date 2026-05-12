@@ -25,9 +25,9 @@ Statut : **migration finalisée — Rapier est le backend par défaut, Cannon-es
 ## Validation à faire en conditions réelles
 
 1. Lancer `npm run dev:all` et vérifier le scénario MVP complet :
-   - Enter → `start_game` reçu serveur, DMD affiche "BALL 1".
+   - `D`, `F` ou `Enter` → `start_game` reçu serveur, DMD affiche "BALL 1".
    - Espace → bille lancée vers Z- (haut du plateau).
-   - Flèches → flippers répondent, rebond crédible sur la bille.
+   - `X` / `C` (ou flèches) → flippers répondent, rebond crédible sur la bille.
    - Bumpers → +100 score, impulsion radiale visible.
    - Bille au drain → `ball_lost`, BALL 2/3, GAME OVER après 3 pertes.
 2. Comparer le ressenti gameplay avec la version Cannon-es (cf. git tag pré-migration). Tuner si nécessaire dans `world.js` (gravity), `ballBody.js` (impulse, friction, restitution), `bumperBody.js` (restitution, repulse force), `flipperBody.js` (FLIPPER_SPEED).
@@ -47,4 +47,4 @@ Statut : **migration finalisée — Rapier est le backend par défaut, Cannon-es
 - **MATERIALS** : seul point de vérité pour friction/restitution par type de body. Chaque body factory lit `MATERIALS.<name>.friction/restitution` (plus de magic numbers dupliqués).
 - **Substeps** : Rapier ne supporte pas le `maxSubSteps` Cannon. La constante `MAX_SUB_STEPS` est conservée pour le port mais ignorée par le wrapper `world.step()`.
 - **ContactMaterial** : Rapier combine friction/restitution via `combineRule` (Average par défaut).
-- **Tunneling** : si une bille très rapide traverse un mur, activer le CCD via `RigidBodyDesc.setCcdEnabled(true)` sur la bille (cf. `KNOWN-ISSUES.md`).
+- **Tunneling** : si une bille très rapide traverse un mur, activer le CCD via `RigidBodyDesc.setCcdEnabled(true)` sur la bille.

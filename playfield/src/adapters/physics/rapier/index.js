@@ -8,7 +8,7 @@
  *     import { initRapier } from "./adapters/physics/rapier/init.js";
  *     await initRapier();
  *
- * (idealement avant tout `createPhysicsWorld()`).
+ * (idealement avant tout `createPhysicsWorld()`), depuis `main.js` ou tout module de composition).
  */
 
 export { initRapier, getRapier } from "./init.js";

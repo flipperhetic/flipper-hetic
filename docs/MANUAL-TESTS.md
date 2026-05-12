@@ -24,7 +24,7 @@ Repeter pour 5 parties consecutives. Cocher chaque item pour chaque partie.
 - [ ] Playfield : bille visible au spawn, Space sans effet
 - [ ] Console serveur : pas d'erreur
 
-### Start (Enter ou S)
+### Start (`D`, `F` pièce, ou `Enter`)
 
 - [ ] Backglass : status=playing, score=0, billes=3
 - [ ] DMD : BALL 1
@@ -38,7 +38,7 @@ Repeter pour 5 parties consecutives. Cocher chaque item pour chaque partie.
 
 ### Jeu (flippers + bumpers)
 
-- [ ] ArrowLeft/ArrowRight : flippers reactifs
+- [ ] `X` / `C` (ou flèches) : flippers reactifs
 - [ ] Contact bumper : score +100 visible sur backglass et DMD
 - [ ] Pas de collision fantome (score qui monte sans contact)
 - [ ] Bille ne traverse pas les murs (anti-tunneling)
@@ -56,7 +56,7 @@ Repeter pour 5 parties consecutives. Cocher chaque item pour chaque partie.
 - [ ] DMD : GAME OVER
 - [ ] Space desactive
 
-### Restart (Enter apres game_over)
+### Restart (`D`, `F` ou `Enter` apres game_over)
 
 - [ ] Score remis a 0, billes a 3
 - [ ] DMD : BALL 1
@@ -78,9 +78,9 @@ Repeter pour 5 parties consecutives. Cocher chaque item pour chaque partie.
 
 ### Edge-cases
 
-- [ ] Enter pendant playing : ignore (pas de reset)
+- [ ] `D` / `F` / `Enter` pendant playing : ignore (pas de reset)
 - [ ] Space hors partie : ignore
-- [ ] Multiples Enter rapides : une seule partie demarre
+- [ ] Multiples starts rapides (`D`/`F`/`Enter`) : une seule partie demarre
 
 ## Resultat
 

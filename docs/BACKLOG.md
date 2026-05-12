@@ -1,11 +1,13 @@
 ## P0 — MVP (obligatoire)
 
+> **État du code :** le MVP est implémenté avec un moteur physique **Rapier** côté playfield (remplacement de Cannon-es). Les lignes ci-dessous restent la grille de référence initiale.
+
 | Tâche | Priorité | Owner | DoD | Dépendances | Estimation |
 |-------|----------|-------|-----|-------------|------------|
 | Serveur WebSocket : connexion, broadcast état (score, balles, gameOver) | P0 | À assigner | Le serveur écoute sur un port, accepte des clients, envoie l’état à tous les clients connectés. Test manuel avec 2 clients. | Aucune | M |
 | Playfield : scène Three.js (caméra, lumières, sol/grille) | P0 | À assigner | Une page affiche une scène 3D avec sol visible, caméra et lumières. Pas de crash. | Aucune | S |
-| Playfield : monde Cannon-es (gravité, sol physique) | P0 | À assigner | Un monde physique avec gravité et un sol est créé ; step() appelé en boucle. | Playfield scène 3D | S |
-| Playfield : bille avec physique (corps Cannon-es + mesh Three.js) | P0 | À assigner | Une bille apparaît sur le playfield, tombe et rebondit sur le sol. Position mesh = position body. | Playfield 3D + physique | M |
+| Playfield : monde physique Rapier (gravité, sol, step) | P0 | À assigner | Un monde physique avec gravité et un sol est créé ; step() appelé en boucle. | Playfield scène 3D | S |
+| Playfield : bille avec physique (corps Rapier + mesh Three.js) | P0 | À assigner | Une bille apparaît sur le playfield, tombe et rebondit sur le sol. Position mesh = position body. | Playfield 3D + physique | M |
 | Backglass : affichage score et nombre de balles depuis le serveur | P0 | À assigner | Le backglass se connecte en WebSocket et affiche score et balles mis à jour en temps réel. | Serveur WebSocket | S |
 | DMD : affichage état / messages depuis le serveur | P0 | À assigner | Le DMD se connecte en WebSocket et affiche un message ou état (ex. READY, score) mis à jour en temps réel. | Serveur WebSocket | S |
 | Synchronisation des 3 écrans : même état reçu par playfield, backglass, DMD | P0 | À assigner | Un changement d’état côté serveur est visible sur les 3 apps dans un délai raisonnable (< 1 s). | Serveur + Playfield + Backglass + DMD | M |

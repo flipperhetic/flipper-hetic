@@ -20,7 +20,7 @@ cd playfield && npm run test:watch
 
 ## Tests serveur — `server/src/__tests__/events.test.js`
 
-Tests unitaires sur la logique metier de `events.js` (machine d'etat, scoring, billes, relay).
+Tests sur les handlers Socket.IO et la logique métier associée (`adapters/socketHandlers.js`, `domain/`, `usecases/`) : machine d'état, scoring, billes, relay flippers.
 
 ### Machine d'etat
 

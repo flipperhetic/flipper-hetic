@@ -48,6 +48,15 @@ import { createHardwareActuators } from "./adapters/actuatorsHardware.js";
 const actuators = createHardwareActuators({ port: serialPort });
 ```
 
+## Cible matériel HETIC (annexe sujet)
+
+En soutenance, un flipper physique équipé prévoit notamment :
+
+- **10 solénoïdes** (feedback « claquement ») pilotés par **2 IoT** via relais ;
+- **Contrôleurs IoT** simulant le clavier du playfield : **X** (flipper gauche), **C** (flipper droit), **D** (start), **F** (pièce entrée).
+
+Le mapping logiciel du playfield est aligné sur ces touches ; le câblage détaillé est un **document complémentaire** fourni avec le matériel.
+
 ## Architecture
 
 Le module respecte la Clean Architecture :

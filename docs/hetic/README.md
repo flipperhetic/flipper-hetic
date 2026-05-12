@@ -1,6 +1,6 @@
 # CDC technique — Flipper virtuel
 
-Ce dossier regroupe le Cahier des Charges technique du projet.
+Ce dossier regroupe le Cahier des Charges technique du projet. Pour lancer le code, les tests et l’architecture logicielle du dépôt, voir le [README du dépôt](../README.md) et l’index [Documentation](../README.md).
 
 | Section | Fichier |
 |---------|---------|
@@ -15,3 +15,5 @@ Ce dossier regroupe le Cahier des Charges technique du projet.
 | 9. Guide Clean Architecture | [clean-architecture.md](clean-architecture.md) |
 
 MVP et critères : [mvp.md](mvp.md).
+
+**Alignement sujet officiel HETIC Web3 :** [referentiel-sujet-hetic-web3.md](referentiel-sujet-hetic-web3.md) (barème, livrables, annexe IoT **X / C / D / F**).

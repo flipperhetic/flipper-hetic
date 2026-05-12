@@ -1,11 +1,10 @@
 /**
- * Convention d'axes (coherente avec Cannon-es etape 5) :
+ * Convention d'axes (playfield 3D + Rapier) :
  *   X = gauche / droite
- *   Y = hauteur (perpendiculaire au plateau) — axe de gravite Cannon-es (0, -9.82, 0)
- *   Z = longueur du plateau (Z negatif = haut du plateau, Z positif = bas / joueur)
+ *   Y = hauteur (perpendiculaire au plateau)
+ *   Z = longueur du plateau (Z negatif = haut, Z positif = bas / joueur)
  *
- * L'inclinaison (~12°) est simulee dans Cannon-es via une composante Z
- * dans le vecteur de gravite, sans incliner les meshes Three.js.
+ * La gravite inclinee est appliquee cote moteur physique (Rapier), pas en inclinant les meshes.
  */
 
 // Plateau
@@ -63,3 +62,9 @@ export const FLIPPER_SPEED = 15;
 
 // Collisions — cooldown entre deux emissions du meme type (ms)
 export const COLLISION_COOLDOWN_MS = 300;
+
+// Rendu WebGL — cibles machines integrees / ecrans haute densite
+/** Plafonne devicePixelRatio (souvent la cause n°1 des lags sur PC integre). */
+export const MAX_RENDERER_PIXEL_RATIO = 1.5;
+/** false = meilleures perfs ; true = contours plus lisses (PC demo). */
+export const RENDERER_ANTIALIAS = false;

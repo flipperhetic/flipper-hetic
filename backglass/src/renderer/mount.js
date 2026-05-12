@@ -1,9 +1,7 @@
 /**
- * Backglass — Rendu DOM.
- * Cree le markup HTML et expose une fonction de mise a jour.
+ * Backglass — Montage du DOM (structure statique uniquement).
  */
-
-export function createBackglassDOM() {
+export function mountBackglassRoot() {
   const app = document.createElement("main");
   app.className = "backglass";
   app.innerHTML = `
@@ -26,15 +24,9 @@ export function createBackglassDOM() {
 
   document.body.append(app);
 
-  const scoreValue = document.getElementById("scoreValue");
-  const ballsLeftValue = document.getElementById("ballsLeftValue");
-  const statusValue = document.getElementById("statusValue");
-
   return {
-    renderState(nextState) {
-      scoreValue.textContent = String(nextState.score ?? 0);
-      ballsLeftValue.textContent = String(nextState.ballsLeft ?? 0);
-      statusValue.textContent = String(nextState.status ?? "idle");
-    },
+    scoreValue: document.getElementById("scoreValue"),
+    ballsLeftValue: document.getElementById("ballsLeftValue"),
+    statusValue: document.getElementById("statusValue"),
   };
 }
