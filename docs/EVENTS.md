@@ -161,3 +161,32 @@ Ainsi :
 - le clavier et l'IoT partagent exactement le meme chemin logique,
 - les regles de jeu restent centralisees,
 - le branchement materiel futur se fait sans dupliquer la logique.
+
+### Contrat firmware contrôleurs (USB HID clavier)
+
+Mode recommandé pour l'annexe IoT du sujet HETIC : l'ESP32 / Arduino se déclare
+**clavier USB HID** et envoie les keycodes ci-dessous. Aucun code playfield à
+modifier — `bindKeyboardInput` consomme déjà ces touches.
+
+| Action | Touche à envoyer | Comportement attendu côté firmware |
+| --- | --- | --- |
+| Flipper gauche | `X` | press tant que la batte est tenue ; release au relâchement |
+| Flipper droit | `C` | press tant que la batte est tenue ; release au relâchement |
+| Start | `D` | impulsion (press / release) |
+| Pièce | `F` | impulsion (press / release) — équivalent Start en MVP |
+
+Exigences :
+- **Debounce matériel/firmware** : filtrer les rebonds physiques avant émission
+  (typique : 5–10 ms). Reste de la responsabilité firmware pour les flippers
+  (pas de garde logicielle côté release afin de préserver la réactivité).
+- **Debounce logiciel sur `start`** : le playfield applique en plus un debounce
+  de 200 ms sur les impulsions `start` (touches `D` / `F` / `Enter`) pour
+  absorber un éventuel bounce côté firmware sans déclencher deux `start_game`
+  d'affilée. Pas de pénalité UX : on n'a jamais besoin de relancer une partie
+  deux fois dans 200 ms.
+- **Press / release symétriques** pour les flippers : un `keydown` sans `keyup`
+  correspondant laisserait la batte enfoncée. Le playfield met en place un
+  filet `blur` qui relâche les flippers si la fenêtre perd le focus, mais le
+  firmware reste responsable de l'envoi du release.
+- **Focus** : la fenêtre du playfield doit avoir le focus pour recevoir les
+  touches HID (cas standard d'un PC en cabine).
