@@ -10,6 +10,7 @@ import {
   launchBallBody,
   resetBallBody,
   setFlipperActive,
+  openLaunchGate,
 } from "./adapters/physics/index.js";
 
 await initRapier();
@@ -42,6 +43,7 @@ const level = buildLevel({ scene, world });
 const socket = initNetwork({
   onGameStarted() {
     resetBallBody(level.ballBody);
+    openLaunchGate(level.launchGateBody);
     collisionHandler.resetDrainFlag();
     collisionHandler.resetCollisionCooldowns();
     setFlipperActive(level.flipperBodies, "left", false);
@@ -99,6 +101,7 @@ const inputController = createGameInputController({
   },
   onDebugResetBall() {
     resetBallBody(level.ballBody);
+    openLaunchGate(level.launchGateBody);
   },
 });
 
@@ -110,6 +113,7 @@ startPlayfieldLoop({
   collisionHandler,
   ballBody: level.ballBody,
   flipperBodies: level.flipperBodies,
+  launchGateBody: level.launchGateBody,
   renderer,
   scene,
   camera,

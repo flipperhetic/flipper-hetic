@@ -9,18 +9,25 @@ import {
   WALL_HEIGHT,
   WALL_THICKNESS,
   DRAIN_OPENING_WIDTH,
+  TUNNEL_LENGTH,
+  TUNNEL_WALL_X,
+  TUNNEL_WALL_Z,
 } from "../domain/constants.js";
 import { createTableMeshes } from "../adapters/renderer/tableMesh.js";
 import { createBallMesh } from "../adapters/renderer/ballMesh.js";
 import { createFlipperMeshes } from "../adapters/renderer/flipperMesh.js";
 import { createBumperMeshes } from "../adapters/renderer/bumperMesh.js";
 import { createSlingshotMeshes } from "../adapters/renderer/slingshotMesh.js";
+import { createCornerDeflectorMeshes } from "../adapters/renderer/cornerDeflectorMesh.js";
+import { createLaunchGateMesh } from "../adapters/renderer/launchGateMesh.js";
 import {
   createStaticBoxBody,
   createBallBody,
   createFlipperBodies,
   createBumperBodies,
   createSlingshotBodies,
+  createCornerDeflectorBodies,
+  createLaunchGateBody,
 } from "../adapters/physics/index.js";
 
 function createWallBody(world, w, h, d, x, y, z) {
@@ -108,6 +115,17 @@ export function buildLevel({ scene, world }) {
   );
   syncPairs.push({ mesh: tableMeshes[5], body: wallBottomRightBody });
 
+  const tunnelWallBody = createWallBody(
+    world,
+    WALL_THICKNESS,
+    WALL_HEIGHT,
+    TUNNEL_LENGTH,
+    TUNNEL_WALL_X,
+    WALL_HEIGHT / 2,
+    TUNNEL_WALL_Z,
+  );
+  syncPairs.push({ mesh: tableMeshes[6], body: tunnelWallBody });
+
   const ballMesh = createBallMesh(scene);
   const ballBody = createBallBody(world);
   syncPairs.push({ mesh: ballMesh, body: ballBody });
@@ -125,11 +143,21 @@ export function buildLevel({ scene, world }) {
     syncPairs.push({ mesh: slingshotMeshes[i], body: slingshotBodies[i] });
   }
 
+  const cornerDeflectorMeshes = createCornerDeflectorMeshes(scene);
+  const cornerDeflectorBodies = createCornerDeflectorBodies(world);
+  for (let i = 0; i < cornerDeflectorMeshes.length; i++) {
+    syncPairs.push({ mesh: cornerDeflectorMeshes[i], body: cornerDeflectorBodies[i] });
+  }
+
   const bumperMeshes = createBumperMeshes(scene);
   const bumperBodies = createBumperBodies(world);
   for (let i = 0; i < bumperMeshes.length; i++) {
     syncPairs.push({ mesh: bumperMeshes[i], body: bumperBodies[i] });
   }
+
+  const launchGateMesh = createLaunchGateMesh(scene);
+  const launchGateBody = createLaunchGateBody(world);
+  syncPairs.push({ mesh: launchGateMesh, body: launchGateBody });
 
   return {
     syncPairs,
@@ -141,5 +169,6 @@ export function buildLevel({ scene, world }) {
     slingshotBodies,
     bumperMeshes,
     bumperBodies,
+    launchGateBody,
   };
 }

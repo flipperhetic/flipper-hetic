@@ -22,13 +22,19 @@ export const DRAIN_OPENING_WIDTH = 2.5;
 // Bille
 export const BALL_RADIUS = 0.25;
 
-// Spawn bille (centre, juste au-dessus du drain)
-export const PLUNGER_SPAWN_X = 0;
+// Tunnel de lancement (couloir vertical le long du mur droit, bas du plateau)
+export const TUNNEL_WIDTH = 1.0;
+export const TUNNEL_LENGTH = 3;
+export const TUNNEL_WALL_X = TABLE_WIDTH / 2 - TUNNEL_WIDTH - WALL_THICKNESS / 2;
+export const TUNNEL_WALL_Z = TABLE_DEPTH / 2 - TUNNEL_LENGTH / 2;
+
+// Spawn bille (au centre du tunnel, juste devant le mur du bas)
+export const PLUNGER_SPAWN_X = TABLE_WIDTH / 2 - TUNNEL_WIDTH / 2;
 export const PLUNGER_SPAWN_Y = 0.26;
 export const PLUNGER_SPAWN_Z = TABLE_DEPTH / 2 - 0.5;
 
 // Plunger — force d'impulsion (Z negatif = vers le haut du plateau)
-export const PLUNGER_IMPULSE_FORCE = 22;
+export const PLUNGER_IMPULSE_FORCE = 38;
 
 // Flippers (battes)
 export const FLIPPER_LENGTH = 2.0;
@@ -42,6 +48,10 @@ export const FLIPPER_PIVOT_Y = FLIPPER_HEIGHT / 2 + 0.05;
 // Slingshots — murs inclines qui ferment le corridor lateral au-dessus des flippers
 export const SLINGSHOT_DEPTH = 0.25;
 export const SLINGSHOT_TOP_OFFSET = 2.4; // distance Z entre l'extremite haute et le pivot flipper
+
+// Deflecteurs d'angle haut — diagonales dans les deux coins superieurs du plateau
+export const CORNER_DEFLECTOR_SIZE = 2;     // longueur d'arete coupee sur X et sur Z
+export const CORNER_DEFLECTOR_DEPTH = 0.25;
 
 // Bumpers
 export const BUMPER_RADIUS = 0.5;

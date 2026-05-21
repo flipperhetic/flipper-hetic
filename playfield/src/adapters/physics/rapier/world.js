@@ -16,8 +16,8 @@
 import { getRapier } from "./init.js";
 import { createBodyHandle } from "./bodyHandle.js";
 
-const TILT_DEG = 16;
-const GRAVITY = 9.82;
+const TILT_DEG = 24;
+const GRAVITY = 18;
 
 export const FIXED_TIME_STEP = 1 / 120;
 export const MAX_SUB_STEPS = 10; // Rapier n'a pas de substeps natifs ; on garde la constante pour le port
@@ -28,11 +28,11 @@ export const MAX_SUB_STEPS = 10; // Rapier n'a pas de substeps natifs ; on garde
  * lit `MATERIALS.<name>.friction` / `.restitution` pour rester coherent.
  */
 export const MATERIALS = {
-  ball: { name: "ball", friction: 0.3, restitution: 0.35 },
-  static: { name: "static", friction: 0.3, restitution: 0.35 },
-  table: { name: "table", friction: 0.3, restitution: 0.2 },
-  flipper: { name: "flipper", friction: 0.3, restitution: 0.8 },
-  bumper: { name: "bumper", friction: 0.1, restitution: 0.8 },
+  ball: { name: "ball", friction: 0.15, restitution: 0.35 },
+  static: { name: "static", friction: 0.15, restitution: 0.35 },
+  table: { name: "table", friction: 0.1, restitution: 0.2 },
+  flipper: { name: "flipper", friction: 0.2, restitution: 0.85 },
+  bumper: { name: "bumper", friction: 0.1, restitution: 0.9 },
 };
 
 export function createPhysicsWorld() {

@@ -38,4 +38,11 @@ export {
 
 export { createBumperBodies } from "./bumperBody.js";
 export { createSlingshotBodies } from "./slingshotBody.js";
+export { createCornerDeflectorBodies } from "./cornerDeflectorBody.js";
+export {
+  createLaunchGateBody,
+  openLaunchGate,
+  closeLaunchGate,
+  updateLaunchGate,
+} from "./launchGateBody.js";
 export { attachCollisionListener } from "./collisionListener.js";
