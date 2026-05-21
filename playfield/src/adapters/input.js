@@ -56,7 +56,44 @@ export function createGameInputController(actions) {
  *
  * Retourne une fonction de cleanup.
  */
+const START_DEBOUNCE_MS = 200;
+
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
 export function bindKeyboardInput(controller, target = window) {
+  let leftDown = false;
+  let rightDown = false;
+  let lastStartAt = -Infinity;
+
+  function pressLeft() {
+    if (leftDown) return;
+    leftDown = true;
+    controller.leftFlipperDown();
+  }
+  function releaseLeft() {
+    if (!leftDown) return;
+    leftDown = false;
+    controller.leftFlipperUp();
+  }
+  function pressRight() {
+    if (rightDown) return;
+    rightDown = true;
+    controller.rightFlipperDown();
+  }
+  function releaseRight() {
+    if (!rightDown) return;
+    rightDown = false;
+    controller.rightFlipperUp();
+  }
+  function triggerStart() {
+    const t = nowMs();
+    if (t - lastStartAt < START_DEBOUNCE_MS) return;
+    lastStartAt = t;
+    controller.start();
+  }
+
   function onKeyDown(event) {
     if (event.repeat) return;
 
@@ -74,19 +111,19 @@ export function bindKeyboardInput(controller, target = window) {
       || event.key === "Enter"
     ) {
       event.preventDefault();
-      controller.start();
+      triggerStart();
       return;
     }
 
     if (event.code === "KeyX" || event.code === "ArrowLeft") {
       event.preventDefault();
-      controller.leftFlipperDown();
+      pressLeft();
       return;
     }
 
     if (event.code === "KeyC" || event.code === "ArrowRight") {
       event.preventDefault();
-      controller.rightFlipperDown();
+      pressRight();
       return;
     }
 
@@ -97,21 +134,28 @@ export function bindKeyboardInput(controller, target = window) {
 
   function onKeyUp(event) {
     if (event.code === "KeyX" || event.code === "ArrowLeft") {
-      controller.leftFlipperUp();
+      releaseLeft();
       return;
     }
 
     if (event.code === "KeyC" || event.code === "ArrowRight") {
-      controller.rightFlipperUp();
+      releaseRight();
     }
+  }
+
+  function onBlur() {
+    releaseLeft();
+    releaseRight();
   }
 
   target.addEventListener("keydown", onKeyDown);
   target.addEventListener("keyup", onKeyUp);
+  target.addEventListener("blur", onBlur);
 
   return function unbindKeyboardInput() {
     target.removeEventListener("keydown", onKeyDown);
     target.removeEventListener("keyup", onKeyUp);
+    target.removeEventListener("blur", onBlur);
   };
 }
 
