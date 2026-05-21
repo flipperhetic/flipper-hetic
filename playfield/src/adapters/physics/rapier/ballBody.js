@@ -13,9 +13,9 @@ import { createBodyHandle } from "./bodyHandle.js";
 import { MATERIALS } from "./world.js";
 
 const BALL_MASS = 1;
-const BALL_LINEAR_DAMPING = 0.1;
+const BALL_LINEAR_DAMPING = 0.02;
 const BALL_FIXED_Y = BALL_RADIUS + 0.01;
-const MAX_BALL_SPEED = 25;
+const MAX_BALL_SPEED = 45;
 
 export function createBallBody(world) {
   const RAPIER = getRapier();

@@ -9,6 +9,9 @@ import {
   WALL_HEIGHT,
   WALL_THICKNESS,
   DRAIN_OPENING_WIDTH,
+  TUNNEL_LENGTH,
+  TUNNEL_WALL_X,
+  TUNNEL_WALL_Z,
 } from "../../domain/constants.js";
 
 export function createTableMeshes(scene) {
@@ -64,6 +67,12 @@ export function createTableMeshes(scene) {
   addWall(
     bottomWallWidth, WALL_HEIGHT, WALL_THICKNESS,
     (DRAIN_OPENING_WIDTH / 2 + bottomWallWidth / 2), WALL_HEIGHT / 2, bottomZ,
+  );
+
+  // Mur separateur du tunnel de lancement (couloir bas-droite)
+  addWall(
+    WALL_THICKNESS, WALL_HEIGHT, TUNNEL_LENGTH,
+    TUNNEL_WALL_X, WALL_HEIGHT / 2, TUNNEL_WALL_Z,
   );
 
   return meshes;
