@@ -16,7 +16,7 @@ const PRESETS = {
     cameraUpX: 0,
     cameraUpY: 0,
     cameraUpZ: -1,
-    orthoZoom: 0.8,
+    orthoZoom: 1.1,
   },
   Cabinet: {
     cameraMode: "perspective",

@@ -13,7 +13,7 @@ export const PLAYFIELD_VIEW_DEFAULTS = {
   cameraUpY: 0,
   cameraUpZ: -1,
   fov: 60,
-  orthoZoom: 1,
+  orthoZoom: 1.1,
   near: 0.1,
   far: 100,
   levelPosX: 0,

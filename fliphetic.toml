@@ -1,0 +1,19 @@
+[app]
+id          = "flipper-hetic"
+name        = "Flipper Hetic amine"
+authors     = ["Hetic Students"]
+description = "Virtual pinball machine with a Three.js 3D playfield, an HTML backglass for score, and a canvas DMD. A Node.js + Socket.IO server synchronises the three screens in real time."
+
+[deploy]
+strategy = "branch"
+ref      = "main"
+
+# Each screen is its own service in the compose file, on its own port.
+[screens]
+playfield = { service = "playfield", port = 5173, path = "/" }
+backglass = { service = "backglass", port = 5174, path = "/" }
+dmd       = { service = "dmd",       port = 5175, path = "/" }
+
+[compose]
+file = "docker-compose.yml"
+ready_timeout = 60
