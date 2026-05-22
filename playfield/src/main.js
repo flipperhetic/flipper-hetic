@@ -25,7 +25,8 @@ import {
 } from "./adapters/network.js";
 import { createCollisionHandler } from "./usecases/collisionHandler.js";
 import { createActuators } from "./adapters/actuators.js";
-import { createGameInputController, bindKeyboardInput } from "./adapters/input.js";
+import { createGameInputController, bindKeyboardInput, bindExternalInputSource } from "./adapters/input.js";
+import { createWebSerialInputSource } from "./adapters/webSerial.js";
 import { buildLevel } from "./composition/buildLevel.js";
 import { groupLevelMeshes } from "./composition/levelGroup.js";
 import { startPlayfieldLoop } from "./composition/runGameLoop.js";
@@ -121,6 +122,10 @@ const inputController = createGameInputController({
 });
 
 bindKeyboardInput(inputController);
+
+// Source d'input ESP32 via Web Serial (bouton #connect-serial dans index.html).
+const webSerialSource = createWebSerialInputSource();
+bindExternalInputSource(webSerialSource.subscribe, inputController);
 
 startPlayfieldLoop({
   world,
