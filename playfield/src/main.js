@@ -25,6 +25,8 @@ import {
 } from "./adapters/network.js";
 import { createCollisionHandler } from "./usecases/collisionHandler.js";
 import { createActuators } from "./adapters/actuators.js";
+import { createAudioEngine } from "./adapters/audio.js";
+import { mountAudioControls, updateAudioHud } from "./adapters/audio-controls.js";
 import { createGameInputController, bindKeyboardInput, bindExternalInputSource } from "./adapters/input.js";
 import { createWebSerialInputSource } from "./adapters/webSerial.js";
 import { buildLevel } from "./composition/buildLevel.js";
@@ -35,7 +37,11 @@ import { wirePlayfieldDebug } from "./adapters/debug/wirePlayfieldDebug.js";
 
 await initRapier();
 
-const actuators = createActuators();
+const audio = createAudioEngine(updateAudioHud);
+mountAudioControls(audio);
+const audioHud = document.getElementById("audio-hud");
+if (audioHud) audioHud.style.display = "none";
+const actuators = createActuators(audio);
 window.actuators = actuators;
 
 const { scene, camera, renderer, dirLight } = createScene();

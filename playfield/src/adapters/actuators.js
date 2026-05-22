@@ -1,40 +1,37 @@
-export function createActuators() {
-  const counts = {
-    bumperHit: 0,
-    slingshotHit: 0,
-    flipperFire: { left: 0, right: 0 },
-    ballLost: 0,
-    gameStart: 0,
-  };
-
+/**
+ * Actuators : logs + audio. Le pilotage IoT viendra se brancher ici.
+ */
+export function createActuators(audio = null) {
   return {
     onBumperHit() {
-      counts.bumperHit++;
-      console.log(`[actuator] bumper_hit #${counts.bumperHit}`);
+      console.log("[actuator] bumper_hit");
+      audio?.playRandom(["bumper-1", "bumper-2", "bumper-3"]);
     },
 
     onSlingshotHit() {
-      counts.slingshotHit++;
-      console.log(`[actuator] slingshot_hit #${counts.slingshotHit}`);
+      console.log("[actuator] slingshot_hit");
+      audio?.playRandom(["flipper-1", "flipper-2", "flipper-3"]);
     },
 
-    /** @param {"left"|"right"} side */
     onFlipperFire(side) {
-      counts.flipperFire[side] = (counts.flipperFire[side] ?? 0) + 1;
-      console.log(`[actuator] flipper_fire side=${side} #${counts.flipperFire[side]}`);
+      console.log(`[actuator] flipper_fire ${side}`);
+      audio?.playRandom(["flipper-1", "flipper-2", "flipper-3"]);
     },
 
     onBallLost() {
-      counts.ballLost++;
-      console.log(`[actuator] ball_lost #${counts.ballLost}`);
+      console.log("[actuator] ball_lost");
+      audio?.stopTheme();
+      audio?.play("game-over");
     },
 
     onGameStart() {
-      counts.gameStart++;
-      console.log(`[actuator] game_start #${counts.gameStart}`);
+      console.log("[actuator] game_start");
+      audio?.play("start");
+      audio?.startTheme(0.18);
     },
-    getCounts() {
-      return structuredClone(counts);
+
+    onMilestone() {
+      audio?.play("milestone");
     },
   };
 }
