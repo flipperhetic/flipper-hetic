@@ -82,10 +82,13 @@ export function createDebugUI(onConfigChange) {
   container.id = "debug-panel";
   container.style.cssText = `
     position: fixed;
-    top: 10px;
+    top: 50px;
     right: 10px;
     width: 420px;
-    max-height: 90vh;
+    min-width: 280px;
+    min-height: 220px;
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
     background: rgba(20, 20, 30, 0.95);
     border: 2px solid #00ff00;
     border-radius: 6px;
@@ -94,7 +97,8 @@ export function createDebugUI(onConfigChange) {
     font-family: 'Courier New', monospace;
     font-size: 11px;
     z-index: 10000;
-    overflow-y: auto;
+    resize: both;
+    overflow: auto;
     box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
     display: none;
   `;
@@ -430,10 +434,42 @@ export function createDebugUI(onConfigChange) {
 
   container.appendChild(reportDiv);
 
+  const toggleButton = document.createElement("button");
+  toggleButton.id = "debug-toggle-button";
+  toggleButton.textContent = "DBG";
+  toggleButton.title = "Ouvrir / fermer le debug";
+  toggleButton.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    width: 48px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    background: #0f0;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10001;
+  `;
+
+  let panelVisible = false;
+  const setPanelVisibility = (visible) => {
+    panelVisible = visible;
+    container.style.display = visible ? "block" : "none";
+    toggleButton.textContent = visible ? "×" : "DBG";
+  };
+
+  toggleButton.addEventListener("click", () => setPanelVisibility(!panelVisible));
+  document.body.appendChild(toggleButton);
+
   // Toggle visibility with backtick
   document.addEventListener("keydown", (e) => {
     if (e.key === "`") {
-      container.style.display = container.style.display === "none" ? "block" : "none";
+      setPanelVisibility(!panelVisible);
     }
   });
 
