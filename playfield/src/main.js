@@ -123,7 +123,8 @@ const inputController = createGameInputController({
 
 bindKeyboardInput(inputController);
 
-// Source d'input ESP32 via Web Serial (bouton #connect-serial dans index.html).
+// Source d'input ESP32 via Web Serial : auto-connexion au demarrage si un port
+// a deja ete autorise. Le bouton #connect-serial ne sert qu'au tout 1er octroi.
 const webSerialSource = createWebSerialInputSource();
 bindExternalInputSource(webSerialSource.subscribe, inputController);
 
