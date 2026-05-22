@@ -10,6 +10,8 @@ import { applyCollision } from "../usecases/applyCollision.js";
 
 let state = new GameState();
 let lastDmdMessage = null;
+let gameOverTimeoutId = null;
+const GAME_OVER_BLOCK_MS = 5000;
 
 /**
  * Remet l'etat a zero (utilise par les tests pour l'isolation).
@@ -17,6 +19,7 @@ let lastDmdMessage = null;
 export function resetState() {
   state = new GameState();
   lastDmdMessage = null;
+  clearGameOverTimer();
 }
 
 function emitState(io) {
@@ -26,6 +29,26 @@ function emitState(io) {
 function emitDmd(io, text) {
   lastDmdMessage = text;
   io.emit(SERVER_EVENTS.DMD_MESSAGE, { text });
+}
+
+function clearGameOverTimer() {
+  if (gameOverTimeoutId !== null) {
+    clearTimeout(gameOverTimeoutId);
+    gameOverTimeoutId = null;
+  }
+}
+
+function scheduleGameOverUnlock(io) {
+  clearGameOverTimer();
+  gameOverTimeoutId = setTimeout(() => {
+    gameOverTimeoutId = null;
+    if (state.status !== "game_over") {
+      return;
+    }
+    state.status = "idle";
+    emitState(io);
+    emitDmd(io, "PRESS START");
+  }, GAME_OVER_BLOCK_MS);
 }
 
 /**
@@ -39,8 +62,12 @@ export function registerSocketHandlers(io) {
     }
 
     socket.on(CLIENT_EVENTS.START_GAME, () => {
+      if (state.status === "game_over" && gameOverTimeoutId !== null) {
+        return;
+      }
       const result = startGame(state);
       if (!result.changed) return;
+      clearGameOverTimer();
       io.emit(SERVER_EVENTS.GAME_STARTED, state.toJSON());
       emitState(io);
       emitDmd(io, result.dmdMessage);
@@ -81,6 +108,7 @@ export function registerSocketHandlers(io) {
       emitDmd(io, result.dmdMessage);
       if (result.gameOver) {
         io.emit(SERVER_EVENTS.GAME_OVER, state.toJSON());
+        scheduleGameOverUnlock(io);
       }
     });
   });

@@ -17,8 +17,10 @@ const TEXT_LINE_Y = Math.floor((DOT_ROWS - 7) / 2);
 const TEXT_BG_PADDING = 1;
 const TEXT_BG_OPACITY = 0.65;
 const VISIBLE_TEXT_WIDTH = DOT_COLS - TEXT_MARGIN * 2;
-const SCROLL_STEP_MS = 100;
-const SCROLL_PAUSE_MS = 3000;
+const SCROLL_STEP_MS = 50;
+const SCROLL_PAUSE_MS = 2500;
+const GAME_OVER_PAUSE_MS = 5000;
+const TRANSITION_SPACES = 4;
 
 /**
  * Cree un renderer dot-matrix attache au canvas fourni.
@@ -49,12 +51,24 @@ export function createDotMatrixRenderer(canvas) {
 
   const scrollState = {
     offsetX: TEXT_MARGIN,
-    direction: -1,
     pauseUntil: 0,
     lastUpdate: performance.now(),
     active: false,
     textWidth: 0,
+    targetX: TEXT_MARGIN,
+    loop: false,
+    text: "",
+    finalText: "",
+    isTransition: false,
   };
+  let gameOverTimeoutId = null;
+
+  function clearGameOverTimeout() {
+    if (gameOverTimeoutId !== null) {
+      clearTimeout(gameOverTimeoutId);
+      gameOverTimeoutId = null;
+    }
+  }
 
   // Load pixel-art image from dmd/img — draw it full-screen on the real 16:9 canvas
   const img = new Image();
@@ -84,26 +98,75 @@ export function createDotMatrixRenderer(canvas) {
     return text.length * 5 + Math.max(0, text.length - 1);
   }
 
-  function getDisplayMessage() {
-    if (dmdState.status === "playing" || dmdState.status === "game_over") {
-      return "";
+  function getScoreText() {
+    return `POINTS : ${String(dmdState.score).slice(0, 8)}`;
+  }
+
+  function getTextForStatus(status) {
+    if (status === "playing") {
+      return getScoreText();
+    }
+    if (status === "game_over") {
+      return "GAME OVER!";
     }
     return dmdState.message || "PRESS START";
   }
 
-  function getScoreText() {
-    return `PTS ${String(dmdState.score).slice(0, 8)}`;
+  function getCurrentText() {
+    if (scrollState.isTransition) {
+      return scrollState.text;
+    }
+    return getTextForStatus(dmdState.status);
   }
 
-  function resetTextScroll(text) {
-    const normalized = (text || "").toUpperCase().slice(0, 16);
+  function resetTextScroll(text, options = {}) {
+    const normalized = (text || "").toUpperCase().slice(0, 32);
     const width = measureTextWidth(normalized);
+    scrollState.text = normalized;
     scrollState.textWidth = width;
-    scrollState.offsetX = TEXT_MARGIN;
-    scrollState.direction = -1;
     scrollState.lastUpdate = performance.now();
-    scrollState.pauseUntil = performance.now() + SCROLL_PAUSE_MS;
-    scrollState.active = width > VISIBLE_TEXT_WIDTH;
+    scrollState.pauseUntil = options.pauseMs != null ? performance.now() + options.pauseMs : 0;
+    scrollState.offsetX = options.offsetX ?? DOT_COLS;
+    scrollState.finalText = options.finalText ?? normalized;
+    scrollState.isTransition = !!options.isTransition;
+
+    if (options.isTransition) {
+      scrollState.targetX = options.targetX ?? Math.floor((DOT_COLS - width) / 2);
+      scrollState.loop = false;
+      scrollState.active = true;
+    } else {
+      scrollState.loop = width > VISIBLE_TEXT_WIDTH;
+      scrollState.targetX = Math.floor((DOT_COLS - width) / 2);
+      // Only mark active (scrolling) when text is wider than viewport; otherwise
+      // keep it static and let rendering use the status-based centered text.
+      scrollState.active = scrollState.loop;
+      if (!scrollState.loop) {
+        scrollState.offsetX = scrollState.targetX;
+      }
+    }
+  }
+
+  function scheduleTextTransition(nextText, currentText = getCurrentText()) {
+    if (!nextText || currentText === nextText) {
+      return;
+    }
+
+    const spacer = " ".repeat(TRANSITION_SPACES);
+    const compositeText = `${currentText}${spacer}${nextText}`;
+    const currentWidth = measureTextWidth(currentText);
+    const nextWidth = measureTextWidth(nextText);
+    const spacerWidth = measureTextWidth(spacer);
+    const offsetX = scrollState.active
+      ? scrollState.offsetX
+      : Math.floor((DOT_COLS - currentWidth) / 2);
+    const targetX = Math.floor((DOT_COLS - nextWidth) / 2) - (currentWidth + spacerWidth);
+
+    resetTextScroll(compositeText, {
+      offsetX,
+      isTransition: true,
+      targetX,
+      finalText: nextText,
+    });
   }
 
   function updateTextScroll(now) {
@@ -118,20 +181,37 @@ export function createDotMatrixRenderer(canvas) {
     }
 
     scrollState.lastUpdate = now;
-    const minOffset = Math.min(TEXT_MARGIN, VISIBLE_TEXT_WIDTH - scrollState.textWidth + TEXT_MARGIN);
-    if (scrollState.direction === -1) {
-      scrollState.offsetX = Math.max(minOffset, scrollState.offsetX - 1);
-      if (scrollState.offsetX <= minOffset) {
-        scrollState.offsetX = minOffset;
+    scrollState.offsetX -= 1;
+
+    if (scrollState.isTransition) {
+      if (scrollState.offsetX <= scrollState.targetX) {
+        scrollState.offsetX = scrollState.targetX;
+        scrollState.isTransition = false;
+        const finalText = scrollState.finalText;
+        const width = measureTextWidth(finalText);
+        scrollState.text = finalText;
+        scrollState.textWidth = width;
+        scrollState.loop = width > VISIBLE_TEXT_WIDTH;
+        scrollState.targetX = Math.floor((DOT_COLS - width) / 2);
+        if (scrollState.loop) {
+          scrollState.active = true;
+        } else {
+          scrollState.active = false;
+          scrollState.offsetX = scrollState.targetX;
+        }
+      }
+      return;
+    }
+
+    if (scrollState.loop) {
+      if (scrollState.offsetX <= -scrollState.textWidth - TEXT_MARGIN) {
+        scrollState.offsetX = DOT_COLS;
         scrollState.pauseUntil = now + SCROLL_PAUSE_MS;
-        scrollState.direction = 1;
       }
     } else {
-      scrollState.offsetX = Math.min(TEXT_MARGIN, scrollState.offsetX + 1);
-      if (scrollState.offsetX >= TEXT_MARGIN) {
-        scrollState.offsetX = TEXT_MARGIN;
-        scrollState.pauseUntil = now + SCROLL_PAUSE_MS;
-        scrollState.direction = -1;
+      if (scrollState.offsetX <= scrollState.targetX) {
+        scrollState.offsetX = scrollState.targetX;
+        scrollState.active = false;
       }
     }
   }
@@ -159,21 +239,21 @@ export function createDotMatrixRenderer(canvas) {
       }
     }
 
-    const message = getDisplayMessage();
-    let textX = TEXT_MARGIN;
-    let textWidth = 0;
-    if (message) {
-      textWidth = measureTextWidth(message);
-      textX = scrollState.active
-        ? Math.floor(scrollState.offsetX)
-        : Math.floor((DOT_COLS - textWidth) / 2);
-      drawBitmapText(textMaskCtx, message, textX, TEXT_LINE_Y, { spacing: 1 });
+    let text, textWidth, textX;
+
+    if (scrollState.isTransition || scrollState.active) {
+      // During a transition or an active scroll we render the composite/scrolling text.
+      text = scrollState.text;
+      textWidth = scrollState.textWidth;
+      textX = Math.floor(scrollState.offsetX);
     } else {
-      const scoreText = getScoreText();
-      textWidth = measureTextWidth(scoreText);
+      // Otherwise render the canonical text for the current status, centered.
+      text = getTextForStatus(dmdState.status);
+      textWidth = measureTextWidth(text);
       textX = Math.floor((DOT_COLS - textWidth) / 2);
-      drawBitmapText(textMaskCtx, scoreText, textX, TEXT_LINE_Y, { spacing: 1 });
     }
+
+    drawBitmapText(textMaskCtx, text, textX, TEXT_LINE_Y, { spacing: 1 });
 
     const imagePixels = imageCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT).data;
     const textPixels = textMaskCtx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
@@ -256,28 +336,82 @@ export function createDotMatrixRenderer(canvas) {
 
   return {
     renderMessage(text) {
-      dmdState.message = normalizeMessage(text);
+      const normalized = normalizeMessage(text);
+      dmdState.message = normalized;
+
+      // If we're idle, schedule the normal transition so the message scrolls in.
       if (dmdState.status === "idle") {
-        resetTextScroll(dmdState.message);
+        scheduleTextTransition(dmdState.message);
+        render();
+        return;
       }
+
+      // If the machine is in game_over, show the DMD message immediately and
+      // keep it visible for the GAME_OVER_PAUSE_MS so the client matches server
+      // behavior even if network ordering varies.
+      if (dmdState.status === "game_over") {
+        resetTextScroll(dmdState.message, { pauseMs: GAME_OVER_PAUSE_MS });
+        render();
+        return;
+      }
+
+      // For other statuses (playing), just update the stored message so it can
+      // be used when returning to idle or for transitions triggered by status.
       render();
     },
 
     renderScore(score) {
       dmdState.score = Number.isFinite(score) ? score : 0;
+      if (!scrollState.isTransition && dmdState.status === "playing") {
+        const updatedText = getTextForStatus(dmdState.status);
+        scrollState.text = updatedText;
+        scrollState.textWidth = measureTextWidth(updatedText);
+        scrollState.loop = false;
+        scrollState.targetX = Math.floor((DOT_COLS - scrollState.textWidth) / 2);
+        scrollState.active = false;
+        scrollState.offsetX = scrollState.targetX;
+      }
       render();
     },
 
     updateStatus(status) {
-      dmdState.status = status ?? "idle";
-      if (dmdState.status === "idle") {
-        resetTextScroll(getDisplayMessage());
+      const nextStatus = status ?? "idle";
+      const currentStatus = dmdState.status;
+      if (nextStatus === currentStatus) {
+        return;
       }
+
+      clearGameOverTimeout();
+      const currentText = getTextForStatus(currentStatus);
+      dmdState.status = nextStatus;
+      const nextText = getTextForStatus(nextStatus);
+
+      // Special handling for game_over: show centered static "GAME OVER!" for
+      // GAME_OVER_PAUSE_MS, then start a leftward transition to PRESS START.
+      if (nextStatus === "game_over") {
+        resetTextScroll(nextText, { pauseMs: GAME_OVER_PAUSE_MS });
+        gameOverTimeoutId = setTimeout(() => {
+          // If status changed in the meantime, abort.
+          if (dmdState.status !== "game_over") return;
+          // Start the leftward scroll transition from GAME OVER! -> PRESS START
+          scheduleTextTransition(getTextForStatus("idle"), nextText);
+        }, GAME_OVER_PAUSE_MS);
+        return;
+      }
+
+      // When returning to idle we want the PRESS START to be static.
+      if (nextStatus === "idle") {
+        resetTextScroll(nextText);
+        return;
+      }
+
+      // Other statuses (playing): transition from the current text.
+      scheduleTextTransition(nextText, currentText);
     },
 
     /** Rendu initial. */
     init() {
-      resetTextScroll(getDisplayMessage());
+      resetTextScroll(getTextForStatus(dmdState.status));
       render();
       requestAnimationFrame(animate);
     },
