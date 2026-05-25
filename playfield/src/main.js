@@ -38,6 +38,7 @@ import { wirePlayfieldDebug } from "./adapters/debug/wirePlayfieldDebug.js";
 await initRapier();
 
 const audio = createAudioEngine(updateAudioHud);
+audio.startTheme(0.18);
 mountAudioControls(audio);
 const audioHud = document.getElementById("audio-hud");
 if (audioHud) audioHud.style.display = "none";
@@ -60,7 +61,9 @@ const viewRuntime = createPlayfieldViewRuntime({
 
 window.addEventListener("resize", viewRuntime.onResize);
 
-wirePlayfieldDebug({ viewRuntime, camera, renderer, scene, levelGroup, world, dirLight });
+wirePlayfieldDebug({ viewRuntime, camera, renderer, scene, levelGroup, world, dirLight, audio });
+
+let pendingLaunchAfterStart = false;
 
 const socket = initNetwork({
   onGameStarted() {
@@ -70,10 +73,22 @@ const socket = initNetwork({
     collisionHandler.resetCollisionCooldowns();
     setFlipperActive(level.flipperBodies, "left", false);
     setFlipperActive(level.flipperBodies, "right", false);
-    actuators.onGameStart();
     console.log("[main] game started — bille au spawn");
+
+    if (pendingLaunchAfterStart) {
+      pendingLaunchAfterStart = false;
+      if (launchBallBody(level.ballBody)) {
+        audio.play("start");
+        emitLaunchBall(socket);
+      }
+    }
+  },
+  onHighScoreBeat(data) {
+    // Play one random highscore sound (handled by audio engine randomness/persistence)
+    try { audio.playRandom(["highscore-1", "highscore-2"]); } catch (e) { /* ignore */ }
   },
   onGameOver(data) {
+    actuators.onGameOver();
     console.log("[main] game over — score final :", data.score);
   },
 });
@@ -99,9 +114,16 @@ const inputController = createGameInputController({
     emitStartGame(socket);
   },
   onLaunch() {
-    if (gameState.status === "playing" && launchBallBody(level.ballBody)) {
-      emitLaunchBall(socket);
+    if (gameState.status === "playing") {
+      if (launchBallBody(level.ballBody)) {
+        audio.play("start");
+        emitLaunchBall(socket);
+      }
+      return;
     }
+
+    pendingLaunchAfterStart = true;
+    emitStartGame(socket);
   },
   onLeftFlipperDown() {
     setFlipperActive(level.flipperBodies, "left", true);

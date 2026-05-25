@@ -20,8 +20,13 @@ export function createActuators(audio = null) {
 
     onBallLost() {
       console.log("[actuator] ball_lost");
-      audio?.stopTheme();
-      audio?.play("game-over");
+      // The theme must keep playing between balls when the game is still active.
+      // Game-over audio is handled separately when the server confirms the final ball is lost.
+    },
+
+    onGameOver() {
+      console.log("[actuator] game_over");
+      audio?.playRandom(["game-over-1", "game-over-2"]);
     },
 
     onGameStart() {
@@ -31,7 +36,7 @@ export function createActuators(audio = null) {
     },
 
     onMilestone() {
-      audio?.play("milestone");
+      audio?.playRandom(["milestone-1", "milestone-2"]);
     },
   };
 }

@@ -12,6 +12,10 @@ export function mountBackglassRoot() {
         <p id="scoreValue" class="card__value">0</p>
       </article>
       <article class="card">
+        <p class="card__label">Highscore</p>
+        <p id="highscoreValue" class="card__value">0</p>
+      </article>
+      <article class="card">
         <p class="card__label">Billes restantes</p>
         <p id="ballsLeftValue" class="card__value">3</p>
       </article>
@@ -20,6 +24,7 @@ export function mountBackglassRoot() {
         <p id="statusValue" class="card__value">idle</p>
       </article>
     </section>
+    <div id="highscore-popup" class="highscore-popup" aria-hidden="true">New Highest score !</div>
   `;
 
   document.body.append(app);
@@ -28,5 +33,7 @@ export function mountBackglassRoot() {
     scoreValue: document.getElementById("scoreValue"),
     ballsLeftValue: document.getElementById("ballsLeftValue"),
     statusValue: document.getElementById("statusValue"),
+    highscorePopup: document.getElementById("highscore-popup"),
+    highscoreValue: document.getElementById("highscoreValue"),
   };
 }

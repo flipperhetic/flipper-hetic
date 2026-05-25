@@ -18,5 +18,9 @@ export function initNetwork(callbacks = {}) {
     callbacks.onStateUpdated?.(data);
   });
 
+  socket.on(SERVER_EVENTS.HIGH_SCORE_BEAT, (data) => {
+    callbacks.onHighScoreBeat?.(data);
+  });
+
   return socket;
 }

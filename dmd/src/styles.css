@@ -13,7 +13,7 @@ body {
 }
 
 .dmd {
-  width: min(920px, 94vw);
+  width: min(100vw, 1600px);
   padding: 1rem;
 }
 
@@ -37,8 +37,10 @@ body {
 
 .dmd__canvas {
   width: 100%;
-  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: calc(100vh - 5rem);
   display: block;
   border-radius: 6px;
   background: #0d0401;
+  image-rendering: pixelated;
 }

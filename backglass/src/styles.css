@@ -8,6 +8,39 @@
   background: radial-gradient(circle at top, #1d2847 0%, #0b1020 55%, #05070f 100%);
 }
 
+@font-face {
+  font-family: 'BreakingBad';
+  src: url('/shared/src/Fonts/BreakingBad-font/Heart Breaking Bad.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.backglass__title {
+  font-family: 'BreakingBad', "Trebuchet MS", "Arial", sans-serif;
+}
+
+.highscore-popup {
+  position: fixed;
+  left: 50%;
+  top: 12%;
+  transform: translateX(-50%);
+  background: rgba(255, 200, 60, 0.95);
+  color: #081018;
+  padding: 0.8rem 1.4rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 320ms ease, opacity 320ms ease;
+  transform-origin: center;
+}
+.highscore-popup.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1.02);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -30,9 +63,17 @@ body {
   text-shadow: 0 0 12px rgba(255, 228, 121, 0.4);
 }
 
+.backglass__highscore {
+  margin: 0 0 1rem;
+  text-align: center;
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  color: #ffd87a;
+  font-weight: 700;
+}
+
 .backglass__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
   gap: 1rem;
 }
 

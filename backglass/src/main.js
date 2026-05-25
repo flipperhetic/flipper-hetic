@@ -7,8 +7,11 @@ import { createBackglassView } from "./renderer/view.js";
 import { initNetwork } from "./adapters/network.js";
 
 const refs = mountBackglassRoot();
-const { renderState } = createBackglassView(refs);
+const { renderState, showHighScorePopup } = createBackglassView(refs);
 
 initNetwork({
   onStateUpdated: renderState,
+  onHighScoreBeat: () => {
+    showHighScorePopup();
+  },
 });

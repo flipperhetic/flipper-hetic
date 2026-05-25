@@ -53,6 +53,11 @@ export function initNetwork(callbacks = {}) {
     callbacks.onGameOver?.(data);
   });
 
+  socket.on(SERVER_EVENTS.HIGH_SCORE_BEAT, (data) => {
+    console.log("[network] highscore beat", data);
+    callbacks.onHighScoreBeat?.(data);
+  });
+
   socket.on(SERVER_EVENTS.DMD_MESSAGE, (data) => {
     console.log("[network] DMD :", data.text);
   });

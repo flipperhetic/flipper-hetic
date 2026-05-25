@@ -43,10 +43,50 @@ export const FONT_5X7 = {
   "Z": ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
 };
 
+export const FONT_5X5 = {
+  " ": ["00000", "00000", "00000", "00000", "00000"],
+  "0": ["01110", "10001", "10011", "10101", "01110"],
+  "1": ["00100", "01100", "00100", "00100", "01110"],
+  "2": ["01110", "10001", "00010", "00100", "11111"],
+  "3": ["11110", "00001", "00110", "00001", "11110"],
+  "4": ["00010", "00110", "01010", "11111", "00010"],
+  "5": ["11111", "10000", "11110", "00001", "11110"],
+  "6": ["01110", "10000", "11110", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "00100"],
+  "8": ["01110", "10001", "01110", "10001", "01110"],
+  "9": ["01110", "10001", "01111", "00001", "01110"],
+  "A": ["01110", "10001", "11111", "10001", "10001"],
+  "B": ["11110", "10001", "11110", "10001", "11110"],
+  "C": ["01111", "10000", "10000", "10000", "01111"],
+  "D": ["11110", "10001", "10001", "10001", "11110"],
+  "E": ["11111", "10000", "11110", "10000", "11111"],
+  "F": ["11111", "10000", "11110", "10000", "10000"],
+  "G": ["01111", "10000", "10111", "10001", "01110"],
+  "H": ["10001", "10001", "11111", "10001", "10001"],
+  "I": ["01110", "00100", "00100", "00100", "01110"],
+  "J": ["00111", "00010", "00010", "10010", "01100"],
+  "K": ["10001", "10010", "11100", "10010", "10001"],
+  "L": ["10000", "10000", "10000", "10000", "11111"],
+  "M": ["10001", "11011", "10101", "10001", "10001"],
+  "N": ["10001", "11001", "10101", "10011", "10001"],
+  "O": ["01110", "10001", "10001", "10001", "01110"],
+  "P": ["11110", "10001", "11110", "10000", "10000"],
+  "Q": ["01110", "10001", "10001", "01010", "00101"],
+  "R": ["11110", "10001", "11110", "10010", "10001"],
+  "S": ["01111", "10000", "01110", "00001", "11110"],
+  "T": ["11111", "00100", "00100", "00100", "00100"],
+  "U": ["10001", "10001", "10001", "10001", "01110"],
+  "V": ["10001", "10001", "10001", "01010", "00100"],
+  "W": ["10001", "10001", "10101", "10101", "01010"],
+  "X": ["10001", "01010", "00100", "01010", "10001"],
+  "Y": ["10001", "01010", "00100", "00100", "00100"],
+  "Z": ["11111", "00010", "00100", "01000", "11111"],
+};
+
 /**
  * Dessine du texte bitmap sur un contexte raster.
  */
-export function drawBitmapText(rasterCtx, text, originX, originY, opts = {}) {
+ export function drawBitmapText(rasterCtx, text, originX, originY, opts = {}) {
   const pixelOn = opts.pixelOn ?? 1;
   const spacing = opts.spacing ?? 1;
   let xCursor = originX;
@@ -64,10 +104,28 @@ export function drawBitmapText(rasterCtx, text, originX, originY, opts = {}) {
   }
 }
 
+export function drawBitmapTextSmall(rasterCtx, text, originX, originY, opts = {}) {
+  const pixelOn = opts.pixelOn ?? 1;
+  const spacing = opts.spacing ?? 1;
+  let xCursor = originX;
+  for (const ch of text) {
+    const glyph = FONT_5X5[ch] ?? FONT_5X5[" "];
+    for (let row = 0; row < glyph.length; row += 1) {
+      const bits = glyph[row];
+      for (let col = 0; col < bits.length; col += 1) {
+        if (bits[col] === "1") {
+          rasterCtx.fillRect(xCursor + col, originY + row, pixelOn, pixelOn);
+        }
+      }
+    }
+    xCursor += 5 + spacing;
+  }
+}
+
 /**
  * Dessine du texte centre horizontalement.
  */
-export function drawCenteredBitmapText(rasterCtx, text, y, dotCols) {
+ export function drawCenteredBitmapText(rasterCtx, text, y, dotCols) {
   const normalized = text.trim();
   const width = normalized.length > 0 ? normalized.length * 5 + (normalized.length - 1) : 0;
   const startX = Math.max(0, Math.floor((dotCols - width) / 2));

@@ -21,4 +21,5 @@ export const SERVER_EVENTS = {
   GAME_STARTED: "game_started",
   GAME_OVER: "game_over",
   DMD_MESSAGE: "dmd_message",
+  HIGH_SCORE_BEAT: "highscore_beat",
 };

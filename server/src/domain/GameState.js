@@ -9,6 +9,7 @@ const INITIAL = {
   score: 0,
   ballsLeft: 3,
   currentBall: 1,
+  highScore: 0,
   lastEvent: null,
 };
 
@@ -26,7 +27,9 @@ export class GameState {
   }
 
   start() {
+    const preservedHigh = this.highScore || 0;
     Object.assign(this, structuredClone(INITIAL));
+    this.highScore = preservedHigh;
     this.status = "playing";
     this.lastEvent = "start_game";
   }
@@ -60,6 +63,7 @@ export class GameState {
     return {
       status: this.status,
       score: this.score,
+      highScore: this.highScore || 0,
       ballsLeft: this.ballsLeft,
       currentBall: this.currentBall,
       lastEvent: this.lastEvent,

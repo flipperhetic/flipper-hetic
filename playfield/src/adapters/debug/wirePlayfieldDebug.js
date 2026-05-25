@@ -4,6 +4,7 @@
  */
 import { DEBUG_ENABLED } from "./config.js";
 import { createDebugUI } from "./ui.js";
+import { createAudioDebugUI } from "./audioDebug.js";
 import {
   PLAYFIELD_VIEW_DEFAULTS,
   applyViewConfigToPerspectiveCamera,
@@ -22,7 +23,7 @@ export function wirePlayfieldDebug(deps) {
     return;
   }
 
-  const { viewRuntime } = deps;
+  const { viewRuntime, audio } = deps;
 
   const onConfigChange = (config) => {
     // Update viewRuntime.params and apply all changes at once
@@ -33,6 +34,9 @@ export function wirePlayfieldDebug(deps) {
 
   // Create UI with config change handler
   createDebugUI(onConfigChange);
+  if (audio) {
+    createAudioDebugUI(audio);
+  }
 
   console.log("[debug] menu initialized — press ` to toggle");
 }
