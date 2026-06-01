@@ -15,12 +15,12 @@ const DISPLAY_BG = "#0d0401";
 const TEXT_MARGIN = 2;
 const TEXT_LINE_Y = Math.floor((DOT_ROWS - 7) / 2);
 const TEXT_BG_PADDING = 1;
-const TEXT_BG_OPACITY = 0.65;
+const TEXT_BG_OPACITY = 0.82;
 const VISIBLE_TEXT_WIDTH = DOT_COLS - TEXT_MARGIN * 2;
-const SCROLL_STEP_MS = 50;
-const SCROLL_PAUSE_MS = 2500;
-const GAME_OVER_PAUSE_MS = 7000;
-const TRANSITION_SPACES = 4;
+const SCROLL_STEP_MS = 28;
+const SCROLL_PAUSE_MS = 1800;
+const GAME_OVER_PAUSE_MS = 5000;
+const TRANSITION_SPACES = 3;
 
 /**
  * Cree un renderer dot-matrix attache au canvas fourni.
@@ -61,14 +61,6 @@ export function createDotMatrixRenderer(canvas) {
     finalText: "",
     isTransition: false,
   };
-  let gameOverTimeoutId = null;
-
-  function clearGameOverTimeout() {
-    if (gameOverTimeoutId !== null) {
-      clearTimeout(gameOverTimeoutId);
-      gameOverTimeoutId = null;
-    }
-  }
 
   // Load pixel-art image from dmd/img — draw it full-screen on the real 16:9 canvas
   const img = new Image();
@@ -82,12 +74,9 @@ export function createDotMatrixRenderer(canvas) {
     render();
   };
   img.onerror = () => {
-    const normalizedBaseUrl = (import.meta?.env?.BASE_URL ?? "/").replace(/\/$/, "");
-    const assetPath = `${normalizedBaseUrl}/assets/img/BB-Pixel-DMD.jpg`;
-    console.warn(`[dmd] failed to load image from ${assetPath}`);
+    // silently ignore
   };
-  const normalizedBaseUrl = (import.meta?.env?.BASE_URL ?? "/").replace(/\/$/, "");
-  img.src = `${normalizedBaseUrl}/assets/img/BB-Pixel-DMD.jpg`;
+  img.src = "/assets/img/BB-Pixel-DMD.jpg";
 
   function normalizeMessage(input) {
     const src = typeof input === "string" ? input : "";
@@ -159,10 +148,9 @@ export function createDotMatrixRenderer(canvas) {
     const currentWidth = measureTextWidth(currentText);
     const nextWidth = measureTextWidth(nextText);
     const spacerWidth = measureTextWidth(spacer);
-    const offsetX = scrollState.active
-      ? scrollState.offsetX
-      : Math.floor((DOT_COLS - currentWidth) / 2);
-    const targetX = Math.floor((DOT_COLS - nextWidth) / 2) - (currentWidth + spacerWidth);
+    const currentX = (DOT_COLS - currentWidth) / 2;
+    const offsetX = scrollState.active ? scrollState.offsetX : currentX;
+    const targetX = (DOT_COLS - nextWidth) / 2 - (currentWidth + spacerWidth);
 
     resetTextScroll(compositeText, {
       offsetX,
@@ -195,7 +183,7 @@ export function createDotMatrixRenderer(canvas) {
         scrollState.text = finalText;
         scrollState.textWidth = width;
         scrollState.loop = width > VISIBLE_TEXT_WIDTH;
-        scrollState.targetX = Math.floor((DOT_COLS - width) / 2);
+        scrollState.targetX = (DOT_COLS - width) / 2;
         if (scrollState.loop) {
           scrollState.active = true;
         } else {
@@ -253,7 +241,7 @@ export function createDotMatrixRenderer(canvas) {
       // Otherwise render the canonical text for the current status, centered.
       text = getTextForStatus(dmdState.status);
       textWidth = measureTextWidth(text);
-      textX = Math.floor((DOT_COLS - textWidth) / 2);
+      textX = Math.round((DOT_COLS - textWidth) / 2);
     }
 
     drawBitmapText(textMaskCtx, text, textX, TEXT_LINE_Y, { spacing: 1 });
@@ -271,12 +259,12 @@ export function createDotMatrixRenderer(canvas) {
     ctx.drawImage(imageCanvas, 0, 0);
     ctx.globalAlpha = 1;
 
-    if (textWidth > 0) {
-      const textRectY = Math.max(0, TEXT_LINE_Y * dotPitchY - TEXT_BG_PADDING * dotPitchY);
-      const textRectH = Math.min(canvas.height - textRectY, (7 + TEXT_BG_PADDING * 2) * dotPitchY);
-      ctx.fillStyle = `rgba(0, 0, 0, ${TEXT_BG_OPACITY})`;
-      ctx.fillRect(0, textRectY, canvas.width, textRectH);
-    }
+    const textRectX = TEXT_MARGIN * dotPitchX;
+    const textRectY = Math.max(0, TEXT_LINE_Y * dotPitchY - TEXT_BG_PADDING * dotPitchY);
+    const textRectW = Math.min(canvas.width - textRectX * 2, canvas.width);
+    const textRectH = Math.min(canvas.height - textRectY, (7 + TEXT_BG_PADDING * 2) * dotPitchY);
+    ctx.fillStyle = `rgba(0, 0, 0, ${TEXT_BG_OPACITY})`;
+    ctx.fillRect(textRectX, textRectY, textRectW, textRectH);
 
     for (let y = 0; y < DOT_ROWS; y += 1) {
       for (let x = 0; x < DOT_COLS; x += 1) {
@@ -340,18 +328,24 @@ export function createDotMatrixRenderer(canvas) {
       const normalized = normalizeMessage(text);
       dmdState.message = normalized;
 
+      // If we're idle, schedule the normal transition so the message scrolls in.
       if (dmdState.status === "idle") {
         scheduleTextTransition(dmdState.message);
         render();
         return;
       }
 
+      // If the machine is in game_over, show the DMD message immediately and
+      // keep it visible for the GAME_OVER_PAUSE_MS so the client matches server
+      // behavior even if network ordering varies.
       if (dmdState.status === "game_over") {
-        scheduleTextTransition(dmdState.message);
+        resetTextScroll(dmdState.message, { pauseMs: GAME_OVER_PAUSE_MS });
         render();
         return;
       }
 
+      // For other statuses (playing), just update the stored message so it can
+      // be used when returning to idle or for transitions triggered by status.
       render();
     },
 
@@ -376,35 +370,26 @@ export function createDotMatrixRenderer(canvas) {
         return;
       }
 
-      clearGameOverTimeout();
       const currentText = getTextForStatus(currentStatus);
       dmdState.status = nextStatus;
-      if (nextStatus === "playing" && currentStatus !== "playing") {
-        dmdState.score = 0;
-      }
       const nextText = getTextForStatus(nextStatus);
 
       if (nextStatus === "game_over") {
-        const currentWidth = measureTextWidth(currentText);
-        const spacerWidth = measureTextWidth(" ".repeat(TRANSITION_SPACES));
-        const nextWidth = measureTextWidth(nextText);
-        const startX = scrollState.active
-          ? scrollState.offsetX
-          : Math.floor((DOT_COLS - currentWidth) / 2);
-        const targetX = Math.floor((DOT_COLS - nextWidth) / 2) - (currentWidth + spacerWidth);
-        const transitionTime = Math.max(0, startX - targetX) * SCROLL_STEP_MS;
+        if (currentStatus === "playing") {
+          scheduleTextTransition(nextText, currentText);
+        } else {
+          resetTextScroll(nextText, { pauseMs: GAME_OVER_PAUSE_MS });
+        }
+        return;
+      }
 
+      if (nextStatus === "idle" && currentStatus === "game_over") {
         scheduleTextTransition(nextText, currentText);
-        gameOverTimeoutId = setTimeout(() => {
-          if (dmdState.status !== "game_over") return;
-          dmdState.status = "idle";
-          scheduleTextTransition("PRESS START", nextText);
-        }, GAME_OVER_PAUSE_MS + transitionTime);
         return;
       }
 
       if (nextStatus === "idle") {
-        scheduleTextTransition(nextText, currentText);
+        resetTextScroll(nextText);
         return;
       }
 

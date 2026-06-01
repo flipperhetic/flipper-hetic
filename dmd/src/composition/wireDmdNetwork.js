@@ -27,11 +27,13 @@ export function wireDmdNetwork({ refs, renderer }) {
       renderer.updateStatus(data?.status);
       stateStatus.textContent = `state: ${data?.status ?? "idle"}`;
     },
-    onGameStarted() {
+    onGameStarted(data) {
+      renderer.renderScore(data?.score);
       renderer.updateStatus("playing");
       stateStatus.textContent = "state: playing";
     },
-    onGameOver() {
+    onGameOver(data) {
+      renderer.renderScore(data?.score);
       renderer.updateStatus("game_over");
       stateStatus.textContent = "state: game_over";
     },

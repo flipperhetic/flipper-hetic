@@ -77,7 +77,7 @@ const SLIDERS = {
   },
 };
 
-export function createDebugUI(onConfigChange) {
+export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } = {}) {
   const container = document.createElement("div");
   container.id = "debug-panel";
   container.style.cssText = `
@@ -429,6 +429,55 @@ export function createDebugUI(onConfigChange) {
     callConfigChange(state);
   });
   buttonsDiv.appendChild(resetAllBtn);
+
+  if (typeof onResetHighScore === "function" || typeof onResetBall === "function") {
+    const debugActions = document.createElement("div");
+    debugActions.style.cssText = "margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap;";
+
+    if (typeof onResetHighScore === "function") {
+      const resetHighscoreBtn = document.createElement("button");
+      resetHighscoreBtn.textContent = "Reset Highscore";
+      resetHighscoreBtn.style.cssText = `
+        flex: 1 1 160px;
+        padding: 8px;
+        background: #ff0;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      `;
+      resetHighscoreBtn.addEventListener("click", () => {
+        onResetHighScore();
+        resetHighscoreBtn.textContent = "Reset!";
+        setTimeout(() => (resetHighscoreBtn.textContent = "Reset Highscore"), 1200);
+      });
+      debugActions.appendChild(resetHighscoreBtn);
+    }
+
+    if (typeof onResetBall === "function") {
+      const resetBallBtn = document.createElement("button");
+      resetBallBtn.textContent = "Reset Ball";
+      resetBallBtn.style.cssText = `
+        flex: 1 1 160px;
+        padding: 8px;
+        background: #ff0;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      `;
+      resetBallBtn.addEventListener("click", () => {
+        onResetBall();
+        resetBallBtn.textContent = "Reset!";
+        setTimeout(() => (resetBallBtn.textContent = "Reset Ball"), 1200);
+      });
+      debugActions.appendChild(resetBallBtn);
+    }
+
+    container.appendChild(debugActions);
+  }
 
   container.appendChild(buttonsDiv);
 

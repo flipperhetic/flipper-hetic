@@ -35,12 +35,12 @@ export function initNetwork(callbacks = {}) {
     callbacks.onStateUpdated?.(data);
   });
 
-  socket.on(SERVER_EVENTS.GAME_STARTED, () => {
-    callbacks.onGameStarted?.();
+  socket.on(SERVER_EVENTS.GAME_STARTED, (payload) => {
+    callbacks.onGameStarted?.(payload);
   });
 
-  socket.on(SERVER_EVENTS.GAME_OVER, () => {
-    callbacks.onGameOver?.();
+  socket.on(SERVER_EVENTS.GAME_OVER, (payload) => {
+    callbacks.onGameOver?.(payload);
   });
 
   return socket;

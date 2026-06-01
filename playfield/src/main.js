@@ -21,6 +21,7 @@ import {
   emitFlipperRightUp,
   emitCollision,
   emitBallLost,
+  emitResetHighScore,
   gameState,
 } from "./adapters/network.js";
 import { createCollisionHandler } from "./usecases/collisionHandler.js";
@@ -61,11 +62,33 @@ const viewRuntime = createPlayfieldViewRuntime({
 
 window.addEventListener("resize", viewRuntime.onResize);
 
-wirePlayfieldDebug({ viewRuntime, camera, renderer, scene, levelGroup, world, dirLight, audio });
+let socket;
+
+const readyDebug = () => {
+  wirePlayfieldDebug({
+    viewRuntime,
+    camera,
+    renderer,
+    scene,
+    levelGroup,
+    world,
+    dirLight,
+    audio,
+    onResetHighScore: () => {
+      if (socket) {
+        emitResetHighScore(socket);
+      }
+    },
+    onResetBall: () => {
+      resetBallBody(level.ballBody);
+      openLaunchGate(level.launchGateBody);
+    },
+  });
+};
 
 let pendingLaunchAfterStart = false;
 
-const socket = initNetwork({
+socket = initNetwork({
   onGameStarted() {
     resetBallBody(level.ballBody);
     openLaunchGate(level.launchGateBody);
@@ -92,6 +115,8 @@ const socket = initNetwork({
     console.log("[main] game over — score final :", data.score);
   },
 });
+
+readyDebug();
 
 const collisionHandler = createCollisionHandler({
   onCollision: (type) => {

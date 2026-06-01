@@ -13,6 +13,7 @@ export const CLIENT_EVENTS = {
   FLIPPER_RIGHT_UP: "flipper_right_up",
   BALL_LOST: "ball_lost",
   COLLISION: "collision",
+  RESET_HIGHSCORE: "reset_highscore",
 };
 
 /** Serveur -> Clients */

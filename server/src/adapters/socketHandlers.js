@@ -8,9 +8,11 @@ import { startGame } from "../usecases/startGame.js";
 import { loseBall } from "../usecases/loseBall.js";
 import { applyCollision } from "../usecases/applyCollision.js";
 import fs from "fs/promises";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
-const HIGHSCORE_FILE = join(process.cwd(), "server", "highscore.json");
+const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const HIGHSCORE_FILE = join(ROOT_DIR, "highscore.json");
 
 async function loadSavedHighScore() {
   try {
@@ -24,8 +26,9 @@ async function loadSavedHighScore() {
 
 async function saveHighScore(hs) {
   try {
-    await fs.mkdir(join(process.cwd(), "server"), { recursive: true });
+    await fs.mkdir(ROOT_DIR, { recursive: true });
     await fs.writeFile(HIGHSCORE_FILE, JSON.stringify({ highScore: hs }), "utf-8");
+    console.log("[highscore] saved", hs, "->", HIGHSCORE_FILE);
   } catch (e) {
     console.warn("failed to save highscore", e);
   }
@@ -38,7 +41,7 @@ let lastDmdMessage = null;
 let gameOverTimeoutId = null;
 let highScoreBeatAnnounced = false;
 let highScoreBeatAnnouncedTime = 0;
-const GAME_OVER_BLOCK_MS = 5000;
+const GAME_OVER_BLOCK_MS = 6200;
 const HIGHSCORE_ANIMATION_MS = 3500;
 
 /**
@@ -51,11 +54,13 @@ export function resetState() {
 }
 
 function emitState(io) {
+  console.log("[socket] emit STATE_UPDATED -> clients", state.highScore);
   io.emit(SERVER_EVENTS.STATE_UPDATED, state.toJSON());
 }
 
 function emitDmd(io, text) {
   lastDmdMessage = text;
+  console.log("[socket] emit DMD_MESSAGE ->", text);
   io.emit(SERVER_EVENTS.DMD_MESSAGE, { text });
 }
 
@@ -89,6 +94,7 @@ function scheduleGameOverUnlock(io) {
  */
 export function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
+    console.log("[socket] client connected", socket.id);
     socket.emit(SERVER_EVENTS.STATE_UPDATED, state.toJSON());
     if (lastDmdMessage) {
       socket.emit(SERVER_EVENTS.DMD_MESSAGE, { text: lastDmdMessage });
@@ -177,6 +183,13 @@ export function registerSocketHandlers(io) {
           io.emit(SERVER_EVENTS.HIGH_SCORE_BEAT, { score: state.score, highScore: state.highScore });
         }
       }
+    });
+
+    socket.on(CLIENT_EVENTS.RESET_HIGHSCORE, () => {
+      console.log("[socket] received RESET_HIGHSCORE from", socket.id);
+      state.highScore = 0;
+      saveHighScore(0).catch(() => {});
+      emitState(io);
     });
   });
 }

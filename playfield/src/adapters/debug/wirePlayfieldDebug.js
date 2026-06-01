@@ -23,7 +23,7 @@ export function wirePlayfieldDebug(deps) {
     return;
   }
 
-  const { viewRuntime, audio } = deps;
+  const { viewRuntime, audio, onResetHighScore, onResetBall } = deps;
 
   const onConfigChange = (config) => {
     // Update viewRuntime.params and apply all changes at once
@@ -32,8 +32,8 @@ export function wirePlayfieldDebug(deps) {
     console.log("[debug] config applied", config);
   };
 
-  // Create UI with config change handler
-  createDebugUI(onConfigChange);
+  // Create UI with config change handler and debug actions
+  createDebugUI({ onConfigChange, onResetHighScore, onResetBall });
   if (audio) {
     createAudioDebugUI(audio);
   }

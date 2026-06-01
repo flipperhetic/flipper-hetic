@@ -14,11 +14,17 @@ const SERVER_URL = "http://localhost:3000";
 export function initNetwork(callbacks = {}) {
   const socket = io(SERVER_URL);
 
+  socket.on("connect", () => {
+    console.log("[backglass-network] connected", socket.id);
+  });
+
   socket.on(SERVER_EVENTS.STATE_UPDATED, (data) => {
+    console.log("[backglass-network] STATE_UPDATED", data.highScore);
     callbacks.onStateUpdated?.(data);
   });
 
   socket.on(SERVER_EVENTS.HIGH_SCORE_BEAT, (data) => {
+    console.log("[backglass-network] HIGH_SCORE_BEAT", data);
     callbacks.onHighScoreBeat?.(data);
   });
 

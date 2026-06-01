@@ -62,6 +62,15 @@ export function initNetwork(callbacks = {}) {
     console.log("[network] DMD :", data.text);
   });
 
+  // Debug: log outgoing reset emits
+  const origEmit = socket.emit.bind(socket);
+  socket.emit = (ev, payload) => {
+    try {
+      console.log("[network] emit ->", ev, payload ?? "(no payload)");
+    } catch (e) { /* ignore logging errors */ }
+    return origEmit(ev, payload);
+  };
+
   return socket;
 }
 
@@ -93,6 +102,10 @@ export function emitFlipperRightUp(socket) {
 
 export function emitBallLost(socket) {
   socket.emit(CLIENT_EVENTS.BALL_LOST);
+}
+
+export function emitResetHighScore(socket) {
+  socket.emit(CLIENT_EVENTS.RESET_HIGHSCORE);
 }
 
 export function emitCollision(socket, type) {
