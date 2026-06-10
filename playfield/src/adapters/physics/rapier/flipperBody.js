@@ -12,6 +12,7 @@ import {
   FLIPPER_PIVOT_X,
   FLIPPER_PIVOT_Z,
   FLIPPER_PIVOT_Y,
+  FLIPPER_OFFSET_X,
   FLIPPER_ROT_X,
   FLIPPER_ROT_Z,
   FLIPPER_SPEED,
@@ -55,7 +56,7 @@ function qTiltFrom(rotX, rotZ) {
 function createOneFlipperBody(world, side) {
   const RAPIER = getRapier();
   const isLeft = side === "left";
-  const pivotX = isLeft ? -FLIPPER_PIVOT_X : FLIPPER_PIVOT_X;
+  const pivotX = (isLeft ? -FLIPPER_PIVOT_X : FLIPPER_PIVOT_X) + FLIPPER_OFFSET_X;
   const shapeOffsetX = isLeft ? FLIPPER_LENGTH / 2 : -FLIPPER_LENGTH / 2;
 
   // Note Rapier : pour un kinematicVelocityBased, l'angvel applique un spin
@@ -142,4 +143,26 @@ export function updateFlippers(flippers) {
 export function postStepFlippers(flippers) {
   postStepFlipper(flippers.left);
   postStepFlipper(flippers.right);
+}
+
+// Rotates both flipper bodies around world Y by thetaRad, preserving relative rest/active angles.
+export function setFlippersWorldRotY(flippers, thetaRad) {
+  const cos = Math.cos(thetaRad);
+  const sin = Math.sin(thetaRad);
+  for (const [side, flipper] of Object.entries(flippers)) {
+    const isLeft = side === 'left';
+    const origX = (isLeft ? -FLIPPER_PIVOT_X : FLIPPER_PIVOT_X) + FLIPPER_OFFSET_X;
+    flipper.body.rb.setTranslation({
+      x: origX * cos - FLIPPER_PIVOT_Z * sin,
+      y: FLIPPER_PIVOT_Y,
+      z: origX * sin + FLIPPER_PIVOT_Z * cos,
+    }, true);
+    const origRest   = isLeft ? -FLIPPER_REST_ANGLE :  FLIPPER_REST_ANGLE;
+    const origActive = isLeft ?  FLIPPER_REST_ANGLE : -FLIPPER_REST_ANGLE;
+    flipper.restAngle    = origRest   + thetaRad;
+    flipper.activeAngle  = origActive + thetaRad;
+    flipper.currentAngle = flipper.restAngle;
+    flipper.body.rb.setRotation(composeFlipperRot(flipper.restAngle, flipper.rotX, flipper.rotZ), true);
+    flipper.body.rb.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  }
 }

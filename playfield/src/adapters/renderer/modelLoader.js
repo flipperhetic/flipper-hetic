@@ -3,12 +3,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // Tune via PFD debug panel → GLB Visual section → Copy JSON to persist values here.
 export const GLB_SCALE = 2.85;
 export const GLB_SCALE_X = 3;
-export const GLB_ROTATION_X = 0;
+export const GLB_ROTATION_X = 1;
 export const GLB_ROTATION_Y = -90;
-export const GLB_ROTATION_Z = 0;
-export const GLB_POSITION_X = 0.35;
-export const GLB_POSITION_Y = -6;
-export const GLB_POSITION_Z = 5.5;
+export const GLB_ROTATION_Z = 16;
+export const GLB_POSITION_X = -0.25;
+export const GLB_POSITION_Y = -6.5;
+export const GLB_POSITION_Z = 2.45;
 
 const DEG = Math.PI / 180;
 

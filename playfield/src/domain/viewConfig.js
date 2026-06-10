@@ -19,7 +19,7 @@ export const PLAYFIELD_VIEW_DEFAULTS = {
   levelRotX: 0,
   levelRotY: 0,
   levelRotZ: 0,
-  gravityTiltDeg: 0,
+  gravityTiltDeg: 8,
   gravityMagnitude: 18,
   ambientIntensity: 0.6,
   dirLightX: 5,

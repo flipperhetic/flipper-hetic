@@ -98,6 +98,7 @@ export function createPlayfieldViewRuntime(deps, params = PLAYFIELD_VIEW_DEFAULT
   return {
     params,
     getCamera: () => activeCamera,
+    orthoCamera,
     apply,
     onResize,
   };

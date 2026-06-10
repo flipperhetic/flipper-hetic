@@ -34,11 +34,11 @@ export {
   setFlipperActive,
   updateFlippers,
   postStepFlippers,
+  setFlippersWorldRotY,
 } from "./flipperBody.js";
 
+export { createArchBody, createTriangleBody } from "./archBody.js";
 export { createBumperBodies } from "./bumperBody.js";
-export { createSlingshotBodies } from "./slingshotBody.js";
-export { createCornerDeflectorBodies } from "./cornerDeflectorBody.js";
 export {
   createLaunchGateBody,
   openLaunchGate,
