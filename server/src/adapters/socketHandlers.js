@@ -137,6 +137,9 @@ export function registerSocketHandlers(io) {
     socket.on(CLIENT_EVENTS.COLLISION, (payload) => {
       const type = payload && typeof payload.type === "string" ? payload.type : null;
       if (!type) return;
+      if (type === 'tunnel' || type === 'tunnel-rv') {
+        io.emit(SERVER_EVENTS.SPECIAL_EVENT, { event: type });
+      }
       const result = applyCollision(state, type);
       if (result.changed) {
         emitState(io);

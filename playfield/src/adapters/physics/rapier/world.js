@@ -105,6 +105,20 @@ export function createStaticBoxBody(world, { width, height, depth, position, mat
   });
 }
 
+export function createSensorBoxBody(world, { width, height, depth, position, rotation, type = "sensor" }) {
+  const RAPIER = getRapier();
+  const bodyDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y, position.z);
+  if (rotation) bodyDesc.setRotation(rotation);
+  const rb = world.createRigidBody(bodyDesc);
+  const collider = world.createCollider(
+    RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2)
+      .setSensor(true)
+      .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS),
+    rb,
+  );
+  return createBodyHandle(rb, world, { userData: { type }, colliders: [collider] });
+}
+
 export function syncMeshesWithBodies(pairs) {
   for (const { mesh, body } of pairs) {
     const t = body.rb.translation();

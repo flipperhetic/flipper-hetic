@@ -28,5 +28,10 @@ export function initNetwork(callbacks = {}) {
     callbacks.onHighScoreBeat?.(data);
   });
 
+  socket.on(SERVER_EVENTS.SPECIAL_EVENT, (data) => {
+    console.log("[backglass-network] SPECIAL_EVENT", data);
+    callbacks.onSpecialEvent?.(data);
+  });
+
   return socket;
 }

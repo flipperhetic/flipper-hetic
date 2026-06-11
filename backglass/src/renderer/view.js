@@ -2,9 +2,11 @@
  * Backglass — Mise à jour de la vue à partir de l'état serveur.
  */
 
-/**
- * @param {{ scoreValue: HTMLElement; ballsLeftValue: HTMLElement; highscoreValue: HTMLElement; highscorePopup: HTMLElement }} refs
- */
+const VIDEO_BY_EVENT = {
+  'tunnel':    '/assets/video/tight-tight-tight.mov',
+  'tunnel-rv': '/assets/video/own-private-domicile-video.mp4.mov',
+};
+
 export function createBackglassView(refs) {
   const { scoreValue, ballsLeftValue, highscoreValue } = refs;
   let highscoreBeatAnimationEndTime = 0;
@@ -29,6 +31,22 @@ export function createBackglassView(refs) {
     },
     isHighScoreAnimationBlocking() {
       return performance.now() < highscoreBeatAnimationEndTime;
+    },
+    showVideoPopup(eventType) {
+      const popup = refs.videoPopup;
+      const video = refs.specialEventVideo;
+      if (!popup || !video) return;
+      const src = VIDEO_BY_EVENT[eventType];
+      if (!src) return;
+      video.src = src;
+      popup.setAttribute("aria-hidden", "false");
+      popup.classList.add("visible");
+      video.play().catch(() => {});
+      video.onended = () => {
+        popup.classList.remove("visible");
+        popup.setAttribute("aria-hidden", "true");
+        video.src = "";
+      };
     },
   };
 }

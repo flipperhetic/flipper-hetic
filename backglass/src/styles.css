@@ -90,6 +90,31 @@ body {
   line-height: 0.9;
 }
 
+.video-popup {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.video-popup.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-popup__video {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+
 .highscore-popup {
   position: absolute;
   left: 50%;

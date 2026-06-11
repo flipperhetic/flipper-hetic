@@ -30,10 +30,10 @@ export function createBallBody(world) {
     .setRestitution(MATERIALS.ball.restitution)
     .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
 
-  world.createCollider(colliderDesc, rb);
+  const collider = world.createCollider(colliderDesc, rb);
 
   // `launched` est porte par le body lui-meme (pas de global module).
-  const handle = createBodyHandle(rb, world, { userData: { type: "ball", launched: false } });
+  const handle = createBodyHandle(rb, world, { userData: { type: "ball", launched: false }, colliders: [collider] });
   resetBallBody(handle);
   return handle;
 }
@@ -74,8 +74,9 @@ export function launchBallBody(body) {
     body.rb.recomputeMassPropertiesFromColliders();
   }
   body.rb.wakeUp();
-  // x: -2 curves ball from launch lane toward flipper zone on return (replaces a static guide rail)
-  body.rb.setLinvel({ x: -2, y: 0, z: -PLUNGER_IMPULSE_FORCE }, true);
+  const zForce = 32 + Math.random() * 12; // 32–44, toujours assez fort pour sortir du tunnel
+  const xForce = 1 + Math.random() * 2;   // 1–3, courbe variable vers la zone flippers
+  body.rb.setLinvel({ x: -xForce, y: 0, z: -zForce }, true);
   body.userData.launched = true;
   return true;
 }

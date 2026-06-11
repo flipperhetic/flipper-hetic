@@ -26,6 +26,9 @@ export function mountBackglassRoot() {
       </div>
       <div id="highscore-popup" class="highscore-popup" aria-hidden="true">New Highest score !</div>
     </div>
+    <div id="video-popup" class="video-popup" aria-hidden="true">
+      <video id="special-event-video" class="video-popup__video" playsinline></video>
+    </div>
   `;
 
   document.body.append(app);
@@ -35,5 +38,7 @@ export function mountBackglassRoot() {
     ballsLeftValue: document.getElementById("ballsLeftValue"),
     highscoreValue: document.getElementById("highscoreValue"),
     highscorePopup: document.getElementById("highscore-popup"),
+    videoPopup: document.getElementById("video-popup"),
+    specialEventVideo: document.getElementById("special-event-video"),
   };
 }

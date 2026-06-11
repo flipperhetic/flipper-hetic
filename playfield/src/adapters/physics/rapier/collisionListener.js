@@ -12,12 +12,12 @@ import { bodyHandlesByRapierHandle } from "./bodyHandle.js";
 
 export function attachCollisionListener(ballBody, handler) {
   const world = ballBody.world;
-  const ballRapierHandle = ballBody.rb.handle;
+  const ballColliderHandle = ballBody.colliders[0].handle;
 
   world.addCollisionListener((h1, h2) => {
     let otherHandle = null;
-    if (h1 === ballRapierHandle) otherHandle = h2;
-    else if (h2 === ballRapierHandle) otherHandle = h1;
+    if (h1 === ballColliderHandle) otherHandle = h2;
+    else if (h2 === ballColliderHandle) otherHandle = h1;
     else return;
 
     // h1/h2 sont des collider handles ; on remonte au rigid body parent.

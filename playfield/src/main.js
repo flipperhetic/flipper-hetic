@@ -118,11 +118,26 @@ socket = initNetwork({
 
 readyDebug();
 
+const BUMPER_SERVER_TYPE = {
+  'bumper-cyl-0':   'bumper_100',
+  'bumper-cyl-1':   'bumper_50',
+  'bumper-cyl-2':   'bumper_25',
+  'bumper-diamond':   'bumper_10',
+  'bumper-diamond-2': 'bumper_10',
+  'bumper-tri-left':  'bumper_10',
+  'bumper-tri-right': 'bumper_10',
+};
+
 const collisionHandler = createCollisionHandler({
   onCollision: (type) => {
-    emitCollision(socket, type);
-    if (type === "bumper") actuators.onBumperHit();
+    const serverType = type.startsWith("bumper")
+      ? (BUMPER_SERVER_TYPE[type] ?? "bumper")
+      : type;
+    emitCollision(socket, serverType);
+    if (type.startsWith("bumper")) actuators.onBumperHit();
     else if (type === "slingshot") actuators.onSlingshotHit();
+    else if (type === "tunnel") audio?.play('milestone-2');
+    else if (type === "tunnel-rv") audio?.play('milestone-1');
   },
   onBallLost: () => {
     emitBallLost(socket);

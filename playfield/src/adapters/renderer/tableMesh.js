@@ -119,7 +119,7 @@ export function createTableMeshes(scene) {
     triGeo,
     new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
   );
-  triMesh.position.set(2.8, 3.4, -2);
+  triMesh.position.set(2.8, 0, -2);
   triMesh.rotation.y = 89 * (Math.PI / 180);
   scene.add(triMesh);
   meshes.push(triMesh); // index 10
@@ -135,6 +135,90 @@ export function createTableMeshes(scene) {
 
   // Slingshot droit diagonal
   addWall(WALL_THICKNESS, WALL_HEIGHT, 3, 1.5, WALL_HEIGHT / 2, 3.5);
+
+  // Buste — guide épaule gauche (index 15)
+  addWall(0.25, 0.7, 2.05, -1.1, 0.3, -5.15);
+
+  // Buste — guide 2 (index 16)
+  addWall(0.2, 1.55, 0.95, -1.95, 0.75, -4.6);
+
+  // Bumpers cylindriques (indices 17-19)
+  const cylDefs = [
+    { x: 1.7,  y: 0.65, z: -3.2,  r: 0.4, h: 1.3 },
+    { x: 0.3,  y: 0.65, z: -2.7,  r: 0.4, h: 1.3 },
+    { x: 0.75, y: 0.65, z: -1.2,  r: 0.4, h: 1.3 },
+  ];
+  const cylMat = new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.5, wireframe: true });
+  for (const { x, y, z, r, h } of cylDefs) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 24), cylMat);
+    m.position.set(x, y, z);
+    scene.add(m);
+    meshes.push(m);
+  }
+
+  // Diamond bumper (index 20) — géométrie mise à jour par buildLevel
+  const diamondMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(diamondMesh);
+  meshes.push(diamondMesh);
+
+  // RV Rectangle (index 21) — géométrie mise à jour par buildLevel
+  const rvRectMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(rvRectMesh);
+  meshes.push(rvRectMesh);
+
+  // RV Triangle (index 22) — géométrie mise à jour par buildLevel
+  const rvTriMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(rvTriMesh);
+  meshes.push(rvTriMesh);
+
+  // Diamond Bumper 2 (index 23) — géométrie mise à jour par buildLevel
+  const diamond2Mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(diamond2Mesh);
+  meshes.push(diamond2Mesh);
+
+  // Left Triangle (index 24) — géométrie mise à jour par buildLevel
+  const triLeftMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(triLeftMesh);
+  meshes.push(triLeftMesh);
+
+  // Right Triangle (index 25) — géométrie mise à jour par buildLevel
+  const triRightMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.6 }),
+  );
+  scene.add(triRightMesh);
+  meshes.push(triRightMesh);
+
+  // Tuco sensor zone (index 26) — vert opaque, mis à jour par buildLevel
+  const tucoSensorMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x00ff00, transparent: true, opacity: 0.45 }),
+  );
+  scene.add(tucoSensorMesh);
+  meshes.push(tucoSensorMesh);
+
+  // RV sensor zone (index 27) — vert opaque, mis à jour par buildLevel
+  const rvSensorMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x00ff00, transparent: true, opacity: 0.45 }),
+  );
+  scene.add(rvSensorMesh);
+  meshes.push(rvSensorMesh);
 
   return meshes;
 }

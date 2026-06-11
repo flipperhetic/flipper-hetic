@@ -60,14 +60,75 @@ export function createArchBody(world, {
   return createBodyHandle(rb, world, { userData: { type: 'arch' }, colliders });
 }
 
-export function createTriangleBody(world, {
-  base  = 4,
-  triH  = 4,
-  wallH = 1,
-  x     = 3,
+export function createCylinderBody(world, {
+  radius = 0.5,
+  height = 1,
+  x      = 0,
+  y      = 0,
+  z      = 0,
+  rotY   = 0,
+  type   = 'bumper',
+} = {}) {
+  const RAPIER = getRapier();
+  const h = rotY / 2;
+  const rb = world.createRigidBody(
+    RAPIER.RigidBodyDesc.fixed()
+      .setTranslation(x, y, z)
+      .setRotation({ x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }),
+  );
+  const col = RAPIER.ColliderDesc
+    .cylinder(height / 2, radius)
+    .setFriction(0.15)
+    .setRestitution(0.6)
+    .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+  return createBodyHandle(rb, world, { userData: { type }, colliders: [world.createCollider(col, rb)] });
+}
+
+export function createDiamondBody(world, {
+  base  = 2,
+  triH  = 1.5,
+  wallH = 0.9,
+  x     = 0,
   y     = 0,
   z     = 0,
   rotY  = 0,
+  type  = 'bumper-diamond',
+} = {}) {
+  const RAPIER = getRapier();
+  const h = rotY / 2;
+  const rb = world.createRigidBody(
+    RAPIER.RigidBodyDesc.fixed()
+      .setTranslation(x, y, z)
+      .setRotation({ x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }),
+  );
+  const pts = new Float32Array([
+    -base / 2, 0,      0,
+     base / 2, 0,      0,
+     0,        0,      triH / 2,
+     0,        0,     -triH / 2,
+    -base / 2, wallH,  0,
+     base / 2, wallH,  0,
+     0,        wallH,  triH / 2,
+     0,        wallH, -triH / 2,
+  ]);
+  const col = RAPIER.ColliderDesc
+    .convexHull(pts)
+    .setFriction(0.15)
+    .setRestitution(0.6)
+    .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+  return createBodyHandle(rb, world, { userData: { type }, colliders: [world.createCollider(col, rb)] });
+}
+
+export function createTriangleBody(world, {
+  base        = 4,
+  triH        = 4,
+  wallH       = 1,
+  x           = 3,
+  y           = 0,
+  z           = 0,
+  rotY        = 0,
+  type        = 'triangle',
+  restitution = 0.35,
 } = {}) {
   const RAPIER = getRapier();
   const h = rotY / 2;
@@ -87,7 +148,7 @@ export function createTriangleBody(world, {
   const col = RAPIER.ColliderDesc
     .convexHull(pts)
     .setFriction(0.15)
-    .setRestitution(0.35)
+    .setRestitution(restitution)
     .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
-  return createBodyHandle(rb, world, { userData: { type: 'triangle' }, colliders: [world.createCollider(col, rb)] });
+  return createBodyHandle(rb, world, { userData: { type }, colliders: [world.createCollider(col, rb)] });
 }

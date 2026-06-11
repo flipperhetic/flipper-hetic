@@ -42,7 +42,12 @@ export function wirePlayfieldDebug(deps) {
       physicsRotateY:         level.physicsRotateY,
       setPhysicsDebugVisible: level.setPhysicsDebugVisible,
     });
-    createPhysicsDebugUI();
+    createPhysicsDebugUI({
+      setTucoSensor:         level.setTucoSensor,
+      tucoSensorDebugConfig: level.tucoSensorDebugConfig,
+      setRvSensor:           level.setRvSensor,
+      rvSensorDebugConfig:   level.rvSensorDebugConfig,
+    });
   }
 
   console.log("[debug] menu initialized — press ` to toggle");

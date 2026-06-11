@@ -55,7 +55,7 @@ export function createCollisionHandler(callbacks) {
       if (!type || IGNORED_TYPES.has(type)) return false;
       if (!canEmit(type, now)) return false;
       callbacks.onCollision(type);
-      if (type === "bumper") emitBumperImpulse(ctx.ballPos, ctx.otherPos);
+      if (type.startsWith("bumper")) emitBumperImpulse(ctx.ballPos, ctx.otherPos);
       return true;
     },
 
