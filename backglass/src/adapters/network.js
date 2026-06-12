@@ -16,6 +16,15 @@ export function initNetwork(callbacks = {}) {
 
   socket.on("connect", () => {
     console.log("[backglass-network] connected", socket.id);
+    callbacks.onConnect?.();
+  });
+
+  socket.on("disconnect", () => {
+    callbacks.onConnectionError?.();
+  });
+
+  socket.on("connect_error", () => {
+    callbacks.onConnectionError?.();
   });
 
   socket.on(SERVER_EVENTS.STATE_UPDATED, (data) => {

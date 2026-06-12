@@ -1,17 +1,13 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { DEBUG_ENABLED } from "./config.js";
 import { createDebugUI } from "./ui.js";
 import { createAudioDebugUI } from "./audioDebug.js";
 import { createPlayfieldDebugUI } from "./playfieldDebug.js";
 import { createPhysicsDebugUI } from "./physicsDebug.js";
 
 export function wirePlayfieldDebug(deps) {
-  if (!DEBUG_ENABLED) {
-    console.log("[debug] disabled via config");
-    return;
-  }
-
   const { viewRuntime, renderer, audio, onResetHighScore, onResetBall, level } = deps;
+
+  if (level) level.setPhysicsDebugVisible(true);
 
   const onConfigChange = (config) => {
     Object.assign(viewRuntime.params, config);

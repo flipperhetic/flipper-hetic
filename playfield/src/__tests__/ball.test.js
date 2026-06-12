@@ -108,9 +108,8 @@ describe("resetBallBody", () => {
     body.rb.setTranslation.mockClear();
     resetBallBody(body);
 
-    // PLUNGER_SPAWN_X = 0, PLUNGER_SPAWN_Y = 0.26, PLUNGER_SPAWN_Z = 8.5
     expect(body.rb.setTranslation).toHaveBeenCalledWith(
-      { x: 0, y: 0.26, z: 8.5 },
+      { x: 4.2, y: 0.26, z: 6.05 },
       true,
     );
   });
@@ -146,7 +145,7 @@ describe("launchBallBody", () => {
     expect(body.rb.setBodyType).toHaveBeenCalledWith(0, true);
     // Le dernier setLinvel doit etre l'impulsion plunger (z negatif).
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
-    expect(lastV.x).toBe(0);
+    expect(lastV.x).toBeLessThan(0);
     expect(lastV.y).toBe(0);
     expect(lastV.z).toBeLessThan(0);
   });
@@ -189,13 +188,13 @@ describe("clampBallBody", () => {
 
   it("plafonne la vitesse quand elle depasse le max", () => {
     const body = makeTestBody();
-    body.rb._state.linvel = { x: 20, y: 0, z: 20 };
+    body.rb._state.linvel = { x: 35, y: 0, z: 35 };
 
     clampBallBody(body);
 
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
     const speed = Math.sqrt(lastV.x ** 2 + lastV.z ** 2);
-    expect(speed).toBeCloseTo(25, 1);
+    expect(speed).toBeCloseTo(45, 1);
   });
 
   it("ne modifie pas la vitesse XZ quand elle est sous le max", () => {

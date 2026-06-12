@@ -6,32 +6,42 @@ Ce document centralise les noms d'événements Socket.IO et les payloads attendu
 
 ## CLIENT_EVENTS (client -> serveur)
 
-- `start_game`
-- `launch_ball`
-- `flipper_left_down`
-- `flipper_left_up`
-- `flipper_right_down`
-- `flipper_right_up`
-- `ball_lost`
-- `collision`
+| Evenement | Payload | Description |
+|---|---|---|
+| `start_game` | — | Demarre ou redemarre une partie |
+| `launch_ball` | — | Lance la bille depuis le tunnel |
+| `flipper_left_down` | optionnel | Relay aux autres clients |
+| `flipper_left_up` | optionnel | Relay aux autres clients |
+| `flipper_right_down` | optionnel | Relay aux autres clients |
+| `flipper_right_up` | optionnel | Relay aux autres clients |
+| `ball_lost` | — | Bille passee dans le drain |
+| `collision` | `{ "type": string }` | Collision detectee (voir types ci-dessous) |
+| `reset_highscore` | — | Remet le meilleur score a zero (debug) |
 
-### Payloads client
+### Types de collision et scoring
 
-- `start_game`: pas de payload
-- `launch_ball`: pas de payload
-- `flipper_left_down`: payload optionnel (relay tel quel aux autres clients)
-- `flipper_left_up`: payload optionnel (relay tel quel aux autres clients)
-- `flipper_right_down`: payload optionnel (relay tel quel aux autres clients)
-- `flipper_right_up`: payload optionnel (relay tel quel aux autres clients)
-- `ball_lost`: pas de payload
-- `collision`: payload obligatoire `{ "type": "bumper" | "wall" | "flipper" | "drain" }`
+| `type` | Points | Description |
+|---|---|---|
+| `bumper_100` | +100 | Bumper principal (cylindre rouge) |
+| `bumper_50` | +50 | Bumper secondaire |
+| `bumper_25` | +25 | Bumper périphérique |
+| `bumper_10` | +10 | Bumper faible (diamant, triangle) |
+| `tunnel` | +1000 | Zone spéciale Tuco (déclenche `special_event`) |
+| `tunnel-rv` | +5000 | Zone spéciale RV (déclenche `special_event`) |
+| `wall` | +0 | Mur (valide, sans points) |
+| `flipper` | +0 | Flipper (valide, sans points) |
+| `drain` | +0 | Drain (valide, sans points) |
 
 ## SERVER_EVENTS (serveur -> clients)
 
-- `state_updated`
-- `game_started`
-- `game_over`
-- `dmd_message`
+| Evenement | Description |
+|---|---|
+| `state_updated` | Etat complet de la partie |
+| `game_started` | Partie demarree (contient l'etat initial) |
+| `game_over` | Fin de partie (contient l'etat final) |
+| `dmd_message` | Message a afficher sur le DMD |
+| `special_event` | Evenement special declenche (tunnel Tuco ou RV) |
+| `highscore_beat` | Nouveau meilleur score atteint pendant la partie |
 
 ## Objet d'etat (`state_updated`)
 
@@ -45,6 +55,7 @@ Forme de l'objet:
 {
   "status": "idle | playing | game_over",
   "score": 0,
+  "highScore": 0,
   "ballsLeft": 3,
   "currentBall": 1,
   "lastEvent": "string | null"
@@ -53,27 +64,43 @@ Forme de l'objet:
 
 Notes:
 - `lastEvent` peut valoir par exemple: `start_game`, `launch_ball`, `ball_lost`, `collision:bumper`.
-- En cas de collision, seul `type: "bumper"` ajoute des points (`+100` en MVP).
+- `highScore` est persistant sur disque entre les parties.
 
-## Exemples JSON demandes
+## Exemples JSON
 
 ### `collision` (client -> serveur)
 
 ```json
-{
-  "type": "bumper"
-}
+{ "type": "bumper_100" }
 ```
 
 ### `dmd_message` (serveur -> clients)
 
 ```json
-{
-  "text": "BALL 1"
-}
+{ "text": "BALL 1" }
 ```
 
-Autres valeurs observees en MVP: `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`.
+Valeurs possibles: `"BALL 1"`, `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`, `"PRESS START"`.
+
+### `special_event` (serveur -> clients)
+
+Emis par le serveur quand `collision` recoit `type: "tunnel"` ou `type: "tunnel-rv"`.
+
+```json
+{ "event": "tunnel" }
+```
+
+```json
+{ "event": "tunnel-rv" }
+```
+
+### `highscore_beat` (serveur -> clients)
+
+Emis une seule fois par partie quand le score depasse le meilleur score.
+
+```json
+{ "score": 5100, "highScore": 5100 }
+```
 
 ### `game_started` (serveur -> clients)
 
@@ -81,6 +108,7 @@ Autres valeurs observees en MVP: `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`.
 {
   "status": "playing",
   "score": 0,
+  "highScore": 0,
   "ballsLeft": 3,
   "currentBall": 1
 }
@@ -92,21 +120,24 @@ Autres valeurs observees en MVP: `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`.
 {
   "status": "game_over",
   "score": 200,
+  "highScore": 200,
   "ballsLeft": 0,
   "currentBall": 4
 }
 ```
 
-## Comportement important (MVP)
+## Comportement important
 
 - Si `start_game` est envoye alors que `status === "playing"`, le serveur ignore.
-- Si `collision` a un `type` invalide, le serveur ignore.
+- Si `collision` a un `type` invalide ou inconnu, le serveur ignore.
 - Si `ball_lost` est envoye hors partie (`status !== "playing"`), le serveur ignore.
-- Les events flippers (`flipper_*`) sont relays en broadcast aux autres clients.
+- Les events flippers (`flipper_*`) sont relays en broadcast aux autres clients (pas d'emetteur).
+- `highscore_beat` n'est emis qu'une seule fois par partie, meme si le score continue de monter.
+- Apres `game_over`, le serveur repasse automatiquement en `idle` apres ~6 secondes (si le joueur ne relance pas de partie).
 
 ## Couche d'input Playfield (clavier / futur IoT)
 
-Le playfield utilise une couche d'abstraction d'inputs dans `playfield/src/input.js`.
+Le playfield utilise une couche d'abstraction d'inputs dans `playfield/src/adapters/input.js`.
 
 But :
 - decoupler la logique de jeu des peripheriques concrets,

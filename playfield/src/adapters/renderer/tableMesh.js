@@ -23,8 +23,8 @@ import {
 } from "../../domain/constants.js";
 
 export function createTableMeshes(scene) {
-  const tableMat = new THREE.MeshStandardMaterial({ color: 0x2d5a27 });
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+  const tableMat = new THREE.MeshStandardMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.5 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xff2222, transparent: true, opacity: 0.4, depthWrite: false });
 
   const meshes = [];
 

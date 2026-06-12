@@ -31,8 +31,6 @@ import { buildLevel } from "./composition/buildLevel.js";
 import { groupLevelMeshes } from "./composition/levelGroup.js";
 import { startPlayfieldLoop } from "./composition/runGameLoop.js";
 import { createPlayfieldViewRuntime } from "./composition/playfieldViewRuntime.js";
-import { wirePlayfieldDebug } from "./adapters/debug/wirePlayfieldDebug.js";
-
 await initRapier();
 
 const audio = createAudioEngine(updateAudioHud);
@@ -42,7 +40,6 @@ mountAudioControls(audio);
 const audioHud = document.getElementById("audio-hud");
 if (audioHud) audioHud.style.display = "none";
 const actuators = createActuators(audio);
-window.actuators = actuators;
 
 const { scene, camera, renderer, dirLight } = createScene();
 const world = createPhysicsWorld();
@@ -61,9 +58,21 @@ const viewRuntime = createPlayfieldViewRuntime({
 
 window.addEventListener("resize", viewRuntime.onResize);
 
+const serverOverlay = document.createElement("div");
+serverOverlay.style.cssText = [
+  "display:none;position:fixed;inset:0;z-index:9999",
+  "background:rgba(0,0,0,.88);align-items:center;justify-content:center",
+  "flex-direction:column;gap:12px",
+  "font-family:'Courier New',monospace;color:#ff4444;font-size:1.1rem;text-align:center",
+].join(";");
+serverOverlay.innerHTML = "<strong>Serveur hors ligne</strong><span>Reconnexion en cours…</span>";
+document.body.appendChild(serverOverlay);
+
 let socket;
 
-const readyDebug = () => {
+const readyDebug = async () => {
+  if (!import.meta.env.DEV) return;
+  const { wirePlayfieldDebug } = await import("./adapters/debug/wirePlayfieldDebug.js");
   wirePlayfieldDebug({
     viewRuntime,
     camera,
@@ -94,6 +103,8 @@ const readyDebug = () => {
 let pendingLaunchAfterStart = false;
 
 socket = initNetwork({
+  onConnect() { serverOverlay.style.display = "none"; },
+  onConnectionError() { serverOverlay.style.display = "flex"; },
   onGameStarted() {
     resetBallBody(level.ballBody);
     openLaunchGate(level.launchGateBody);

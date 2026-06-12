@@ -18,6 +18,9 @@ export function wireDmdNetwork({ refs, renderer }) {
     onDisconnect() {
       socketStatus.textContent = "socket: disconnected";
     },
+    onConnectionError() {
+      socketStatus.textContent = "socket: error";
+    },
     onDmdMessage() {
       // Ignore arbitrary DMD messages so the display remains limited to the
       // three expected states: PRESS START, POINTS, GAME OVER.

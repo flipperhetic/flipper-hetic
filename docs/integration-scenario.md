@@ -65,7 +65,7 @@ Checks attendus a chaque etape sur les 3 ecrans.
 ### 4. Jeu — flippers + collisions + bumpers
 
 - `X` / `C` (ou flèches) : flippers repondent immediatement
-- Bumper touche (`collision { type: "bumper" }`) : +100 au score
+- Bumper touche (`collision { type: "bumper_100" }`) : +100 au score
 - `wall` / `flipper` : relayes sans score
 - Backglass et DMD refletent le score serveur en direct
 

@@ -1,6 +1,3 @@
-/**
- * Actuators : logs + audio. Le pilotage IoT viendra se brancher ici.
- */
 export function createActuators(audio = null) {
   return {
     onBumperHit() {

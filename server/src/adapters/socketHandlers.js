@@ -40,9 +40,7 @@ loadSavedHighScore().then((hs) => { state.highScore = hs || 0; }).catch(() => {}
 let lastDmdMessage = null;
 let gameOverTimeoutId = null;
 let highScoreBeatAnnounced = false;
-let highScoreBeatAnnouncedTime = 0;
 const GAME_OVER_BLOCK_MS = 6200;
-const HIGHSCORE_ANIMATION_MS = 3500;
 
 /**
  * Remet l'etat a zero (utilise par les tests pour l'isolation).
@@ -50,6 +48,7 @@ const HIGHSCORE_ANIMATION_MS = 3500;
 export function resetState() {
   state = new GameState();
   lastDmdMessage = null;
+  highScoreBeatAnnounced = false;
   clearGameOverTimer();
 }
 
@@ -101,9 +100,6 @@ export function registerSocketHandlers(io) {
     }
 
     socket.on(CLIENT_EVENTS.START_GAME, () => {
-      if (state.status === "game_over" && gameOverTimeoutId !== null) {
-        return;
-      }
       const result = startGame(state);
       if (!result.changed) return;
       clearGameOverTimer();
@@ -146,7 +142,6 @@ export function registerSocketHandlers(io) {
         // Emit high score beat immediately if just detected and not yet announced
         if (result.highScoreBeat && !highScoreBeatAnnounced) {
           highScoreBeatAnnounced = true;
-          highScoreBeatAnnouncedTime = performance.now();
           saveHighScore(state.highScore).catch(() => {});
           io.emit(SERVER_EVENTS.HIGH_SCORE_BEAT, { score: state.score, highScore: state.highScore });
         }
@@ -159,30 +154,11 @@ export function registerSocketHandlers(io) {
       emitState(io);
       emitDmd(io, result.dmdMessage);
       if (result.gameOver) {
-        // If highscore beat animation is still running, delay game-over emission
-        const timeSinceBeat = performance.now() - highScoreBeatAnnouncedTime;
-        const animationStillRunning = highScoreBeatAnnounced && timeSinceBeat < HIGHSCORE_ANIMATION_MS;
-        
-        if (animationStillRunning) {
-          // Delay game-over until animation finishes
-          const delayMs = HIGHSCORE_ANIMATION_MS - timeSinceBeat;
-          setTimeout(() => {
-            io.emit(SERVER_EVENTS.GAME_OVER, state.toJSON());
-            scheduleGameOverUnlock(io);
-          }, delayMs);
-        } else {
-          io.emit(SERVER_EVENTS.GAME_OVER, state.toJSON());
-          scheduleGameOverUnlock(io);
-        }
-        
-        // If the usecase reported a high score update, persist it.
-        if (result.highScoreUpdated) {
-          saveHighScore(state.highScore).catch(() => {});
-        }
-        // Only emit HIGH_SCORE_BEAT if not already announced during collision
+        io.emit(SERVER_EVENTS.GAME_OVER, state.toJSON());
+        scheduleGameOverUnlock(io);
+        if (result.highScoreUpdated) saveHighScore(state.highScore).catch(() => {});
         if (result.highScoreBeat && !highScoreBeatAnnounced) {
           highScoreBeatAnnounced = true;
-          highScoreBeatAnnouncedTime = performance.now();
           io.emit(SERVER_EVENTS.HIGH_SCORE_BEAT, { score: state.score, highScore: state.highScore });
         }
       }

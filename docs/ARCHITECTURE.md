@@ -59,7 +59,7 @@ Les tests unitaires et d’intégration ciblant ces couches se trouvent sous `__
 ## Playfield (`playfield/src/`)
 
 - **`main.js`** — Composition : enchaîne `buildLevel` (plateau 3D + corps Rapier), réseau, collisions, entrées, puis démarre la boucle via `composition/runGameLoop.js`.
-- **`composition/buildLevel.js`** — Assemblage meshes + bodies (table, murs, bille, flippers, bumpers, slingshots) sans logique réseau.
+- **`composition/buildLevel.js`** — Orchestrateur : délègue à `buildWalls.js`, `buildBumpers.js`, `buildSensors.js`, `buildActors.js` (un fichier par responsabilité), sans logique réseau.
 - **`composition/runGameLoop.js`** — Boucle `requestAnimationFrame` : pas physique, synchronisation mesh/body, rendu.
 - **`domain/`** — Constantes et paramètres de plateau (données de conception, seuils).
 - **`usecases/collisionHandler.js`** — Décisions liées aux collisions et au drain **sans** importer le client réseau (injection des effets de bord au niveau composition).
@@ -125,6 +125,24 @@ main.js  →  renderer/mount.js
 - **Conteneurisation** — `docker-compose.yml` et `Dockerfile` par service pour un environnement de démonstration reproductible.
 
 Ce document se limite à la **vision architecturale** ; les procédures de test et CI/CD sont dans [`TESTING.md`](TESTING.md), [`MANUAL-TESTS.md`](MANUAL-TESTS.md) et [`CI-CD.md`](CI-CD.md).
+
+---
+
+## Persistance du meilleur score
+
+`server/highscore.json` est écrit sur le disque local du processus serveur.
+
+- **En développement et production directe** : le fichier persiste entre les redémarrages du processus Node.js.
+- **En Docker sans volume** : le fichier est perdu si le conteneur est supprimé. Pour conserver le highscore, ajouter un volume dans `docker-compose.yml` :
+
+```yaml
+services:
+  server:
+    volumes:
+      - ./server/data:/app/data
+```
+
+Pour ce projet flipper, un fichier JSON local est suffisant. Aucune base de données n'est nécessaire.
 
 ## Performances (cible matériel « flipper »)
 

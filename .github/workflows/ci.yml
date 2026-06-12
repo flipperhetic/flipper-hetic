@@ -12,13 +12,13 @@ jobs:
       matrix:
         include:
           - dir: server
-            command: "node --check src/index.js"
+            command: "npm test"
           - dir: playfield
-            command: "npm run build"
+            command: "npm run build && npm test"
           - dir: backglass
-            command: "npm run build"
+            command: "npm run build && npm test"
           - dir: dmd
-            command: "npm run build"
+            command: "npm run build && npm test"
 
     steps:
       - name: Checkout
@@ -31,9 +31,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        working-directory: ${{ matrix.dir }}
         run: npm ci
 
-      - name: Run checks / build
+      - name: ${{ matrix.dir }}
         working-directory: ${{ matrix.dir }}
         run: ${{ matrix.command }}

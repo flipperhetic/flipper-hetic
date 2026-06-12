@@ -276,14 +276,7 @@ describe("Gestion des billes", () => {
     expect(dmd.text).toBe("GAME OVER");
   });
 
-  it("16 — ball_lost hors partie (idle) ignore", () => {
-    // On est deja en playing via beforeEach — tester l'etat initial
-    // L'etat initial (idle) a ete teste ; ici on verifie que restart fonctionne
-    expect(env.initialState.status).toBe("idle");
-    // ball_lost en idle = pas de state_updated
-  });
-
-  it("17 — ball_lost apres game_over ignore", async () => {
+  it("16 — ball_lost apres game_over ignore", async () => {
     await loseBall(env.client);
     await loseBall(env.client);
     env.client.emit("launch_ball");

@@ -1,160 +1,203 @@
-# Tests
+# Tests — Flipper Hetic
 
-Framework : **Vitest** (ESM natif, compatible Vite et Node.js pur).
+Framework : **Vitest** (ESM natif).
 
 ## Lancer les tests
 
 ```bash
-# Tous les tests serveur
-cd server && npm test
+# Tous les packages
+npm run test:all
 
-# Tous les tests playfield
-cd playfield && npm test
-
-# Mode watch (relance automatique a chaque modification)
-cd server && npm run test:watch
-cd playfield && npm run test:watch
+# Un package spécifique
+npm test --workspace=server
+npm test --workspace=playfield
+npm test --workspace=backglass
+npm test --workspace=dmd
 ```
 
 ---
 
-## Tests serveur — `server/src/__tests__/events.test.js`
+## Récapitulatif
 
-Tests sur les handlers Socket.IO et la logique métier associée (`adapters/socketHandlers.js`, `domain/`, `usecases/`) : machine d'état, scoring, billes, relay flippers.
+| Package | Fichier | Tests | Type |
+|---------|---------|------:|------|
+| server | `events.test.js` | 20 | Unitaire / intégration Socket |
+| server | `game-flow.test.js` | 3 | Intégration bout-en-bout |
+| playfield | `collisions.test.js` | 15 | Unitaire (use case) |
+| playfield | `ball.test.js` | 9 | Unitaire (physics body) |
+| playfield | `actuators.test.js` | 5 | Unitaire (adapter) |
+| playfield | `input.test.js` | 18 | Unitaire (adapter input) |
+| playfield | `webSerial.test.js` | 7 | Unitaire (adapter IoT) |
+| backglass | `view.test.js` | 7 | Unitaire (renderer) |
+| backglass | `network.test.js` | 4 | Unitaire (adapter réseau) |
+| dmd | `font.test.js` | 4 | Unitaire (renderer) |
+| dmd | `wireDmdNetwork.test.js` | 5 | Unitaire (composition) |
+| **Total** | | **97** | |
 
-### Machine d'etat
+---
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 1 | Etat initial a la connexion | `status:"idle"`, `score:0`, `ballsLeft:3` |
-| 2 | `start_game` | `status:"playing"`, recoit `game_started` + `state_updated` + `dmd_message:"BALL 1"` |
-| 3 | `start_game` pendant playing | ignore, score inchange |
-| 4 | `start_game` apres game_over | etat reinitialise a zero |
+## Serveur — `events.test.js`
+
+Tests sur la machine d'état, le scoring, la gestion des billes, le relay flippers et la resynchronisation.
+
+### Machine d'état
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | État initial à la connexion | `status:"idle"`, `score:0`, `ballsLeft:3` |
+| 2 | `start_game` | `status:"playing"`, reçoit `game_started` + `state_updated` + `dmd_message:"BALL 1"` |
+| 3 | `start_game` pendant playing | ignoré, score inchangé |
+| 4 | `start_game` après game_over | état réinitialisé à zéro |
 
 ### Scoring
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 5 | Bumper | `score += 100` |
-| 6 | Wall | `score` inchange |
-| 7 | Flipper | `score` inchange |
-| 8 | Drain | `score` inchange |
-| 9 | Type invalide | ignore |
-| 10 | Payload vide | ignore |
-| 11 | Collision hors partie | ignore |
-| 12 | 5 bumpers consecutifs | `score === 500` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 5 | `bumper_100` | `score += 100` |
+| 6 | `wall` | `score` inchangé |
+| 7 | `flipper` | `score` inchangé |
+| 8 | `drain` | `score` inchangé |
+| 9 | Type invalide | ignoré |
+| 10 | Payload vide | ignoré |
+| 11 | Collision hors partie | ignoré |
+| 12 | 5 bumpers consécutifs | `score === 500` |
 
 ### Gestion des billes
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
+| # | Test | Résultat attendu |
+|---|------|-----------------|
 | 13 | 1re perte | `ballsLeft:2`, `currentBall:2`, DMD `BALL 2` |
 | 14 | 2e perte | `ballsLeft:1`, `currentBall:3`, DMD `BALL 3` |
 | 15 | 3e perte | `status:"game_over"`, `ballsLeft:0`, DMD `GAME OVER` |
-| 16 | `ball_lost` en idle | ignore |
-| 17 | `ball_lost` apres game_over | ignore |
+| 16 | `ball_lost` en idle | ignoré |
+| 17 | `ball_lost` après game_over | ignoré |
 
 ### Relay flippers
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 18 | Flipper broadcast | client B recoit, client A non |
-| 19 | 4 events flipper | `left_down`, `left_up`, `right_down`, `right_up` tous relayes |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 18 | Flipper broadcast | client B reçoit, client A non |
+| 19 | 4 events flipper | `left_down`, `left_up`, `right_down`, `right_up` tous relayés |
 
-### Anti double-emission
+### Anti double-émission
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 20 | Double `ball_lost` sans `launch_ball` entre | le second est ignore |
-
-### Resync connexion
-
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 21 | Nouveau client mid-game | recoit `state_updated` courant + dernier `dmd_message` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 20 | Double `ball_lost` sans `launch_ball` entre | le second est ignoré |
 
 ---
 
-## Tests serveur — `server/src/__tests__/game-flow.test.js`
+## Serveur — `game-flow.test.js`
 
-Tests d'integration avec Socket.IO en memoire (2 clients connectes).
+Tests d'intégration avec Socket.IO en mémoire (2 clients connectés).
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 1 | Partie complete (3 billes, scoring, game_over, restart) | score 300, game_over, restart a zero, les deux clients synchronises |
-| 2 | Broadcast flipper | client B recoit, client A non |
-| 3 | Collision bumper multi-client | les deux clients recoivent `score:100` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Partie complète (3 billes, scoring, game_over, restart) | score 300, game_over, restart à zéro, les deux clients synchronisés |
+| 2 | Broadcast flipper | client B reçoit, client A non |
+| 3 | Collision bumper multi-client | les deux clients reçoivent `score:100` |
 
 ---
 
-## Tests playfield — `playfield/src/__tests__/collisions.test.js`
+## Playfield — `collisions.test.js`
 
-Tests unitaires sur la detection drain et le debounce collision (use case pur, sans mock physique).
+Tests unitaires sur la détection drain et le debounce collision (use case pur, sans mock physique).
 
 ### Drain
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 1 | Bille au-dela du seuil en playing | `emitBallLost` appele, retourne `true` |
-| 2 | Appels multiples sans reset | `emitBallLost` appele une seule fois |
-| 3 | Status != playing | ignore |
-| 4 | `resetDrainFlag` re-arme | un nouveau drain emet a nouveau |
-| 5 | Bille en-deca du seuil | retourne `false` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Bille au-delà du seuil en playing | `emitBallLost` appelé, retourne `true` |
+| 2 | Appels multiples sans reset | `emitBallLost` appelé une seule fois |
+| 3 | Status != playing | ignoré |
+| 4 | `resetDrainFlag` re-arme | un nouveau drain émet à nouveau |
+| 5 | Bille en-deçà du seuil | retourne `false` |
 | 6 | Bille revient sur le plateau | re-arme naturellement le flag |
 
 ### Debounce collision
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 7 | Deux bumpers < 300ms | `emitCollision` appele une seule fois |
-| 8 | Deux bumpers > 300ms | `emitCollision` appele deux fois |
-| 9 | Types `ball` et `table` | ignores |
-| 10 | Bodies sans `userData` | ignores |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 7 | Deux bumpers < 300 ms | `emitCollision` appelé une seule fois |
+| 8 | Deux bumpers > 300 ms | `emitCollision` appelé deux fois |
+| 9 | Types `ball` et `table` | ignorés |
+| 10 | Bodies sans `userData` | ignorés |
 
 ### Reset cooldowns
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 11 | `resetCollisionCooldowns` entre parties | cooldown efface, collision immediate autorisee |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 11 | `resetCollisionCooldowns` entre parties | cooldown effacé, collision immédiate autorisée |
 
 ---
 
-## Tests playfield — `playfield/src/__tests__/ball.test.js`
+## Playfield — `ball.test.js`
 
-Tests unitaires sur le cycle de vie de la bille (`@dimforge/rapier3d-compat` et `bodyHandle.js` mockes via `init.js`).
+Tests unitaires sur le cycle de vie de la bille (Rapier mocké via `init.js`).
 
 ### resetBall
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 1 | Position au spawn | `position.set(0, 0.26, 8.5)` |
-| 2 | Velocites a zero | velocity, angularVelocity, force, torque remis a zero |
-| 3 | Body fige en KinematicPositionBased | `setBodyType(2, true)` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Position au spawn | `position.set(4.2, 0.26, 6.05)` |
+| 2 | Vélocités à zéro | velocity, angularVelocity, force, torque remis à zéro |
+| 3 | Body figé en KinematicPositionBased | `setBodyType(2, true)` |
 
 ### launchBall
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
-| 4 | Debloque en DYNAMIC + impulsion Z- | `applyImpulse` appele, `impulse.z < 0` |
-| 5 | Double launch refuse | 2e appel retourne `false` |
-| 6 | Reset puis launch re-autorise | retourne `true` |
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 4 | Débloque en DYNAMIC + impulsion Z- et X- | `applyImpulse` appelé, `impulse.z < 0`, `impulse.x < 0` |
+| 5 | Double launch refusé | 2e appel retourne `false` |
+| 6 | Reset puis launch re-autorisé | retourne `true` |
 
 ### clampBall
 
-| # | Test | Resultat attendu |
-|---|------|------------------|
+| # | Test | Résultat attendu |
+|---|------|-----------------|
 | 7 | Verrouille Y | `position.y === BALL_RADIUS + 0.01`, `velocity.y === 0` |
-| 8 | Plafonne vitesse > 25 | vitesse ramenee a 25 |
-| 9 | Vitesse sous le max | inchangee |
+| 8 | Plafonne vitesse > 25 | vitesse ramenée à 25 |
+| 9 | Vitesse sous le max | inchangée |
 
 ---
 
-## Recapitulatif
+## Playfield — `actuators.test.js`
 
-| Package | Fichier | Tests | Type |
-|---------|---------|-------|------|
-| server | `events.test.js` | 21 | Unitaire |
-| server | `game-flow.test.js` | 3 | Integration |
-| playfield | `collisions.test.js` | 11 | Unitaire |
-| playfield | `ball.test.js` | 9 | Unitaire |
-| **Total** | | **44** | |
+Tests unitaires sur l'adapter actuateurs (sons, callbacks).
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Méthodes attendues exposées | toutes présentes |
+| 2 | Fonctionne sans audio | aucune erreur levée |
+| 3 | `onBumperHit` joue un son aléatoire | `playRandom` appelé |
+| 4 | `onGameStart` démarre le thème | `play` + `startTheme` appelés |
+| 5 | Deux instances indépendantes | callbacks isolés |
+
+---
+
+## Playfield — `input.test.js` et `webSerial.test.js`
+
+Tests unitaires sur les adapters d'entrée (clavier et Web Serial / IoT).
+
+| Fichier | Tests | Couverture |
+|---------|------:|------------|
+| `input.test.js` | 18 | Controller actions, debounce start, blur release flippers |
+| `webSerial.test.js` | 7 | Subscribe/unsubscribe, parsing trames série |
+
+---
+
+## Backglass — `view.test.js` et `network.test.js`
+
+| Fichier | Tests | Couverture |
+|---------|------:|------------|
+| `view.test.js` | 7 | `renderState` (score, billes, highscore), popups highscore et vidéo |
+| `network.test.js` | 4 | Listeners Socket enregistrés, callbacks `onStateUpdated`, `onHighScoreBeat`, `onSpecialEvent` |
+
+---
+
+## DMD — `font.test.js` et `wireDmdNetwork.test.js`
+
+| Fichier | Tests | Couverture |
+|---------|------:|------------|
+| `font.test.js` | 4 | Pixels FONT_5X7, caractère inconnu, avance curseur, `drawCenteredBitmapText` |
+| `wireDmdNetwork.test.js` | 5 | Connexion/déconnexion → `socketStatus`, score + status → renderer |

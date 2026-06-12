@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le module `playfield/src/adapters/actuators.js` expose une API d'actionneurs appelée par `main.js` à chaque événement de jeu pertinent. En l'absence de matériel, la version simulation logue chaque déclenchement et incrémente des compteurs.
+Le module `playfield/src/adapters/actuators.js` expose une API d'actionneurs appelée par `main.js` à chaque événement de jeu pertinent. En l'absence de matériel, la version simulation logue chaque déclenchement en console et joue les sons associés.
 
 ## Mapping événement → actionneur
 
@@ -27,8 +27,6 @@ actuators.onSlingshotHit();        // collision slingshot
 actuators.onFlipperFire("left");   // "left" | "right"
 actuators.onBallLost();            // bille dans le drain
 actuators.onGameStart();           // début de partie
-
-actuators.getCounts();             // snapshot compteurs (debug/tests)
 ```
 
 ## Version simulation

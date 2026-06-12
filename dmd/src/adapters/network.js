@@ -27,6 +27,10 @@ export function initNetwork(callbacks = {}) {
     callbacks.onDisconnect?.();
   });
 
+  socket.on("connect_error", () => {
+    callbacks.onConnectionError?.();
+  });
+
   socket.on(SERVER_EVENTS.DMD_MESSAGE, (payload) => {
     callbacks.onDmdMessage?.(payload?.text);
   });

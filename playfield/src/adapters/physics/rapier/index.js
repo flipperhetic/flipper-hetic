@@ -39,12 +39,10 @@ export {
 } from "./flipperBody.js";
 
 export { createArchBody, createTriangleBody, createCylinderBody, createDiamondBody } from "./archBody.js";
-export { createBumperBodies } from "./bumperBody.js";
 export {
   createLaunchGateBody,
   openLaunchGate,
   closeLaunchGate,
   updateLaunchGate,
-  setGateConfig,
 } from "./launchGateBody.js";
 export { attachCollisionListener } from "./collisionListener.js";

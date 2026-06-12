@@ -71,14 +71,7 @@ export const ARCH_OFFSET_Z   = 5;
 export const ARCH_ROT_Y      = 0;
 
 // Bumpers
-export const BUMPER_RADIUS = 0.5;
-export const BUMPER_HEIGHT = 0.6;
 export const BUMPER_REPULSE_FORCE = 4;
-export const BUMPER_POSITIONS = [
-  { x: -3.1, z: -3.4 },
-  { x: 2.6, z: -6.8 },
-  { x: -0.4, z: -1.1 },
-];
 
 // Drain — seuil Z au-dela duquel la bille est consideree perdue.
 // Doit être en dessous des flippers (FLIPPER_PIVOT_Z = 9.75) avec marge suffisante.

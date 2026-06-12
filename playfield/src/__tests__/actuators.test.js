@@ -1,125 +1,53 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createActuators } from "../adapters/actuators.js";
 
-let actuators;
+function makeAudio() {
+  return { play: vi.fn(), playRandom: vi.fn(), startTheme: vi.fn() };
+}
 
-beforeEach(() => {
-  actuators = createActuators();
-});
-
-
-describe("état initial", () => {
-  it("1 — tous les compteurs démarrent à zéro", () => {
-    const counts = actuators.getCounts();
-    expect(counts.bumperHit).toBe(0);
-    expect(counts.slingshotHit).toBe(0);
-    expect(counts.flipperFire.left).toBe(0);
-    expect(counts.flipperFire.right).toBe(0);
-    expect(counts.ballLost).toBe(0);
-    expect(counts.gameStart).toBe(0);
-  });
-});
-
-describe("onBumperHit", () => {
-  it("2 — incrémente bumperHit à chaque appel", () => {
-    actuators.onBumperHit();
-    expect(actuators.getCounts().bumperHit).toBe(1);
-
-    actuators.onBumperHit();
-    actuators.onBumperHit();
-    expect(actuators.getCounts().bumperHit).toBe(3);
+describe("createActuators", () => {
+  it("1 — expose les methodes attendues", () => {
+    const a = createActuators();
+    expect(typeof a.onBumperHit).toBe("function");
+    expect(typeof a.onSlingshotHit).toBe("function");
+    expect(typeof a.onFlipperFire).toBe("function");
+    expect(typeof a.onBallLost).toBe("function");
+    expect(typeof a.onGameOver).toBe("function");
+    expect(typeof a.onGameStart).toBe("function");
+    expect(typeof a.onMilestone).toBe("function");
   });
 
-  it("3 — n'affecte pas les autres compteurs", () => {
-    actuators.onBumperHit();
-    const counts = actuators.getCounts();
-    expect(counts.slingshotHit).toBe(0);
-    expect(counts.flipperFire.left).toBe(0);
-    expect(counts.flipperFire.right).toBe(0);
-    expect(counts.ballLost).toBe(0);
-    expect(counts.gameStart).toBe(0);
-  });
-});
-
-describe("onSlingshotHit", () => {
-  it("4 — incrémente slingshotHit à chaque appel", () => {
-    actuators.onSlingshotHit();
-    expect(actuators.getCounts().slingshotHit).toBe(1);
-
-    actuators.onSlingshotHit();
-    expect(actuators.getCounts().slingshotHit).toBe(2);
+  it("2 — fonctionne sans audio (pas d'erreur)", () => {
+    const a = createActuators();
+    expect(() => {
+      a.onBumperHit();
+      a.onSlingshotHit();
+      a.onFlipperFire("left");
+      a.onBallLost();
+      a.onGameOver();
+      a.onGameStart();
+      a.onMilestone();
+    }).not.toThrow();
   });
 
-  it("5 — n'affecte pas bumperHit", () => {
-    actuators.onSlingshotHit();
-    expect(actuators.getCounts().bumperHit).toBe(0);
-  });
-});
-
-describe("onFlipperFire", () => {
-  it("6 — incrémente flipperFire.left pour le flipper gauche", () => {
-    actuators.onFlipperFire("left");
-    actuators.onFlipperFire("left");
-    const counts = actuators.getCounts();
-    expect(counts.flipperFire.left).toBe(2);
-    expect(counts.flipperFire.right).toBe(0);
+  it("3 — onBumperHit joue un son bumper aleatoire", () => {
+    const audio = makeAudio();
+    createActuators(audio).onBumperHit();
+    expect(audio.playRandom).toHaveBeenCalledWith(["bumper-1", "bumper-2", "bumper-3"]);
   });
 
-  it("7 — incrémente flipperFire.right pour le flipper droit", () => {
-    actuators.onFlipperFire("right");
-    const counts = actuators.getCounts();
-    expect(counts.flipperFire.right).toBe(1);
-    expect(counts.flipperFire.left).toBe(0);
+  it("4 — onGameStart demarre le theme", () => {
+    const audio = makeAudio();
+    createActuators(audio).onGameStart();
+    expect(audio.play).toHaveBeenCalledWith("start");
+    expect(audio.startTheme).toHaveBeenCalled();
   });
 
-  it("8 — les deux flippers sont indépendants", () => {
-    actuators.onFlipperFire("left");
-    actuators.onFlipperFire("left");
-    actuators.onFlipperFire("right");
-    const counts = actuators.getCounts();
-    expect(counts.flipperFire.left).toBe(2);
-    expect(counts.flipperFire.right).toBe(1);
-  });
-});
-
-describe("onBallLost", () => {
-  it("9 — incrémente ballLost à chaque appel", () => {
-    actuators.onBallLost();
-    expect(actuators.getCounts().ballLost).toBe(1);
-
-    actuators.onBallLost();
-    expect(actuators.getCounts().ballLost).toBe(2);
-  });
-
-  it("10 — n'affecte pas les autres compteurs", () => {
-    actuators.onBallLost();
-    const counts = actuators.getCounts();
-    expect(counts.bumperHit).toBe(0);
-    expect(counts.slingshotHit).toBe(0);
-    expect(counts.gameStart).toBe(0);
-  });
-});
-
-describe("onGameStart", () => {
-  it("11 — incrémente gameStart à chaque appel", () => {
-    actuators.onGameStart();
-    actuators.onGameStart();
-    expect(actuators.getCounts().gameStart).toBe(2);
-  });
-});
-
-describe("getCounts", () => {
-  it("12 — retourne un snapshot : la copie n'est pas affectée par des appels ultérieurs", () => {
-    const snapshot = actuators.getCounts();
-    actuators.onBumperHit();
-    actuators.onBallLost();
-    expect(snapshot.bumperHit).toBe(0);
-    expect(snapshot.ballLost).toBe(0);
-  });
-
-  it("13 — deux instances createActuators() sont indépendantes", () => {
-    const other = createActuators();
-    actuators.onBumperHit();
-    expect(other.getCounts().bumperHit).toBe(0);
+  it("5 — deux instances sont independantes", () => {
+    const audioA = makeAudio();
+    const audioB = makeAudio();
+    createActuators(audioA).onBumperHit();
+    expect(audioA.playRandom).toHaveBeenCalledTimes(1);
+    expect(audioB.playRandom).not.toHaveBeenCalled();
   });
 });

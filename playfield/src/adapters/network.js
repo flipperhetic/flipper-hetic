@@ -31,11 +31,17 @@ export function initNetwork(callbacks = {}) {
   const socket = io(SERVER_URL);
 
   socket.on("connect", () => {
-    console.log("[network] connecte au serveur", socket.id);
+    console.log("[network] connecte", socket.id);
+    callbacks.onConnect?.();
   });
 
   socket.on("disconnect", (reason) => {
     console.log("[network] deconnecte :", reason);
+    callbacks.onConnectionError?.();
+  });
+
+  socket.on("connect_error", () => {
+    callbacks.onConnectionError?.();
   });
 
   socket.on(SERVER_EVENTS.STATE_UPDATED, (data) => {
@@ -61,15 +67,6 @@ export function initNetwork(callbacks = {}) {
   socket.on(SERVER_EVENTS.DMD_MESSAGE, (data) => {
     console.log("[network] DMD :", data.text);
   });
-
-  // Debug: log outgoing reset emits
-  const origEmit = socket.emit.bind(socket);
-  socket.emit = (ev, payload) => {
-    try {
-      console.log("[network] emit ->", ev, payload ?? "(no payload)");
-    } catch (e) { /* ignore logging errors */ }
-    return origEmit(ev, payload);
-  };
 
   return socket;
 }
