@@ -3,10 +3,15 @@
 Lit deux boutons physiques et envoie les événements de flipper en série vers le
 **playfield** (Web Serial). Chaque bouton pilote un flipper :
 
-| Bouton  | GPIO (par défaut) | Appui | Relâché |
-| :------ | :---------------- | :---- | :------ |
-| Gauche  | `32`              | `PL`  | `RL`    |
-| Droit   | `33`              | `PR`  | `RR`    |
+| Bouton (borne) | GPIO | Appui | Relâché |
+| :------------- | :--- | :---- | :------ |
+| black left     | `16` | `PL`  | `RL`    |
+| black right    | `13` | `PR`  | `RR`    |
+
+> La borne câble d'autres boutons (`white L/R`, `front green/yellow/red/white`,
+> plunger) sur d'autres GPIO — **non lus** par ce firmware. Le décodage côté web
+> supporte déjà `ST` (start), `LA` (launch) et `DBG` (reset) si on veut les
+> activer plus tard.
 
 > Compat : un firmware 1-bouton historique envoie `P`/`R` ; le playfield les
 > traite comme le bouton **gauche**.
@@ -18,8 +23,8 @@ résistance de tirage interne (`INPUT_PULLUP`), donc **aucune résistance extern
 n'est nécessaire : la broche lit `HIGH` au repos et `LOW` quand on appuie.
 
 ```
-GPIO 32 ──[ bouton gauche ]── GND
-GPIO 33 ──[ bouton droit  ]── GND
+GPIO 16 ──[ black left  ]── GND
+GPIO 13 ──[ black right ]── GND
 ```
 
 Pour utiliser d'autres broches, modifier `PIN_FLIPPER_LEFT` / `PIN_FLIPPER_RIGHT`
