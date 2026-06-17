@@ -9,13 +9,13 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const DOT_RADIUS_RATIO = 0.35;
 // LED color changed to green as requested
-const DOT_ON = "#7AFB7B";
-const DOT_OFF = "rgba(14, 129, 66, 0.16)";
-const DISPLAY_BG = "#0d0401";
+const DOT_ON = "#CFFFD0";
+const DOT_OFF = "rgba(14, 129, 66, 0.12)";
+const DISPLAY_BG = "#040201";
 const TEXT_MARGIN = 2;
 const TEXT_LINE_Y = Math.floor((DOT_ROWS - 7) / 2);
 const TEXT_BG_PADDING = 1;
-const TEXT_BG_OPACITY = 0.82;
+const TEXT_BG_OPACITY = 0.92;
 const VISIBLE_TEXT_WIDTH = DOT_COLS - TEXT_MARGIN * 2;
 const SCROLL_STEP_MS = 28;
 const SCROLL_PAUSE_MS = 1800;
@@ -255,7 +255,7 @@ export function createDotMatrixRenderer(canvas) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = DISPLAY_BG;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = 0.22;
     ctx.drawImage(imageCanvas, 0, 0);
     ctx.globalAlpha = 1;
 
@@ -278,31 +278,36 @@ export function createDotMatrixRenderer(canvas) {
         const textA = textPixels[(y * DOT_COLS + x) * 4 + 3];
         const drawX = x * dotPitchX + dotPitchX / 2;
         const drawY = y * dotPitchY + dotPitchY / 2;
+        // Bande horizontale du texte : on y supprime les points colorés de
+        // l'image pour que le texte ressorte sur un fond propre et sombre.
+        const inTextBand =
+          y >= TEXT_LINE_Y - TEXT_BG_PADDING && y < TEXT_LINE_Y + 7 + TEXT_BG_PADDING;
         let fillStyle = DOT_OFF;
         let shadowColor = "transparent";
         let shadowBlur = 0;
 
         if (textA > 0) {
-          // draw a black outline behind text dots for better contrast
+          // contour noir plus large derrière chaque point de texte
           ctx.beginPath();
-          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+          ctx.fillStyle = "rgba(0, 0, 0, 0.9)";
           ctx.shadowColor = "transparent";
           ctx.shadowBlur = 0;
-          ctx.arc(drawX, drawY, dotRadius * 1.2, 0, Math.PI * 2);
+          ctx.arc(drawX, drawY, dotRadius * 1.5, 0, Math.PI * 2);
           ctx.fill();
 
+          // point de texte plus gros que les points de fond + halo vert
           fillStyle = DOT_ON;
-          shadowColor = "rgba(255, 122, 42, 0.7)";
-          shadowBlur = 6;
+          shadowColor = "rgba(180, 255, 180, 0.95)";
+          shadowBlur = 12;
           ctx.beginPath();
           ctx.fillStyle = fillStyle;
           ctx.shadowColor = shadowColor;
           ctx.shadowBlur = shadowBlur;
-          ctx.arc(drawX, drawY, dotRadius * 0.7, 0, Math.PI * 2);
+          ctx.arc(drawX, drawY, dotRadius * 1.08, 0, Math.PI * 2);
           ctx.fill();
           continue;
-        } else if (imgA > 16) {
-          fillStyle = `rgba(${imgR}, ${imgG}, ${imgB}, 0.9)`;
+        } else if (imgA > 16 && !inTextBand) {
+          fillStyle = `rgba(${imgR}, ${imgG}, ${imgB}, 0.8)`;
         }
 
         ctx.beginPath();

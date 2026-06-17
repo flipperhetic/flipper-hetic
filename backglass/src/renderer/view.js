@@ -151,11 +151,79 @@ export function createBackglassView(refs) {
     prevBallsLeft = ballsLeft;
   }
 
+  // Machine d'états des écrans (accueil / jeu / game over).
+  // Le serveur repasse en "idle" ~6 s après la défaite, mais on MAINTIENT
+  // l'écran Game Over pendant 2 min avant de laisser revenir l'accueil.
+  const GAME_OVER_HOLD_MS = 2 * 60 * 1000;
+  let gameOverActive = false;
+  let gameOverTimer = 0;
+
+  function showAttract() {
+    refs.root?.classList.remove("show-game-over");
+    refs.root?.classList.remove("entered");
+  }
+  function showBackglass() {
+    refs.root?.classList.remove("show-game-over");
+    refs.root?.classList.add("entered");
+  }
+
+  function syncScreens(status, score, highScore) {
+    if (!refs.root) return;
+
+    if (status === "playing") {
+      clearTimeout(gameOverTimer);
+      gameOverActive = false;
+      showBackglass();
+      return;
+    }
+
+    if (status === "game_over") {
+      if (!gameOverActive) {
+        gameOverActive = true;
+        fillGameOver(score, highScore);
+        // Au bout de 2 min : on lâche le game over et l'accueil réapparaît.
+        clearTimeout(gameOverTimer);
+        gameOverTimer = setTimeout(() => {
+          gameOverActive = false;
+          showAttract();
+        }, GAME_OVER_HOLD_MS);
+      }
+      refs.root.classList.add("entered"); // accueil masqué
+      refs.root.classList.add("show-game-over");
+      return;
+    }
+
+    // status "idle" : si on tient encore le game over (fenêtre 2 min), on l'ignore.
+    if (gameOverActive) return;
+    showAttract();
+  }
+
+  // Groupe les chiffres par 3 (ex. 12450 -> "12 450").
+  function formatScore(n) {
+    return String(n ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  // Remplit le dossier "scène de crime" (une seule fois par game over).
+  function fillGameOver(score, highScore) {
+    if (refs.gameOverScore) refs.gameOverScore.textContent = formatScore(score);
+    if (refs.gameOverRecord) refs.gameOverRecord.textContent = formatScore(highScore);
+    if (refs.gameOverCase) {
+      refs.gameOverCase.textContent = `CASE #${String(Math.floor(Math.random() * 900) + 100)}`;
+    }
+    const beatRecord = (score ?? 0) > 0 && (score ?? 0) >= (highScore ?? 0);
+    refs.gameOverNewRecord?.classList.toggle("visible", beatRecord);
+  }
+
   return {
+    // Quitte l'écran d'accueil (appelé sur "Press Enter").
+    dismissAttract() {
+      refs.root?.classList.add("entered");
+    },
     renderState(nextState) {
       setScore(nextState.score ?? 0);
       setHighscore(nextState.highScore ?? 0);
       renderBalls(nextState.ballsLeft ?? 0);
+      syncScreens(nextState.status, nextState.score, nextState.highScore);
     },
     showHighScorePopup() {
       const popup = refs.highscorePopup;

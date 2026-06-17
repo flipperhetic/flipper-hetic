@@ -112,11 +112,53 @@ export function mountBackglassRoot() {
       <video id="special-event-video" class="video-popup__video" playsinline muted></video>
     </div>
     ${ballLossOverlay()}
+    <div id="game-over" class="game-over" aria-hidden="true">
+      <div class="game-over__bg"></div>
+      <img class="game-over__prop game-over__prop--chalk" src="/assets/img/chalk-outline.png" alt="" />
+      <img class="game-over__prop game-over__prop--marker game-over__prop--marker-1" src="/assets/img/evidence-marker.png" alt="" />
+      <img class="game-over__prop game-over__prop--marker game-over__prop--marker-2" src="/assets/img/evidence-marker.png" alt="" />
+      <img class="game-over__prop game-over__prop--marker game-over__prop--marker-3" src="/assets/img/evidence-marker.png" alt="" />
+      <div class="police-tape police-tape--top">POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · </div>
+      <div class="police-tape police-tape--bottom">POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · POLICE LINE · DO NOT CROSS · </div>
+      <div class="game-over__content">
+        <img class="game-over__title" src="/assets/img/game-over-title.png" alt="Game Over" />
+        <div class="case-file">
+          <div class="case-file__header">
+            <span>Evidence report</span>
+            <span class="case-file__num" id="gameOverCase">CASE #000</span>
+          </div>
+          <dl class="case-file__rows">
+            <div class="case-file__row"><dt>Score</dt><dd id="gameOverScore">0</dd></div>
+            <div class="case-file__row"><dt>Record</dt><dd id="gameOverRecord">0</dd></div>
+          </dl>
+          <img class="case-file__stamp" id="gameOverNewRecord" src="/assets/img/stamp-record.png" alt="New record" />
+        </div>
+        <div class="game-over__replay">Press <kbd>Enter</kbd> to play again</div>
+      </div>
+    </div>
+    <div id="attract-screen" class="attract-screen">
+      <div class="attract-screen__bg"></div>
+      <div class="attract-screen__scanlines"></div>
+      <div class="attract-screen__flicker"></div>
+      <div class="attract-screen__inner">
+        <img class="attract-screen__logo" src="/assets/img/brbra-logo.png" alt="Breaking Ball" />
+        <p class="attract-screen__sub">Heisenberg Pinball</p>
+        <div class="attract-screen__quote" aria-hidden="true">
+          <span>"Say my name."</span>
+          <span>"I am the one who knocks."</span>
+          <span>"Tread lightly."</span>
+          <span>"Yeah, science!"</span>
+        </div>
+        <div class="attract-screen__press">Press <kbd>Enter</kbd> to play</div>
+        <div class="attract-screen__hint">Insert coin · 1 credit</div>
+      </div>
+    </div>
   `;
 
   document.body.append(app);
 
   return {
+    root: app,
     scoreValue: document.getElementById("scoreValue"),
     ballsLeftValue: document.getElementById("ballsLeftValue"),
     ballIcons: Array.from(app.querySelectorAll(".backglass__ball")),
@@ -125,5 +167,10 @@ export function mountBackglassRoot() {
     videoPopup: document.getElementById("video-popup"),
     specialEventVideo: document.getElementById("special-event-video"),
     ballLossOverlay: document.getElementById("ball-loss-overlay"),
+    attractScreen: document.getElementById("attract-screen"),
+    gameOverScore: document.getElementById("gameOverScore"),
+    gameOverRecord: document.getElementById("gameOverRecord"),
+    gameOverNewRecord: document.getElementById("gameOverNewRecord"),
+    gameOverCase: document.getElementById("gameOverCase"),
   };
 }

@@ -2,12 +2,13 @@
  * Backglass — Composition root.
  */
 import "./styles.css";
+import { CLIENT_EVENTS } from "shared";
 import { mountBackglassRoot } from "./renderer/mount.js";
 import { createBackglassView } from "./renderer/view.js";
 import { initNetwork } from "./adapters/network.js";
 
 const refs = mountBackglassRoot();
-const { renderState, showHighScorePopup, showVideoPopup } = createBackglassView(refs);
+const { renderState, showHighScorePopup, showVideoPopup, dismissAttract } = createBackglassView(refs);
 
 const serverOverlay = document.createElement("div");
 serverOverlay.style.cssText = [
@@ -19,10 +20,18 @@ serverOverlay.style.cssText = [
 serverOverlay.innerHTML = "<strong>Serveur hors ligne</strong><span>Reconnexion en cours…</span>";
 document.body.appendChild(serverOverlay);
 
-initNetwork({
+const socket = initNetwork({
   onConnect() { serverOverlay.style.display = "none"; },
   onConnectionError() { serverOverlay.style.display = "flex"; },
   onStateUpdated: renderState,
   onHighScoreBeat: () => showHighScorePopup(),
   onSpecialEvent: ({ event }) => showVideoPopup(event),
+});
+
+// Écran d'accueil : "Press Enter to play" quitte l'attract et lance la partie.
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === "NumpadEnter") {
+    dismissAttract();
+    socket.emit(CLIENT_EVENTS.START_GAME);
+  }
 });
