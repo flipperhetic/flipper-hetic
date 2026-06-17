@@ -62,6 +62,7 @@ export function wirePlayfieldDebug(deps) {
       world:                  deps.world,
       onConfigChange,
       physicsRotateY:         level.physicsRotateY,
+      physicsTranslate:       level.physicsTranslate,
       setPhysicsDebugVisible: level.setPhysicsDebugVisible,
     });
     createPhysicsDebugUI({

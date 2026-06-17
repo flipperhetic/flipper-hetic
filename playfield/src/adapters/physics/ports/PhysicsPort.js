@@ -79,5 +79,3 @@
  *       })
  *     La regle metier (debounce + repulse bumper) est dans le use case.
  */
-
-export const PHYSICS_PORT_VERSION = 2;

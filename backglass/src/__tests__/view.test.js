@@ -64,13 +64,6 @@ describe("showHighScorePopup", () => {
     expect(refs.highscorePopup.classList.add).toHaveBeenCalledWith("visible");
   });
 
-  it("4 — isHighScoreAnimationBlocking retourne false par defaut, true juste apres", () => {
-    const refs = makeRefs();
-    const { showHighScorePopup, isHighScoreAnimationBlocking } = createBackglassView(refs);
-    expect(isHighScoreAnimationBlocking()).toBe(false);
-    showHighScorePopup();
-    expect(isHighScoreAnimationBlocking()).toBe(true);
-  });
 });
 
 describe("showVideoPopup", () => {

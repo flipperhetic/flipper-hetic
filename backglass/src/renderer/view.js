@@ -94,7 +94,6 @@ function createCountUp(el, { punch = false } = {}) {
 
 export function createBackglassView(refs) {
   const { scoreValue, ballsLeftValue, highscoreValue, ballIcons, ballLossOverlay } = refs;
-  let highscoreBeatAnimationEndTime = 0;
   let prevBallsLeft = null;
   let ballLossTimer = 0;
 
@@ -231,14 +230,10 @@ export function createBackglassView(refs) {
       popup.setAttribute("aria-hidden", "false");
       popup.classList.add("visible");
       const ANIMATION_DURATION = 3500;
-      highscoreBeatAnimationEndTime = performance.now() + ANIMATION_DURATION;
       setTimeout(() => {
         popup.classList.remove("visible");
         popup.setAttribute("aria-hidden", "true");
       }, ANIMATION_DURATION);
-    },
-    isHighScoreAnimationBlocking() {
-      return performance.now() < highscoreBeatAnimationEndTime;
     },
     showVideoPopup(eventType) {
       const popup = refs.videoPopup;

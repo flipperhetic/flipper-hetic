@@ -14,11 +14,11 @@ Pour chaque package en parallèle (`server`, `playfield`, `backglass`, `dmd`) :
 | Package | Commande | Contenu |
 |---------|----------|---------|
 | `server` | `npm test` | 23 tests Vitest |
-| `playfield` | `npm run build && npm test` | Build Vite + 54 tests |
-| `backglass` | `npm run build && npm test` | Build Vite + 11 tests |
-| `dmd` | `npm run build && npm test` | Build Vite + 9 tests |
+| `playfield` | `npm run build && npm test` | Build Vite + 47 tests |
+| `backglass` | `npm run build && npm test` | Build Vite + 10 tests |
+| `dmd` | `npm run build && npm test` | Build Vite + 8 tests |
 
-Critère de succès : build sans erreur + 97 tests verts.
+Critère de succès : build sans erreur + 88 tests verts.
 
 ## CD — `cd.yml`
 

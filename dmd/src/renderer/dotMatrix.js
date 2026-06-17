@@ -1,7 +1,7 @@
 /**
  * DMD — Rendu dot-matrix sur canvas.
  */
-import { drawBitmapText, drawBitmapTextSmall } from "./font.js";
+import { drawBitmapText } from "./font.js";
 
 const DOT_COLS = 96;
 const DOT_ROWS = 54;

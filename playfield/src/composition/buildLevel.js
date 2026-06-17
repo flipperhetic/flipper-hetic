@@ -5,6 +5,7 @@ import { buildWalls } from "./buildWalls.js";
 import { buildBumpers } from "./buildBumpers.js";
 import { buildSensors } from "./buildSensors.js";
 import { buildActors } from "./buildActors.js";
+import { ARCH_OFFSET_X, ARCH_OFFSET_Z } from '../domain/constants.js';
 
 export async function buildLevel({ scene, world }) {
   const gltfModel = await loadPlayfieldModel();
@@ -19,18 +20,52 @@ export async function buildLevel({ scene, world }) {
 
   const syncPairs = [...wallPairs, ...bumperPairs, ...actorPairs, ...sensorPairs];
 
-  function physicsRotateY(angleDeg) {
-    const theta = angleDeg * Math.PI / 180;
-    const cos = Math.cos(theta);
-    const sin = Math.sin(theta);
-    const qy = { x: 0, y: Math.sin(theta / 2), z: 0, w: Math.cos(theta / 2) };
+  // Snapshot bumper starting positions so physicsTranslate can offset from origin.
+  const bumperSnapshots = bumperPairs.map(p => {
+    const t = p.body.rb.translation();
+    return { rb: p.body.rb, x0: t.x, y0: t.y, z0: t.z };
+  });
+
+  let _rotY = 0;
+  let _dx = 0, _dz = 0;
+
+  function _applyWorldTransform() {
+    const cos = Math.cos(_rotY);
+    const sin = Math.sin(_rotY);
+    const qy = { x: 0, y: Math.sin(_rotY / 2), z: 0, w: Math.cos(_rotY / 2) };
     for (const def of Object.values(wallDefs)) {
-      def.body.rb.setTranslation({ x: def.x * cos - def.z * sin, y: def.y, z: def.x * sin + def.z * cos }, true);
+      def.body.rb.setTranslation({
+        x: def.x * cos - def.z * sin + _dx,
+        y: def.y,
+        z: def.x * sin + def.z * cos + _dz,
+      }, true);
       def.body.rb.setRotation(qy, true);
     }
-    archBody.rb.setTranslation({ x: 0, y: 0, z: 0 }, true);
+    archBody.rb.setTranslation({
+      x: ARCH_OFFSET_X * cos - ARCH_OFFSET_Z * sin + _dx,
+      y: 0,
+      z: ARCH_OFFSET_X * sin + ARCH_OFFSET_Z * cos + _dz,
+    }, true);
     archBody.rb.setRotation(qy, true);
-    setFlippersWorldRotY(flipperBodies, theta);
+    for (const snap of bumperSnapshots) {
+      snap.rb.setTranslation({
+        x: snap.x0 * cos - snap.z0 * sin + _dx,
+        y: snap.y0,
+        z: snap.x0 * sin + snap.z0 * cos + _dz,
+      }, true);
+    }
+    setFlippersWorldRotY(flipperBodies, _rotY);
+  }
+
+  function physicsRotateY(angleDeg) {
+    _rotY = angleDeg * Math.PI / 180;
+    _applyWorldTransform();
+  }
+
+  function physicsTranslate(dx, dz) {
+    _dx = dx;
+    _dz = dz;
+    _applyWorldTransform();
   }
 
   function setPhysicsDebugVisible(v) {
@@ -44,6 +79,7 @@ export async function buildLevel({ scene, world }) {
     launchGateBody,
     gltfModel,
     physicsRotateY,
+    physicsTranslate,
     setPhysicsDebugVisible,
   };
 }

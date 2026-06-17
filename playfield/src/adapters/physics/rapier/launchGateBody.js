@@ -63,40 +63,6 @@ export function closeLaunchGate(gate) {
 }
 
 /**
- * Repositionne et redimensionne la gate (debug).
- * Recrée le collider pour appliquer la nouvelle taille/rotation.
- * Force l'affichage en position fermée pour visualiser en live.
- * rotY en radians (converti en degres pour userData).
- */
-export function setGateConfig(gate, { x, z, w, h, d, rotY = 0 } = {}) {
-  const RAPIER = getRapier();
-  const world = gate.world;
-
-  for (const col of gate.colliders) world.removeCollider(col, false);
-
-  const halfRot = rotY / 2;
-  gate.rb.setRotation({ x: 0, y: Math.sin(halfRot), z: 0, w: Math.cos(halfRot) }, true);
-
-  const collider = world.createCollider(
-    RAPIER.ColliderDesc.cuboid(w / 2, h / 2, d / 2)
-      .setFriction(MATERIALS.static.friction)
-      .setRestitution(MATERIALS.static.restitution),
-    gate.rb,
-  );
-  gate.colliders = [collider];
-
-  gate.userData.closedX = x;
-  gate.userData.closedZ = z;
-  gate.userData.w = w;
-  gate.userData.h = h;
-  gate.userData.d = d;
-  gate.userData.rotY = rotY * 180 / Math.PI;
-
-  gate.rb.setTranslation({ x, y: GATE_Y_CLOSED, z }, true);
-  gate.userData.state = "closed";
-}
-
-/**
  * Ferme la porte dès que la bille a quitté le tunnel par le haut.
  * Idempotent : ne fait rien si déjà fermée.
  */

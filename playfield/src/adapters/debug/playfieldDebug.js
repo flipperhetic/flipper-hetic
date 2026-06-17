@@ -12,7 +12,7 @@ import { applyPhysicsGravity } from '../physics/rapier/world.js';
 
 const DEG = Math.PI / 180;
 
-export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, world, onConfigChange, physicsRotateY, setPhysicsDebugVisible }) {
+export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, world, onConfigChange, physicsRotateY, physicsTranslate, setPhysicsDebugVisible }) {
   const defaults = {
     glbScale:  GLB_SCALE,
     glbScaleX: GLB_SCALE_X,
@@ -37,6 +37,8 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     worldRotX: 0,
     worldRotY: 0,
     worldRotZ: 0,
+    worldPosX: 0,
+    worldPosZ: 0,
   };
 
   const state = { ...defaults };
@@ -49,7 +51,11 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
       (state.glbRotY + state.worldRotY) * DEG,
       (state.glbRotZ + state.worldRotZ) * DEG,
     );
-    gltfModel.position.set(state.glbPosX, state.glbPosY, state.glbPosZ);
+    gltfModel.position.set(
+      state.glbPosX + state.worldPosX,
+      state.glbPosY,
+      state.glbPosZ + state.worldPosZ,
+    );
   }
 
   function quatFromYaw(a) { const h = a / 2; return { x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }; }
@@ -75,8 +81,13 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
   }
 
   function applyWorldRot() {
-    applyGLB(); // inclut worldRotX/Y/Z dans la rotation du GLB directement
+    applyGLB();
     if (physicsRotateY) physicsRotateY(state.worldRotY);
+  }
+
+  function applyWorldPos() {
+    applyGLB();
+    if (physicsTranslate) physicsTranslate(state.worldPosX, state.worldPosZ);
   }
 
   function applyBall() {
@@ -147,11 +158,13 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
       ],
     },
     {
-      title: '▸ World Rotation',
+      title: '▸ World Transform',
       rows: [
-        { key: 'worldRotX', label: 'Rotate X (°)', min: -180, max: 180, step: 1, apply: applyWorldRot },
-        { key: 'worldRotY', label: 'Rotate Y (°)', min: -180, max: 180, step: 1, apply: applyWorldRot },
-        { key: 'worldRotZ', label: 'Rotate Z (°)', min: -180, max: 180, step: 1, apply: applyWorldRot },
+        { key: 'worldPosX', label: 'Position X',   min: -20,  max: 20,  step: 0.05, apply: applyWorldPos },
+        { key: 'worldPosZ', label: 'Position Z',   min: -20,  max: 20,  step: 0.05, apply: applyWorldPos },
+        { key: 'worldRotX', label: 'Rotate X (°)', min: -180, max: 180, step: 1,    apply: applyWorldRot },
+        { key: 'worldRotY', label: 'Rotate Y (°)', min: -180, max: 180, step: 1,    apply: applyWorldRot },
+        { key: 'worldRotZ', label: 'Rotate Z (°)', min: -180, max: 180, step: 1,    apply: applyWorldRot },
       ],
     },
   ];
@@ -320,6 +333,7 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
         gravityMagnitude: state.gravityMag,
       },
       worldRot: { worldRotX: state.worldRotX, worldRotY: state.worldRotY, worldRotZ: state.worldRotZ },
+      worldPos: { worldPosX: state.worldPosX, worldPosZ: state.worldPosZ },
     };
     navigator.clipboard.writeText(JSON.stringify(json, null, 2));
     copyBtn.textContent = '✓ Copied!';
