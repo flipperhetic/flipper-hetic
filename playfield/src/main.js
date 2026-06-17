@@ -26,7 +26,7 @@ import { createActuators } from "./adapters/actuators.js";
 import { createAudioEngine } from "./adapters/audio.js";
 import { mountAudioControls, updateAudioHud } from "./adapters/audio-controls.js";
 import { createGameInputController, bindKeyboardInput, bindExternalInputSource } from "./adapters/input.js";
-import { createWebSerialInputSource } from "./adapters/webSerial.js";
+import { createCabinetInputSource } from "./adapters/cabinetInput.js";
 import { buildLevel } from "./composition/buildLevel.js";
 import { groupLevelMeshes } from "./composition/levelGroup.js";
 import { startPlayfieldLoop } from "./composition/runGameLoop.js";
@@ -207,10 +207,11 @@ const inputController = createGameInputController({
 
 bindKeyboardInput(inputController);
 
-// Source d'input ESP32 via Web Serial : auto-connexion au demarrage si un port
-// a deja ete autorise. Le bouton #connect-serial ne sert qu'au tout 1er octroi.
-const webSerialSource = createWebSerialInputSource();
-bindExternalInputSource(webSerialSource.subscribe, inputController);
+// Source d'input ESP32 via le bridge/ Docker (relais socket.io). Le bridge lit
+// /dev/ttyUSB0 sur le cabinet et emit "cabinet_button" au server. Ici on traduit
+// chaque ID firmware en action inputController, exactement comme le clavier.
+const cabinetSource = createCabinetInputSource(socket);
+bindExternalInputSource(cabinetSource.subscribe, inputController);
 
 startPlayfieldLoop({
   world,

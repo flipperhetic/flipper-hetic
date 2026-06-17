@@ -170,5 +170,13 @@ export function registerSocketHandlers(io) {
       saveHighScore(0).catch(() => {});
       emitState(io);
     });
+
+    // Bridge ESP32 -> relai brut aux autres clients (le playfield mappe l'ID
+    // vers une action inputController). Payload : { id, action: "DOWN"|"UP" }.
+    socket.on(CLIENT_EVENTS.CABINET_BUTTON, (payload) => {
+      if (!payload || typeof payload.id !== "string") return;
+      if (payload.action !== "DOWN" && payload.action !== "UP") return;
+      socket.broadcast.emit(CLIENT_EVENTS.CABINET_BUTTON, payload);
+    });
   });
 }

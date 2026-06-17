@@ -1,0 +1,14 @@
+{
+  "name": "flipper-hetic-bridge",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Lit l'ESP32 boutons sur /dev/ttyUSB0 et relaie au server socket.io.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

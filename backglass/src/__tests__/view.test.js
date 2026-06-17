@@ -1,10 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createBackglassView } from "../renderer/view.js";
 
+function makeBallIcon() {
+  return { classList: { toggle: vi.fn() } };
+}
+
 function makeRefs() {
   return {
     scoreValue: { textContent: "" },
     ballsLeftValue: { textContent: "" },
+    ballIcons: [makeBallIcon(), makeBallIcon(), makeBallIcon()],
     highscoreValue: { textContent: "" },
     highscorePopup: {
       setAttribute: vi.fn(),
@@ -27,21 +32,26 @@ function makeRefs() {
 }
 
 describe("renderState", () => {
-  it("1 — met a jour score, highScore, ballsLeft", () => {
+  it("1 — met a jour score, highScore, ballsLeft (sachets)", () => {
     const refs = makeRefs();
     const { renderState } = createBackglassView(refs);
     renderState({ score: 1500, highScore: 3000, ballsLeft: 2 });
     expect(refs.scoreValue.textContent).toBe("1500");
     expect(refs.highscoreValue.textContent).toBe("3000");
-    expect(refs.ballsLeftValue.textContent).toBe("2/3");
+    // 2 balles restantes : sachets 0 et 1 pleins, sachet 2 vide (lost)
+    expect(refs.ballIcons[0].classList.toggle).toHaveBeenCalledWith("lost", false);
+    expect(refs.ballIcons[1].classList.toggle).toHaveBeenCalledWith("lost", false);
+    expect(refs.ballIcons[2].classList.toggle).toHaveBeenCalledWith("lost", true);
   });
 
-  it("2 — valeurs absentes affichees comme 0", () => {
+  it("2 — valeurs absentes : score 0 et tous les sachets vides", () => {
     const refs = makeRefs();
     const { renderState } = createBackglassView(refs);
     renderState({});
     expect(refs.scoreValue.textContent).toBe("0");
-    expect(refs.ballsLeftValue.textContent).toBe("0/3");
+    refs.ballIcons.forEach((icon) => {
+      expect(icon.classList.toggle).toHaveBeenCalledWith("lost", true);
+    });
   });
 });
 

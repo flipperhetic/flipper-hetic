@@ -14,6 +14,9 @@ export const CLIENT_EVENTS = {
   BALL_LOST: "ball_lost",
   COLLISION: "collision",
   RESET_HIGHSCORE: "reset_highscore",
+  // Emis par le bridge/ ESP32. Payload: { id: string, action: "DOWN"|"UP" }.
+  // Le server relaie en broadcast aux autres clients (cf. playfield).
+  CABINET_BUTTON: "cabinet_button",
 };
 
 /** Serveur -> Clients */

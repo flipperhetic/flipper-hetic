@@ -48,3 +48,22 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+  # Lit l'ESP32 boutons sur /dev/ttyUSB0 et relaie au server socket.io.
+  # Le cabinet flashe le firmware AVANT le `compose up` (cf. fliphetic.toml),
+  # donc /dev/ttyUSB0 est present a ce moment-la. Sur un poste sans ESP32
+  # branche, ce service echouera a creer le conteneur — attendu (prod = cab).
+  bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      SERIAL_PATH: /dev/ttyUSB0
+      SERIAL_BAUD: "115200"
+      SERVER_URL: http://server:3000
+    depends_on:
+      server:
+        condition: service_healthy
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"

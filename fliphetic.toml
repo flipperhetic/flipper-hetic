@@ -17,3 +17,14 @@ dmd       = { service = "dmd",       port = 5175, path = "/" }
 [compose]
 file = "docker-compose.yml"
 ready_timeout = 60
+
+# ESP32 button-box. Le cabinet flashe ce binaire merge a chaque Load,
+# puis demarre les services Docker (dont bridge/ qui lit /dev/ttyUSB0).
+# Le binaire est build par .github/workflows/firmware.yml (PlatformIO +
+# esptool merge_bin) et commite dans firmware/build/firmware.bin.
+[esp32.esp32]
+firmware   = "firmware/build/firmware.bin"
+chip       = "esp32"
+flash_addr = "0x0"
+baud       = 115200
+required   = false

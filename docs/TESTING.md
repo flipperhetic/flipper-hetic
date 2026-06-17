@@ -27,12 +27,13 @@ npm test --workspace=dmd
 | playfield | `ball.test.js` | 9 | Unitaire (physics body) |
 | playfield | `actuators.test.js` | 5 | Unitaire (adapter) |
 | playfield | `input.test.js` | 18 | Unitaire (adapter input) |
-| playfield | `webSerial.test.js` | 7 | Unitaire (adapter IoT) |
 | backglass | `view.test.js` | 7 | Unitaire (renderer) |
 | backglass | `network.test.js` | 4 | Unitaire (adapter réseau) |
 | dmd | `font.test.js` | 4 | Unitaire (renderer) |
 | dmd | `wireDmdNetwork.test.js` | 5 | Unitaire (composition) |
-| **Total** | | **97** | |
+| **Total** | | **90** | |
+
+> Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via socket.io). Le mapping ID firmware → action vit dans `playfield/src/adapters/cabinetInput.js`.
 
 ---
 
@@ -175,14 +176,13 @@ Tests unitaires sur l'adapter actuateurs (sons, callbacks).
 
 ---
 
-## Playfield — `input.test.js` et `webSerial.test.js`
+## Playfield — `input.test.js`
 
-Tests unitaires sur les adapters d'entrée (clavier et Web Serial / IoT).
+Tests unitaires sur l'adapter d'entrée clavier.
 
 | Fichier | Tests | Couverture |
 |---------|------:|------------|
 | `input.test.js` | 18 | Controller actions, debounce start, blur release flippers |
-| `webSerial.test.js` | 7 | Subscribe/unsubscribe, parsing trames série |
 
 ---
 
