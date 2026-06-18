@@ -18,7 +18,10 @@ import {
   BUMPER_REPULSE_FORCE,
 } from "../domain/constants.js";
 
-const IGNORED_TYPES = new Set(["ball", "table"]);
+let _drainZ = DRAIN_Z_THRESHOLD;
+export function setDrainThreshold(z) { _drainZ = z; }
+
+const IGNORED_TYPES = new Set(["ball", "table", "triangle", "arch"]);
 
 export function createCollisionHandler(callbacks) {
   const lastEmitByType = {};
@@ -64,15 +67,10 @@ export function createCollisionHandler(callbacks) {
      * Retourne true si la bille vient d'etre perdue (onBallLost appele).
      */
     checkDrain(ballZ, gameStatus) {
-      if (gameStatus !== "playing") {
-        ballLostEmitted = false;
-        return false;
-      }
-
-      if (ballZ > DRAIN_Z_THRESHOLD) {
+      if (ballZ > _drainZ) {
         if (!ballLostEmitted) {
           ballLostEmitted = true;
-          callbacks.onBallLost();
+          if (gameStatus === "playing") callbacks.onBallLost();
           return true;
         }
       } else {

@@ -1,7 +1,8 @@
 import {
-  GLB_SCALE, GLB_SCALE_X, GLB_ROTATION_X, GLB_ROTATION_Y, GLB_ROTATION_Z,
+  GLB_SCALE_X, GLB_SCALE_Y, GLB_SCALE_Z, GLB_ROTATION_X, GLB_ROTATION_Y, GLB_ROTATION_Z,
   GLB_POSITION_X, GLB_POSITION_Y, GLB_POSITION_Z,
 } from '../renderer/modelLoader.js';
+import { BoxGeometry, CylinderGeometry } from 'three';
 import {
   FLIPPER_PIVOT_X, FLIPPER_PIVOT_Z, FLIPPER_PIVOT_Y, FLIPPER_REST_ANGLE,
   FLIPPER_ROT_X, FLIPPER_ROT_Z, FLIPPER_OFFSET_X,
@@ -9,12 +10,15 @@ import {
 } from '../../domain/constants.js';
 import { PLAYFIELD_VIEW_DEFAULTS } from '../../domain/viewConfig.js';
 import { applyPhysicsGravity } from '../physics/rapier/world.js';
+import { setBallFixedY } from '../physics/rapier/ballBody.js';
 
 const DEG = Math.PI / 180;
+const RESET_BTN_CSS = 'padding:1px 5px;background:transparent;color:#0ff;border:1px solid #0ff;border-radius:3px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:1.4';
 
-export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, world, onConfigChange, physicsRotateY, setPhysicsDebugVisible }) {
+export function createPlayfieldDebugUI({ gltfModel, gltfInner, flipperBodies, ballBody, world, onConfigChange, physicsRotateY, setPhysicsDebugVisible, triggers }) {
   const defaults = {
-    glbScale:  GLB_SCALE,
+    glbScaleY: GLB_SCALE_Y,
+    glbScaleZ: GLB_SCALE_Z,
     glbScaleX: GLB_SCALE_X,
     glbRotX:   GLB_ROTATION_X,
     glbRotY:   GLB_ROTATION_Y,
@@ -32,8 +36,8 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     spawnX:    PLUNGER_SPAWN_X,
     spawnY:    PLUNGER_SPAWN_Y,
     spawnZ:    PLUNGER_SPAWN_Z,
-    gravityTilt: PLAYFIELD_VIEW_DEFAULTS.gravityTiltDeg,
-    gravityMag:  PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude,
+    gravityTiltDeg:   PLAYFIELD_VIEW_DEFAULTS.gravityTiltDeg,
+    gravityMagnitude: PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude,
     worldRotX: 0,
     worldRotY: 0,
     worldRotZ: 0,
@@ -43,13 +47,16 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
 
   function applyGLB() {
     if (!gltfModel) return;
-    gltfModel.scale.set(state.glbScaleX, state.glbScale, state.glbScale);
-    gltfModel.rotation.set(
+    // Scale and position on outer group — changing scale stays in world axes, no rotation interaction.
+    gltfModel.scale.set(state.glbScaleX, state.glbScaleY, state.glbScaleZ);
+    gltfModel.position.set(state.glbPosX, state.glbPosY, state.glbPosZ);
+    // Rotation on inner model — isolated from scale so non-uniform scale doesn't shear.
+    const rotTarget = gltfInner ?? gltfModel;
+    rotTarget.rotation.set(
       (state.glbRotX + state.worldRotX) * DEG,
       (state.glbRotY + state.worldRotY) * DEG,
       (state.glbRotZ + state.worldRotZ) * DEG,
     );
-    gltfModel.position.set(state.glbPosX, state.glbPosY, state.glbPosZ);
   }
 
   function quatFromYaw(a) { const h = a / 2; return { x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }; }
@@ -71,18 +78,20 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
 
   function applyGravity() {
     if (!world) return;
-    applyPhysicsGravity(world, state.gravityTilt, state.gravityMag);
+    applyPhysicsGravity(world, state.gravityTiltDeg, state.gravityMagnitude);
   }
 
   function applyWorldRot() {
-    applyGLB(); // inclut worldRotX/Y/Z dans la rotation du GLB directement
+    applyGLB();
     if (physicsRotateY) physicsRotateY(state.worldRotY);
   }
 
+
   function applyBall() {
     if (!ballBody?.rb) return;
+    setBallFixedY(state.spawnY);
     ballBody.rb.setBodyType(2, true);
-    ballBody.rb.setTranslation({ x: state.spawnX, y: state.spawnY, z: state.spawnZ }, true);
+    ballBody.rb.setNextKinematicTranslation({ x: state.spawnX, y: state.spawnY, z: state.spawnZ });
     ballBody.rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
     ballBody.rb.setAngvel({ x: 0, y: 0, z: 0 }, true);
     ballBody.userData.launched = false;
@@ -110,7 +119,8 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     {
       title: '▸ GLB Visual',
       rows: [
-        { key: 'glbScale',  label: 'Scale (Y/Z)', min: 0.1,  max: 20,   step: 0.05, apply: applyGLB },
+        { key: 'glbScaleY', label: 'Scale Y',     min: 0.1,  max: 20,   step: 0.05, apply: applyGLB },
+        { key: 'glbScaleZ', label: 'Scale Z',     min: 0.1,  max: 20,   step: 0.05, apply: applyGLB },
         { key: 'glbScaleX', label: 'Scale X',     min: 0.1,  max: 20,   step: 0.05, apply: applyGLB },
         { key: 'glbRotX',  label: 'Rotation X°', min: -180, max: 180,  step: 1,    apply: applyGLB },
         { key: 'glbRotY',  label: 'Rotation Y°', min: -180, max: 180,  step: 1,    apply: applyGLB },
@@ -136,14 +146,15 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
       title: '▸ Ball Spawn',
       rows: [
         { key: 'spawnX', label: 'Spawn X', min: -6,  max: 6,  step: 0.05, apply: applyBall },
+        { key: 'spawnY', label: 'Spawn Y', min: -2,  max: 5,  step: 0.05, apply: applyBall },
         { key: 'spawnZ', label: 'Spawn Z', min: 0,   max: 12, step: 0.05, apply: applyBall },
       ],
     },
     {
       title: '▸ Gravity',
       rows: [
-        { key: 'gravityTilt', label: 'Tilt (°)',    min: -45, max: 45, step: 0.5, apply: applyGravity },
-        { key: 'gravityMag',  label: 'Magnitude',   min: 0,   max: 40, step: 0.5, apply: applyGravity },
+        { key: 'gravityTiltDeg',   label: 'Tilt (°)',    min: -45, max: 45, step: 0.5, apply: applyGravity },
+        { key: 'gravityMagnitude', label: 'Magnitude',   min: 0,   max: 40, step: 0.5, apply: applyGravity },
       ],
     },
     {
@@ -169,8 +180,6 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
   hdr.style.cssText = 'font-weight:bold;margin-bottom:8px;font-size:12px';
   hdr.textContent = '[PFD] Playfield Debug';
   panel.appendChild(hdr);
-
-  const RESET_BTN = 'padding:1px 5px;background:transparent;color:#0ff;border:1px solid #0ff;border-radius:3px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:1.4';
 
   const allOnChange = [];
 
@@ -207,7 +216,7 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     const resetBtn = document.createElement('button');
     resetBtn.textContent = '↺';
     resetBtn.title = `Reset to ${defaults[row.key]}`;
-    resetBtn.style.cssText = RESET_BTN;
+    resetBtn.style.cssText = RESET_BTN_CSS;
     resetBtn.addEventListener('click', () => onChange(defaults[row.key]));
     wrap.appendChild(resetBtn);
 
@@ -229,11 +238,9 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
 
     const secReset = document.createElement('button');
     secReset.textContent = '↺ Reset section';
-    secReset.style.cssText = RESET_BTN;
+    secReset.style.cssText = RESET_BTN_CSS;
     secReset.addEventListener('click', () => {
-      rows.forEach((r) => {
-        state[r.key] = defaults[r.key];
-      });
+      rows.forEach((r) => { state[r.key] = defaults[r.key]; });
       allOnChange
         .filter(({ key }) => rows.some((r) => r.key === key))
         .forEach(({ key, onChange }) => onChange(defaults[key]));
@@ -244,6 +251,159 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     rows.forEach((r) => sec.appendChild(makeRow(r)));
     panel.appendChild(sec);
   });
+
+  // ── Component sections (Obstacles / Bumpers / Triggers) ──────────────────
+
+  function makeCompUI(comp) {
+    const cs = { x: comp.ix, y: comp.iy, z: comp.iz, rx: comp.irx ?? 0, ry: comp.iry, rz: comp.irz ?? 0 };
+    if (comp.w != null) { cs.w = comp.w; cs.h = comp.h; cs.d = comp.d; }
+    if (comp.radius != null) { cs.radius = comp.radius; cs.height = comp.height; }
+    if (comp.shapeControls) { for (const sc of comp.shapeControls) cs[sc.key] = sc.default; }
+    const cd = { ...cs };
+    const changeFns = {};
+
+    function applyPos() {
+      comp.body?.rb?.setTranslation({ x: cs.x, y: cs.y, z: cs.z }, true);
+    }
+    function applyRot() {
+      if (!comp.body?.rb) return;
+      const hx = cs.rx * DEG / 2, hy = cs.ry * DEG / 2, hz = cs.rz * DEG / 2;
+      const qx = { x: Math.sin(hx), y: 0, z: 0, w: Math.cos(hx) };
+      const qy = { x: 0, y: Math.sin(hy), z: 0, w: Math.cos(hy) };
+      const qz = { x: 0, y: 0, z: Math.sin(hz), w: Math.cos(hz) };
+      comp.body.rb.setRotation(mulQuat(mulQuat(qy, qx), qz), true);
+    }
+    function applySize() {
+      const col = comp.body?.colliders?.[0];
+      if (!col) return;
+      if (cs.w != null) {
+        col.setHalfExtents({ x: cs.w / 2, y: cs.h / 2, z: cs.d / 2 });
+        if (comp.mesh) {
+          comp.mesh.geometry.dispose();
+          comp.mesh.geometry = new BoxGeometry(cs.w, cs.h, cs.d);
+        }
+      } else if (cs.radius != null) {
+        col.setRadius(cs.radius);
+        col.setHalfHeight(cs.height / 2);
+        if (comp.mesh) {
+          comp.mesh.geometry.dispose();
+          comp.mesh.geometry = new CylinderGeometry(cs.radius, cs.radius, cs.height, 24);
+        }
+      }
+    }
+
+    function makeCompRow(key, label, min, max, step, onApply) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:center;gap:4px;margin-bottom:4px';
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'flex:0 0 72px;font-size:10px';
+      lbl.textContent = label;
+      wrap.appendChild(lbl);
+      const slider = document.createElement('input');
+      slider.type = 'range'; slider.min = min; slider.max = max; slider.step = step; slider.value = cs[key];
+      slider.style.cssText = 'flex:1;cursor:pointer;accent-color:#0ff';
+      wrap.appendChild(slider);
+      const num = document.createElement('input');
+      num.type = 'number'; num.value = cs[key]; num.step = step;
+      num.style.cssText = 'width:50px;background:#0a0a14;color:#0ff;border:1px solid #0ff;padding:2px;font-size:10px';
+      wrap.appendChild(num);
+      function onChange(v) {
+        const val = parseFloat(v);
+        if (isNaN(val)) return;
+        cs[key] = val;
+        num.value = val;
+        if (val >= parseFloat(slider.min) && val <= parseFloat(slider.max)) slider.value = val;
+        onApply();
+      }
+      slider.addEventListener('input', () => onChange(slider.value));
+      num.addEventListener('change', () => onChange(num.value));
+      const rstBtn = document.createElement('button');
+      rstBtn.textContent = '↺';
+      rstBtn.style.cssText = 'padding:0 4px;background:transparent;color:#0ff;border:1px solid #0ff;border-radius:3px;cursor:pointer;font-size:10px;line-height:1.4';
+      rstBtn.addEventListener('click', () => onChange(cd[key]));
+      wrap.appendChild(rstBtn);
+      changeFns[key] = onChange;
+      return wrap;
+    }
+
+    const container = document.createElement('div');
+    container.style.cssText = 'margin-top:4px;border-left:2px solid rgba(0,255,255,.15)';
+
+    const compHdr = document.createElement('div');
+    compHdr.style.cssText = 'display:flex;align-items:center;gap:4px;padding:2px 4px;cursor:pointer;font-size:10px;color:#8ff';
+    const arrow = document.createElement('span');
+    arrow.textContent = '▸';
+    compHdr.appendChild(arrow);
+    const nameLbl = document.createElement('span');
+    nameLbl.style.flex = '1';
+    nameLbl.textContent = comp.name;
+    compHdr.appendChild(nameLbl);
+    const rstBtn = document.createElement('button');
+    rstBtn.textContent = '↺';
+    rstBtn.style.cssText = 'padding:0 4px;background:transparent;color:#0ff;border:1px solid #0ff;border-radius:3px;cursor:pointer;font-size:10px;line-height:1.4';
+    rstBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      for (const [k, fn] of Object.entries(changeFns)) fn(cd[k]);
+    });
+    compHdr.appendChild(rstBtn);
+
+    const rows = document.createElement('div');
+    rows.style.cssText = 'display:none;padding:4px 4px 0 8px';
+
+    rows.appendChild(makeCompRow('x',  'Pos X',    -15,  15,  0.05, applyPos));
+    rows.appendChild(makeCompRow('y',  'Pos Y',     -5,   5,  0.05, applyPos));
+    rows.appendChild(makeCompRow('z',  'Pos Z',    -15,  15,  0.05, applyPos));
+    rows.appendChild(makeCompRow('rx', 'Rot X°',  -180, 180,  1,    applyRot));
+    rows.appendChild(makeCompRow('ry', 'Rot Y°',  -180, 180,  1,    applyRot));
+    rows.appendChild(makeCompRow('rz', 'Rot Z°',  -180, 180,  1,    applyRot));
+    if (cd.w != null) {
+      rows.appendChild(makeCompRow('w', 'Taille W', 0.05, 20, 0.05, applySize));
+      rows.appendChild(makeCompRow('h', 'Taille H', 0.05, 10, 0.05, applySize));
+      rows.appendChild(makeCompRow('d', 'Taille D', 0.05, 20, 0.05, applySize));
+    } else if (cd.radius != null) {
+      rows.appendChild(makeCompRow('radius', 'Rayon',   0.05, 3, 0.05, applySize));
+      rows.appendChild(makeCompRow('height', 'Hauteur', 0.05, 5, 0.05, applySize));
+    }
+    if (comp.shapeControls) {
+      for (const sc of comp.shapeControls) {
+        rows.appendChild(makeCompRow(sc.key, sc.label, sc.min, sc.max, sc.step,
+          () => comp.onShapeChange(sc.key, cs[sc.key])));
+      }
+    }
+
+    let expanded = false;
+    compHdr.addEventListener('click', () => {
+      expanded = !expanded;
+      rows.style.display = expanded ? 'block' : 'none';
+      arrow.textContent = expanded ? '▾' : '▸';
+    });
+
+    container.appendChild(compHdr);
+    container.appendChild(rows);
+    return { element: container, getCS: () => ({ ...cs }) };
+  }
+
+  const compStates = [];
+
+  function makeComponentSection(title, components, category) {
+    if (!components?.length) return;
+    const sec = document.createElement('div');
+    sec.style.cssText = 'margin-top:10px;border-top:1px solid rgba(0,255,255,.3);padding-top:8px';
+    const h = document.createElement('div');
+    h.style.cssText = 'font-weight:bold;margin-bottom:4px;font-size:11px';
+    h.textContent = title;
+    sec.appendChild(h);
+    for (const comp of components) {
+      const { element, getCS } = makeCompUI(comp);
+      compStates.push({ category, name: comp.name, getCS });
+      sec.appendChild(element);
+    }
+    panel.appendChild(sec);
+  }
+
+  makeComponentSection('▸ Triggers', triggers, 'triggers');
+
+  // ── Controls ─────────────────────────────────────────────────────────────
 
   if (setPhysicsDebugVisible) {
     let debugOn = true;
@@ -291,37 +451,12 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
   copyBtn.textContent = 'Copy JSON';
   copyBtn.style.cssText = 'flex:1;padding:6px;background:#0ff;color:#000;border:none;border-radius:3px;cursor:pointer;font:bold 12px \'Courier New\'';
   copyBtn.addEventListener('click', () => {
-    const json = {
-      glb: {
-        GLB_SCALE:      state.glbScale,
-        GLB_SCALE_X:    state.glbScaleX,
-        GLB_ROTATION_X: state.glbRotX,
-        GLB_ROTATION_Y: state.glbRotY,
-        GLB_ROTATION_Z: state.glbRotZ,
-        GLB_POSITION_X: state.glbPosX,
-        GLB_POSITION_Y: state.glbPosY,
-        GLB_POSITION_Z: state.glbPosZ,
-      },
-      flippers: {
-        FLIPPER_PIVOT_X:    state.pivotX,
-        FLIPPER_OFFSET_X:   state.offsetX,
-        FLIPPER_PIVOT_Y:    state.pivotY,
-        FLIPPER_PIVOT_Z:    state.pivotZ,
-        FLIPPER_REST_ANGLE: state.restAngle,
-        FLIPPER_ROT_X:      state.flipperRotX * DEG,
-        FLIPPER_ROT_Z:      state.flipperRotZ * DEG,
-      },
-      ball: {
-        PLUNGER_SPAWN_X: state.spawnX,
-        PLUNGER_SPAWN_Z: state.spawnZ,
-      },
-      gravity: {
-        gravityTiltDeg:   state.gravityTilt,
-        gravityMagnitude: state.gravityMag,
-      },
-      worldRot: { worldRotX: state.worldRotX, worldRotY: state.worldRotY, worldRotZ: state.worldRotZ },
-    };
-    navigator.clipboard.writeText(JSON.stringify(json, null, 2));
+    const components = {};
+    for (const { category, name, getCS } of compStates) {
+      if (!components[category]) components[category] = [];
+      components[category].push({ name, ...getCS() });
+    }
+    navigator.clipboard.writeText(JSON.stringify({ ...state, components }, null, 2));
     copyBtn.textContent = '✓ Copied!';
     setTimeout(() => { copyBtn.textContent = 'Copy JSON'; }, 2000);
   });
@@ -340,4 +475,5 @@ export function createPlayfieldDebugUI({ gltfModel, flipperBodies, ballBody, wor
     toggleBtn.textContent = visible ? '✕' : 'PFD';
   });
   document.body.appendChild(toggleBtn);
+  return { getState: () => state };
 }

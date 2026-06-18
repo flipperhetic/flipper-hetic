@@ -29,9 +29,9 @@ export const TUNNEL_WALL_X = TABLE_WIDTH / 2 - TUNNEL_WIDTH - WALL_THICKNESS / 2
 export const TUNNEL_WALL_Z = TABLE_DEPTH / 2 - TUNNEL_LENGTH / 2;
 
 // Spawn bille (au centre du tunnel, juste devant le mur du bas)
-export const PLUNGER_SPAWN_X = 4.2;
-export const PLUNGER_SPAWN_Y = 0.26;
-export const PLUNGER_SPAWN_Z = 6.05;
+export const PLUNGER_SPAWN_X = 4.75;
+export const PLUNGER_SPAWN_Y = 0.65;
+export const PLUNGER_SPAWN_Z = 10.75;
 
 // Plunger — force d'impulsion (Z negatif = vers le haut du plateau)
 export const PLUNGER_IMPULSE_FORCE = 38;
@@ -43,7 +43,7 @@ export const FLIPPER_HEIGHT = 0.3;
 export const FLIPPER_REST_ANGLE = 0.5;   // radians (~28°), battes au repos vers le drain
 export const FLIPPER_PIVOT_X = 2.3;
 export const FLIPPER_OFFSET_X = -0.55;
-export const FLIPPER_PIVOT_Z = 4.75;
+export const FLIPPER_PIVOT_Z = 8.45;
 export const FLIPPER_PIVOT_Y = 0.35;
 export const FLIPPER_ROT_X = 0.05235987755982989;  // radians (~3°), inclinaison des battes sur l'axe X
 export const FLIPPER_ROT_Z = 0.017453292519943295;  // radians (~1°), inclinaison des battes sur l'axe Z
@@ -62,20 +62,21 @@ export const CORNER_DEFLECTOR_DEPTH = 0.25;
 // ARCH_SEGMENTS: nombre de points pour approcher la courbe (10 = suffisant)
 export const ARCH_RADIUS     = TABLE_WIDTH / 2;
 export const ARCH_CENTER_Z   = -8.5;
-export const ARCH_HALF_WIDTH = 5.3;
-export const ARCH_HALF_DEPTH = 3.1;
+export const ARCH_HALF_WIDTH = 6.05;
+export const ARCH_HALF_DEPTH = 6.75;
 export const ARCH_HEIGHT     = 7.2;
 export const ARCH_SEGMENTS   = 10;
 export const ARCH_OFFSET_X   = 0;
-export const ARCH_OFFSET_Z   = 5;
+export const ARCH_OFFSET_Y   = -3.25;
+export const ARCH_OFFSET_Z   = 2;
 export const ARCH_ROT_Y      = 0;
 
 // Bumpers
 export const BUMPER_REPULSE_FORCE = 4;
 
 // Drain — seuil Z au-dela duquel la bille est consideree perdue.
-// Doit être en dessous des flippers (FLIPPER_PIVOT_Z = 9.75) avec marge suffisante.
-export const DRAIN_Z_THRESHOLD = TABLE_DEPTH / 2 + 2.5;  // = 11.5
+// En dessous des murs bas (z~12) et du spawn (z=10.75), aligned with drain zone mesh.
+export const DRAIN_Z_THRESHOLD = 10.85;
 
 // Flippers — vitesse de rotation (rad/s)
 export const FLIPPER_SPEED = 15;

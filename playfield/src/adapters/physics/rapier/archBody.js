@@ -3,7 +3,7 @@ import { createBodyHandle } from './bodyHandle.js';
 import {
   ARCH_HALF_WIDTH, ARCH_HALF_DEPTH, ARCH_HEIGHT,
   ARCH_CENTER_Z, ARCH_SEGMENTS,
-  ARCH_OFFSET_X, ARCH_OFFSET_Z, ARCH_ROT_Y,
+  ARCH_OFFSET_X, ARCH_OFFSET_Y, ARCH_OFFSET_Z, ARCH_ROT_Y,
 } from '../../../domain/constants.js';
 
 export function createArchBody(world, {
@@ -13,6 +13,7 @@ export function createArchBody(world, {
   centerZ       = ARCH_CENTER_Z,
   segments      = ARCH_SEGMENTS,
   offsetX       = ARCH_OFFSET_X,
+  offsetY       = ARCH_OFFSET_Y,
   offsetZ       = ARCH_OFFSET_Z,
   rotY          = ARCH_ROT_Y,
   wallThickness = 1.1,
@@ -22,7 +23,7 @@ export function createArchBody(world, {
 
   const rb = world.createRigidBody(
     RAPIER.RigidBodyDesc.fixed()
-      .setTranslation(offsetX, 0, offsetZ)
+      .setTranslation(offsetX, offsetY, offsetZ)
       .setRotation({ x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }),
   );
 
@@ -66,15 +67,17 @@ export function createCylinderBody(world, {
   x      = 0,
   y      = 0,
   z      = 0,
+  rotX   = 0,
   rotY   = 0,
   type   = 'bumper',
 } = {}) {
   const RAPIER = getRapier();
-  const h = rotY / 2;
+  const hx = rotX / 2, hy = rotY / 2;
+  const sx = Math.sin(hx), cx = Math.cos(hx), sy = Math.sin(hy), cy = Math.cos(hy);
   const rb = world.createRigidBody(
     RAPIER.RigidBodyDesc.fixed()
       .setTranslation(x, y, z)
-      .setRotation({ x: 0, y: Math.sin(h), z: 0, w: Math.cos(h) }),
+      .setRotation({ x: cy * sx, y: sy * cx, z: -sy * sx, w: cy * cx }),
   );
   const col = RAPIER.ColliderDesc
     .cylinder(height / 2, radius)

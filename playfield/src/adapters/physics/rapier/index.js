@@ -28,6 +28,7 @@ export {
   resetBallBody,
   launchBallBody,
   clampBallBody,
+  setBallFixedY,
 } from "./ballBody.js";
 
 export {

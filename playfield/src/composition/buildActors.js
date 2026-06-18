@@ -32,5 +32,5 @@ export function buildActors(world, scene) {
   );
   syncPairs.push({ mesh: launchGateMesh, body: launchGateBody });
 
-  return { ballBody, flipperBodies, launchGateBody, syncPairs };
+  return { ballBody, flipperBodies, launchGateBody, launchGateMesh, syncPairs };
 }

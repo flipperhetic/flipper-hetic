@@ -16,7 +16,8 @@ const PRESETS = {
     cameraUpX: 0,
     cameraUpY: 0,
     cameraUpZ: -1,
-    orthoZoom: 1.1,
+    orthoZoomX: 1.1,
+    orthoZoomY: 1.1,
   },
   Cabinet: {
     cameraMode: "perspective",
@@ -52,9 +53,8 @@ const SLIDERS = {
     cameraUpY: { type: "range", min: -1, max: 1, default: PLAYFIELD_VIEW_DEFAULTS.cameraUpY, step: 0.1 },
     cameraUpZ: { type: "range", min: -1, max: 1, default: PLAYFIELD_VIEW_DEFAULTS.cameraUpZ, step: 0.1 },
     fov: { type: "range", min: 10, max: 120, default: PLAYFIELD_VIEW_DEFAULTS.fov, step: 1 },
-    orthoZoom: { type: "range", min: 0.1, max: 5, default: PLAYFIELD_VIEW_DEFAULTS.orthoZoom, step: 0.1 },
-    near: { type: "range", min: 0.01, max: 1, default: PLAYFIELD_VIEW_DEFAULTS.near, step: 0.01 },
-    far: { type: "range", min: 10, max: 500, default: PLAYFIELD_VIEW_DEFAULTS.far, step: 10 },
+    orthoZoomX: { type: "range", min: 0.1, max: 5, default: PLAYFIELD_VIEW_DEFAULTS.orthoZoomX, step: 0.1 },
+    orthoZoomY: { type: "range", min: 0.1, max: 5, default: PLAYFIELD_VIEW_DEFAULTS.orthoZoomY, step: 0.1 },
   },
   "Plateau": {
     levelPosX: { type: "range", min: -10, max: 10, default: PLAYFIELD_VIEW_DEFAULTS.levelPosX, step: 0.1 },
@@ -110,6 +110,7 @@ export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } 
 
   const state = { ...PLAYFIELD_VIEW_DEFAULTS };
   const inputRefs = {};
+  const wrapperRefs = {};
 
   // Rapport live (défini avant les sliders pour être utilisable)
   const reportDiv = document.createElement("div");
@@ -150,9 +151,17 @@ export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } 
     reportContent.textContent = report;
   };
 
+  function updateModeVisibility() {
+    const isOrtho = state.cameraMode === "orthographic";
+    if (wrapperRefs.fov) wrapperRefs.fov.style.display = isOrtho ? "none" : "flex";
+    if (wrapperRefs.orthoZoomX) wrapperRefs.orthoZoomX.style.display = isOrtho ? "flex" : "none";
+    if (wrapperRefs.orthoZoomY) wrapperRefs.orthoZoomY.style.display = isOrtho ? "flex" : "none";
+  }
+
   // Wrapper qui appelle updateReport après onConfigChange
   const callConfigChange = (cfg) => {
     updateReport();
+    updateModeVisibility();
     onConfigChange(cfg);
   };
 
@@ -196,7 +205,8 @@ export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } 
     wrapper.appendChild(resetBtn);
 
     const update = () => {
-      const val = Math.max(config.min, Math.min(config.max, parseFloat(input.value) || state[key]));
+      const parsed = parseFloat(input.value);
+      const val = Math.max(config.min, Math.min(config.max, isNaN(parsed) ? state[key] : parsed));
       state[key] = val;
       slider.value = val;
       input.value = val;
@@ -308,10 +318,15 @@ export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } 
     sectionDiv.appendChild(sectionTitle);
 
     Object.entries(sliders).forEach(([key, config]) => {
+      let el;
       if (config.type === "range") {
-        sectionDiv.appendChild(createSlider(key, config));
+        el = createSlider(key, config);
       } else if (config.type === "select") {
-        sectionDiv.appendChild(createSelect(key, config));
+        el = createSelect(key, config);
+      }
+      if (el) {
+        wrapperRefs[key] = el;
+        sectionDiv.appendChild(el);
       }
     });
 
@@ -524,6 +539,19 @@ export function createDebugUI({ onConfigChange, onResetHighScore, onResetBall } 
 
   document.body.appendChild(container);
   updateReport();
+  updateModeVisibility();
 
-  return { container, state };
+  function syncInputs(partial) {
+    Object.assign(state, partial);
+    Object.entries(partial).forEach(([k, v]) => {
+      const input = inputRefs[k];
+      if (!input) return;
+      input.value = v;
+      const slider = input.previousElementSibling;
+      if (slider && slider.type === "range") slider.value = v;
+    });
+    updateReport();
+  }
+
+  return { container, state, syncInputs }; // state est une référence live
 }

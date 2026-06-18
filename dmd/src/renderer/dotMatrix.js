@@ -1,7 +1,7 @@
 /**
  * DMD — Rendu dot-matrix sur canvas.
  */
-import { drawBitmapText, drawBitmapTextSmall } from "./font.js";
+import { drawBitmapText } from "./font.js";
 
 const DOT_COLS = 96;
 const DOT_ROWS = 54;
@@ -67,10 +67,25 @@ export function createDotMatrixRenderer(canvas) {
   let imgLoaded = false;
   let imgNaturalW = 0;
   let imgNaturalH = 0;
+  // Pixels cached once at load — avoids a 8 MB GPU→CPU getImageData transfer every frame
+  let cachedImagePixels = null;
   img.onload = () => {
     imgLoaded = true;
     imgNaturalW = img.naturalWidth;
     imgNaturalH = img.naturalHeight;
+    const scaleH = CANVAS_HEIGHT / imgNaturalH || 1;
+    const scaleW = CANVAS_WIDTH / imgNaturalW || 1;
+    const scale = Math.min(scaleH, scaleW);
+    const drawW = Math.max(1, Math.round(imgNaturalW * scale));
+    const drawH = Math.max(1, Math.round(imgNaturalH * scale));
+    const dstX = Math.round((CANVAS_WIDTH - drawW) / 2);
+    const dstY = Math.round((CANVAS_HEIGHT - drawH) / 2);
+    try {
+      imageCtx.drawImage(img, 0, 0, imgNaturalW, imgNaturalH, dstX, dstY, drawW, drawH);
+      cachedImagePixels = imageCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT).data;
+    } catch (e) {
+      // silently ignore
+    }
     render();
   };
   img.onerror = () => {
@@ -207,28 +222,12 @@ export function createDotMatrixRenderer(canvas) {
     }
   }
 
+  // Fallback vide — permet d'accéder à imagePixels[idx] avant le chargement sans erreur
+  const EMPTY_PIXELS = new Uint8ClampedArray(0);
+
   function render() {
-    imageCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     textMaskCtx.clearRect(0, 0, DOT_COLS, DOT_ROWS);
     textMaskCtx.fillStyle = "#ffffff";
-
-    // If image loaded, draw it full-screen in the 16:9 canvas and preserve the entire image.
-    if (imgLoaded) {
-      const scaleH = CANVAS_HEIGHT / imgNaturalH || 1;
-      const scaleW = CANVAS_WIDTH / imgNaturalW || 1;
-      const scale = Math.min(scaleH, scaleW); // contain
-
-      const drawW = Math.max(1, Math.round(imgNaturalW * scale));
-      const drawH = Math.max(1, Math.round(imgNaturalH * scale));
-      const dstX = Math.round((CANVAS_WIDTH - drawW) / 2);
-      const dstY = Math.round((CANVAS_HEIGHT - drawH) / 2);
-
-      try {
-        imageCtx.drawImage(img, 0, 0, imgNaturalW, imgNaturalH, dstX, dstY, drawW, drawH);
-      } catch (e) {
-        // ignore
-      }
-    }
 
     let text, textWidth, textX;
 
@@ -246,7 +245,7 @@ export function createDotMatrixRenderer(canvas) {
 
     drawBitmapText(textMaskCtx, text, textX, TEXT_LINE_Y, { spacing: 1 });
 
-    const imagePixels = imageCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT).data;
+    const imagePixels = cachedImagePixels ?? EMPTY_PIXELS;
     const textPixels = textMaskCtx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
     const dotPitchX = canvas.width / DOT_COLS;
     const dotPitchY = canvas.height / DOT_ROWS;

@@ -61,8 +61,9 @@ import {
   launchBallBody,
   clampBallBody,
   createBallBody,
+  setBallFixedY,
 } from "../adapters/physics/rapier/ballBody.js";
-import { BALL_RADIUS } from "../domain/constants.js";
+import { PLUNGER_SPAWN_X, PLUNGER_SPAWN_Y, PLUNGER_SPAWN_Z } from "../domain/constants.js";
 
 function makeFakeRb() {
   const state = {
@@ -109,7 +110,7 @@ describe("resetBallBody", () => {
     resetBallBody(body);
 
     expect(body.rb.setTranslation).toHaveBeenCalledWith(
-      { x: 4.2, y: 0.26, z: 6.05 },
+      { x: PLUNGER_SPAWN_X, y: PLUNGER_SPAWN_Y, z: PLUNGER_SPAWN_Z },
       true,
     );
   });
@@ -173,7 +174,10 @@ describe("launchBallBody", () => {
 });
 
 describe("clampBallBody", () => {
-  it("verrouille Y a BALL_RADIUS + 0.01 quand la bille s'eloigne du plateau", () => {
+  it("verrouille Y a ballFixedY quand la bille s'eloigne du plateau", () => {
+    const TEST_Y = 0.5;
+    setBallFixedY(TEST_Y);
+
     const body = makeTestBody();
     body.rb._state.translation = { x: 0, y: 5, z: 0 };
     body.rb._state.linvel = { x: 3, y: 10, z: 4 };
@@ -182,8 +186,10 @@ describe("clampBallBody", () => {
 
     const lastT = body.rb.setTranslation.mock.calls.at(-1)[0];
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
-    expect(lastT.y).toBe(BALL_RADIUS + 0.01);
+    expect(lastT.y).toBe(TEST_Y);
     expect(lastV.y).toBe(0);
+
+    setBallFixedY(PLUNGER_SPAWN_Y); // restore
   });
 
   it("plafonne la vitesse quand elle depasse le max", () => {

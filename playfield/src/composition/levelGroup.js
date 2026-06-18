@@ -1,12 +1,5 @@
-/**
- * Regroupe les meshes du niveau sous un parent Three.js (structure scène).
- */
 import * as THREE from "three";
 
-/**
- * @param {import("three").Scene} scene
- * @param {{ mesh: import("three").Object3D }[]} syncPairs
- */
 export function groupLevelMeshes(scene, syncPairs) {
   const levelGroup = new THREE.Group();
   levelGroup.name = "playfield-level";

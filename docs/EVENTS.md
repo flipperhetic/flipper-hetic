@@ -31,6 +31,7 @@ Ce document centralise les noms d'événements Socket.IO et les payloads attendu
 | `wall` | +0 | Mur (valide, sans points) |
 | `flipper` | +0 | Flipper (valide, sans points) |
 | `drain` | +0 | Drain (valide, sans points) |
+| `triangle` | +0 | Obstacle triangle/arche (valide, sans points) |
 
 ## SERVER_EVENTS (serveur -> clients)
 

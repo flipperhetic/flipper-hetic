@@ -27,11 +27,11 @@ npm test --workspace=dmd
 | playfield | `ball.test.js` | 9 | Unitaire (physics body) |
 | playfield | `actuators.test.js` | 5 | Unitaire (adapter) |
 | playfield | `input.test.js` | 18 | Unitaire (adapter input) |
-| backglass | `view.test.js` | 7 | Unitaire (renderer) |
+| backglass | `view.test.js` | 6 | Unitaire (renderer) |
 | backglass | `network.test.js` | 4 | Unitaire (adapter réseau) |
-| dmd | `font.test.js` | 4 | Unitaire (renderer) |
+| dmd | `font.test.js` | 3 | Unitaire (renderer) |
 | dmd | `wireDmdNetwork.test.js` | 5 | Unitaire (composition) |
-| **Total** | | **90** | |
+| **Total** | | **88** | |
 
 > Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via socket.io). Le mapping ID firmware → action vit dans `playfield/src/adapters/cabinetInput.js`.
 
@@ -190,7 +190,7 @@ Tests unitaires sur l'adapter d'entrée clavier.
 
 | Fichier | Tests | Couverture |
 |---------|------:|------------|
-| `view.test.js` | 7 | `renderState` (score, billes, highscore), popups highscore et vidéo |
+| `view.test.js` | 6 | `renderState` (score, billes, highscore), popups highscore et vidéo |
 | `network.test.js` | 4 | Listeners Socket enregistrés, callbacks `onStateUpdated`, `onHighScoreBeat`, `onSpecialEvent` |
 
 ---
@@ -199,5 +199,5 @@ Tests unitaires sur l'adapter d'entrée clavier.
 
 | Fichier | Tests | Couverture |
 |---------|------:|------------|
-| `font.test.js` | 4 | Pixels FONT_5X7, caractère inconnu, avance curseur, `drawCenteredBitmapText` |
+| `font.test.js` | 3 | Pixels FONT_5X7, caractère inconnu, avance curseur |
 | `wireDmdNetwork.test.js` | 5 | Connexion/déconnexion → `socketStatus`, score + status → renderer |

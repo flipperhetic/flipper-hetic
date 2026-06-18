@@ -11,8 +11,10 @@ import { MATERIALS } from "./world.js";
 
 const BALL_MASS = 1;
 const BALL_LINEAR_DAMPING = 0.02;
-const BALL_FIXED_Y = BALL_RADIUS + 0.01;
+let ballFixedY = PLUNGER_SPAWN_Y;
 const MAX_BALL_SPEED = 45;
+
+export function setBallFixedY(y) { ballFixedY = y; }
 
 export function createBallBody(world) {
   const RAPIER = getRapier();
@@ -40,8 +42,8 @@ export function createBallBody(world) {
 
 export function clampBallBody(body) {
   const t = body.rb.translation();
-  if (t.y !== BALL_FIXED_Y) {
-    body.rb.setTranslation({ x: t.x, y: BALL_FIXED_Y, z: t.z }, true);
+  if (t.y !== ballFixedY) {
+    body.rb.setTranslation({ x: t.x, y: ballFixedY, z: t.z }, true);
   }
   const v = body.rb.linvel();
   let vx = v.x;

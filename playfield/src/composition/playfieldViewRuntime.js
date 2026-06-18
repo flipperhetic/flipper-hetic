@@ -29,8 +29,8 @@ export function createPlayfieldViewRuntime(deps, params = PLAYFIELD_VIEW_DEFAULT
 
   function updateOrthoBounds() {
     const aspect = window.innerWidth / window.innerHeight;
-    const h = 10 / params.orthoZoom;
-    const w = h * aspect;
+    const h = 10 / params.orthoZoomY;
+    const w = (10 / params.orthoZoomX) * aspect;
     orthoCamera.left = -w;
     orthoCamera.right = w;
     orthoCamera.top = h;

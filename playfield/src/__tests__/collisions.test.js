@@ -3,9 +3,22 @@
  *
  * API pure : aucun import de framework, aucun mock Cannon-es necessaire.
  * Couvre : debounce par type, drain detection, reset des flags et cooldowns.
+ *
+ * Le seuil drain est rendu mutable (setDrainThreshold) pour que le debug panel
+ * puisse le piloter en live. Les tests fixent un seuil connu via beforeEach
+ * pour rester independants de la constante DRAIN_Z_THRESHOLD de constants.js.
+ *
+ * Changement de comportement v2 :
+ *   checkDrain retourne true des que ballZ > seuil, quelle que soit la partie.
+ *   onBallLost n'est appele que si status === "playing" (separation reset
+ *   mecanique / emission reseau).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createCollisionHandler } from "../usecases/collisionHandler.js";
+import { createCollisionHandler, setDrainThreshold } from "../usecases/collisionHandler.js";
+
+const TEST_DRAIN_Z = 8;  // seuil fixe pour les tests, independant de constants.js
+const PAST_DRAIN   = 10; // > TEST_DRAIN_Z
+const BEFORE_DRAIN = 5;  // < TEST_DRAIN_Z
 
 let onCollision;
 let onBallLost;
@@ -13,6 +26,7 @@ let onBumperImpulse;
 let handler;
 
 beforeEach(() => {
+  setDrainThreshold(TEST_DRAIN_Z);
   onCollision = vi.fn();
   onBallLost = vi.fn();
   onBumperImpulse = vi.fn();
@@ -22,24 +36,23 @@ beforeEach(() => {
 // ── Drain ───────────────────────────────────────────────
 
 describe("checkDrain", () => {
-  const PAST_DRAIN = 10;
-  const BEFORE_DRAIN = 5;
-
   it("1 — retourne true et appelle onBallLost quand z > seuil et status playing", () => {
     expect(handler.checkDrain(PAST_DRAIN, "playing")).toBe(true);
     expect(onBallLost).toHaveBeenCalledOnce();
   });
 
-  it("2 — ne re-appelle pas sans resetDrainFlag", () => {
+  it("2 — ne re-appelle pas onBallLost sans resetDrainFlag", () => {
     handler.checkDrain(PAST_DRAIN, "playing");
     handler.checkDrain(PAST_DRAIN, "playing");
     handler.checkDrain(PAST_DRAIN, "playing");
     expect(onBallLost).toHaveBeenCalledOnce();
   });
 
-  it("3 — ignore si status !== playing", () => {
-    expect(handler.checkDrain(PAST_DRAIN, "idle")).toBe(false);
-    expect(handler.checkDrain(PAST_DRAIN, "game_over")).toBe(false);
+  it("3 — retourne true mais sans onBallLost si status !== playing (reset mecanique toujours actif)", () => {
+    expect(handler.checkDrain(PAST_DRAIN, "idle")).toBe(true);
+    expect(onBallLost).not.toHaveBeenCalled();
+    handler.resetDrainFlag();
+    expect(handler.checkDrain(PAST_DRAIN, "game_over")).toBe(true);
     expect(onBallLost).not.toHaveBeenCalled();
   });
 

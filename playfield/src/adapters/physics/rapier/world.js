@@ -20,7 +20,7 @@ import { PLAYFIELD_VIEW_DEFAULTS } from "../../../domain/viewConfig.js";
 const TILT_DEG = PLAYFIELD_VIEW_DEFAULTS.gravityTiltDeg;
 const GRAVITY = PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude;
 
-export const FIXED_TIME_STEP = 1 / 120;
+export const FIXED_TIME_STEP = 1 / 60;
 export const MAX_SUB_STEPS = 10; // Rapier n'a pas de substeps natifs ; on garde la constante pour le port
 
 /**
