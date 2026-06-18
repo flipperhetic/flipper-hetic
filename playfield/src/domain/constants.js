@@ -44,7 +44,7 @@ export const FLIPPER_REST_ANGLE = 0.5;   // radians (~28°), battes au repos ver
 export const FLIPPER_PIVOT_X = 2.3;
 export const FLIPPER_OFFSET_X = -0.55;
 export const FLIPPER_PIVOT_Z = 8.45;
-export const FLIPPER_PIVOT_Y = 0.35;
+export const FLIPPER_PIVOT_Y = 0.55;
 export const FLIPPER_ROT_X = 0.05235987755982989;  // radians (~3°), inclinaison des battes sur l'axe X
 export const FLIPPER_ROT_Z = 0.017453292519943295;  // radians (~1°), inclinaison des battes sur l'axe Z
 

@@ -54,10 +54,9 @@ export function startPlayfieldLoop(deps) {
       updateFlippers(flipperBodies);
       world.step(FIXED_TIME_STEP, FIXED_TIME_STEP, 1);
       postStepFlippers(flipperBodies);
+      clampBallBody(ballBody);
       accumulator -= FIXED_TIME_STEP;
     }
-
-    clampBallBody(ballBody);
     updateLaunchGate(launchGateBody, ballBody.position.z);
 
     if (collisionHandler.checkDrain(ballBody.position.z, gameState.status)) {

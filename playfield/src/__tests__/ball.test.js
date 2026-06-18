@@ -81,6 +81,7 @@ function makeFakeRb() {
     setAngvel: vi.fn((v) => { state.angvel = { ...v }; }),
     setRotation: vi.fn((q) => { state.rotation = { ...q }; }),
     setBodyType: vi.fn((t) => { state.bodyType = t; }),
+    enableCcd: vi.fn(),
     applyImpulse: vi.fn(),
     wakeUp: vi.fn(),
     translation: () => state.translation,

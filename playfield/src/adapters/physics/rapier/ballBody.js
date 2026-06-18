@@ -25,6 +25,7 @@ export function createBallBody(world) {
     .setCanSleep(false);
 
   const rb = world.createRigidBody(bodyDesc);
+  rb.enableCcd(true);
 
   const colliderDesc = RAPIER.ColliderDesc.ball(BALL_RADIUS)
     .setDensity(BALL_MASS / ((4 / 3) * Math.PI * BALL_RADIUS ** 3))
