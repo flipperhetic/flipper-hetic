@@ -68,15 +68,4 @@ export class GameState {
     }
     return "ball_lost";
   }
-
-  toJSON() {
-    return {
-      status: this.status,
-      score: this.score,
-      highScore: this.highScore || 0,
-      ballsLeft: this.ballsLeft,
-      currentBall: this.currentBall,
-      lastEvent: this.lastEvent,
-    };
-  }
 }
