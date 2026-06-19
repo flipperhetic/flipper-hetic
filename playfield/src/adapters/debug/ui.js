@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Debug menu UI — panel with sliders, inputs, buttons.
  * Isolated in adapters/debug/ for easy removal.
  */
@@ -63,10 +63,6 @@ const SLIDERS = {
     levelRotX: { type: "range", min: -180, max: 180, default: PLAYFIELD_VIEW_DEFAULTS.levelRotX, step: 1 },
     levelRotY: { type: "range", min: -180, max: 180, default: PLAYFIELD_VIEW_DEFAULTS.levelRotY, step: 1 },
     levelRotZ: { type: "range", min: -180, max: 180, default: PLAYFIELD_VIEW_DEFAULTS.levelRotZ, step: 1 },
-  },
-  "Physique": {
-    gravityTiltDeg: { type: "range", min: 0, max: 45, default: PLAYFIELD_VIEW_DEFAULTS.gravityTiltDeg, step: 0.1 },
-    gravityMagnitude: { type: "range", min: 1, max: 60, default: PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude, step: 0.1 },
   },
   "Lumières": {
     ambientIntensity: { type: "range", min: 0, max: 2, default: PLAYFIELD_VIEW_DEFAULTS.ambientIntensity, step: 0.1 },

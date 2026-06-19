@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Playfield — Composition du niveau.
  *
  * Le fond (plateau 9:16) et les murs d'extremite sont des meshes Three.js
@@ -9,6 +9,8 @@ import { Mesh, BoxGeometry, MeshBasicMaterial, DoubleSide } from "three";
 import { setFlippersWorldRotY, createStaticBoxBody } from "../adapters/physics/index.js";
 import { buildActors } from "./buildActors.js";
 import { buildEnvironment } from "./buildEnvironment.js";
+import { buildGLBCollisions } from "./buildGLBCollisions.js";
+import { loadExtraModels } from "../adapters/renderer/modelLoader.js";
 import {
   DRAIN_Z_THRESHOLD,
   DRAIN_OPENING_WIDTH,
@@ -23,6 +25,14 @@ const DEG = Math.PI / 180;
 export async function buildLevel({ scene, world }) {
   // -- Fond + murs (Three.js + colliders statiques) ------------------------
   const { group: envGroup } = buildEnvironment(world);
+
+  // -- Modeles GLB (bumpers, obstacles) ------------------------------------
+  const extraScenes = await loadExtraModels();
+  for (const m of extraScenes) {
+    envGroup.add(m);
+    m.updateMatrixWorld(true);
+    buildGLBCollisions(world, m);
+  }
 
   // Plafond de verre (physique seule) : bloque les rebonds verticaux.
   createStaticBoxBody(world, {
@@ -52,7 +62,6 @@ export async function buildLevel({ scene, world }) {
   drainMesh.visible = false;
   envGroup.add(drainMesh);
 
-  // Body factice : permet de regler le seuil de drain via le panneau debug.
   const drainFakeBody = {
     rb: {
       setTranslation({ x, y, z }) {
@@ -104,6 +113,7 @@ export async function buildLevel({ scene, world }) {
     launchGateBody,
     gltfModel: envGroup,
     gltfInner: envGroup,
+    gltfExtras: extraScenes,
     physicsRotateY,
     setPhysicsDebugVisible,
     triggers,
