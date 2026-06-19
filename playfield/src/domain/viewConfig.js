@@ -26,11 +26,15 @@ export const PLAYFIELD_VIEW_DEFAULTS = {
   // eleves -> g*sin(30) = 40*0.5 = 20 u/s^2 (vs ~2.5 auparavant).
   gravityTiltDeg: 30,
   gravityMagnitude: 40,
-  ambientIntensity: 0.6,
-  dirLightX: 5,
-  dirLightY: 15,
-  dirLightZ: 5,
-  dirLightIntensity: 0.8,
+  // Eclairage "coucher de soleil" (theme Breaking Bad / Texas) : la directional
+  // (cf. scene.js, couleur orange chaude + ombres) vient du coin BAS-DROITE hors
+  // plateau (X+ = droite, Z+ = bas/joueur), angle rasant -> ombres longues vers
+  // le haut du plateau. Ambient baisse pour garder du contraste.
+  ambientIntensity: 0.55,
+  dirLightX: 14,
+  dirLightY: 14,
+  dirLightZ: 18,
+  dirLightIntensity: 3.6,
 };
 
 export function applyViewConfigToPerspectiveCamera(

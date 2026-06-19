@@ -90,9 +90,9 @@ export function buildEnvironment(world) {
       color: 0xffe600, // jaune chantier / toxic
       metalness: 0.2,
       roughness: 1,
-      // Leger emissif jaune : sans lui, les murs lateraux (vus de tranche par la
-      // camera) restent sombres/ternes et ne "lisent" pas comme jaunes.
-      emissive: 0x3a3000,
+      // Emissif ambre chaud (et non olive) : dans la penombre les murs lisent
+      // jaune-orange au lieu de virer au vert, et restent visibles de tranche.
+      emissive: 0x3d1c00,
       emissiveIntensity: 0.5,
       normalMap: loadRust("/textures/rust_normalGL.jpg", rx, ry, ox, oy),
       roughnessMap: loadRust("/textures/rust_roughness.jpg", rx, ry, ox, oy),
@@ -109,6 +109,7 @@ export function buildEnvironment(world) {
     floorMat,
   );
   floor.position.set(0, -TABLE_THICKNESS / 2, 0);
+  floor.receiveShadow = true;
   group.add(floor);
 
   // Surface texturee posee sur le plateau. Plan tourne de -90° sur X : il est
@@ -121,15 +122,16 @@ export function buildEnvironment(world) {
     new THREE.PlaneGeometry(TABLE_WIDTH, TABLE_DEPTH),
     new THREE.MeshStandardMaterial({
       map: tex,
-      emissive: 0xffffff,
+      emissive: 0xffd9b3,
       emissiveMap: tex,
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.85, // auto-illumination relevee : le plateau reste lisible sous l'eclairage sombre
       roughness: 0.7,
       metalness: 0.0,
     }),
   );
   topPlane.rotation.x = -Math.PI / 2;
   topPlane.position.set(0, 0.01, 0);
+  topPlane.receiveShadow = true; // surface visible : recoit les ombres des murs/bille
   group.add(topPlane);
 
   createStaticBoxBody(world, {
@@ -155,6 +157,8 @@ export function buildEnvironment(world) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(x, wy, z);
     mesh.rotation.y = ry;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     group.add(mesh);
     let rotation;
     if (ry) {

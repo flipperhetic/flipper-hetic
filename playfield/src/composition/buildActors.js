@@ -12,10 +12,13 @@ export function buildActors(world, scene) {
   const syncPairs = [];
 
   const ballMesh = createBallMesh(scene);
+  ballMesh.castShadow = true;
   const ballBody = createBallBody(world);
   syncPairs.push({ mesh: ballMesh, body: ballBody });
 
   const flipperMeshes = createFlipperMeshes(scene);
+  flipperMeshes.left.castShadow = true;
+  flipperMeshes.right.castShadow = true;
   const flipperBodies = createFlipperBodies(world);
   syncPairs.push(
     { mesh: flipperMeshes.left,  body: flipperBodies.left.body },

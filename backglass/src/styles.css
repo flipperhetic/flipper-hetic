@@ -362,11 +362,15 @@ body {
 
 .game-over__replay kbd {
   font-family: inherit;
-  color: var(--gold-bright);
-  border: 2px solid currentColor;
+  color: #36e04a; /* bouton vert du flipper */
+  border: 2px solid #fff; /* bordure blanche neon */
   border-radius: 8px;
   padding: 0 0.4em;
   margin: 0 0.15em;
+  /* bloom vert : halo exterieur + glow interieur */
+  text-shadow: 0 0 8px rgba(54, 224, 74, 0.9);
+  box-shadow: 0 0 8px rgba(54, 224, 74, 0.9), 0 0 20px rgba(54, 224, 74, 0.6),
+    inset 0 0 8px rgba(54, 224, 74, 0.45);
 }
 
 @keyframes gameover-in {
@@ -508,12 +512,15 @@ body {
 
 .attract-screen__press kbd {
   font-family: inherit;
-  color: var(--gold-bright);
-  border: 2px solid currentColor;
+  color: #36e04a; /* bouton vert du flipper */
+  border: 2px solid #fff; /* bordure blanche neon */
   border-radius: 8px;
   padding: 0 0.4em;
   margin: 0 0.15em;
-  box-shadow: 0 0 14px rgba(215, 195, 110, 0.4);
+  /* bloom vert plus intense (texte d'accueil plus grand) */
+  text-shadow: 0 0 10px rgba(54, 224, 74, 0.95);
+  box-shadow: 0 0 10px rgba(54, 224, 74, 0.95), 0 0 26px rgba(54, 224, 74, 0.6),
+    0 0 42px rgba(54, 224, 74, 0.4), inset 0 0 10px rgba(54, 224, 74, 0.5);
 }
 
 .attract-screen__hint {

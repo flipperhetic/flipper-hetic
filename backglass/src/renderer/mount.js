@@ -133,7 +133,7 @@ export function mountBackglassRoot() {
           </dl>
           <img class="case-file__stamp" id="gameOverNewRecord" src="/assets/img/stamp-record.png" alt="New record" />
         </div>
-        <div class="game-over__replay">Press <kbd>Enter</kbd> to play again</div>
+        <div class="game-over__replay">Press the <kbd>green button</kbd> to play again</div>
       </div>
     </div>
     <div id="attract-screen" class="attract-screen">
@@ -149,7 +149,7 @@ export function mountBackglassRoot() {
           <span>"Tread lightly."</span>
           <span>"Yeah, science!"</span>
         </div>
-        <div class="attract-screen__press">Press <kbd>Enter</kbd> to play</div>
+        <div class="attract-screen__press">Press the <kbd>green button</kbd> to play</div>
         <div class="attract-screen__hint">Insert coin · 1 credit</div>
       </div>
     </div>
