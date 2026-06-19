@@ -1,21 +1,17 @@
 import { Vector3 } from 'three';
-import { getRapier } from '../adapters/physics/rapier/init.js';
-import { createBodyHandle } from '../adapters/physics/rapier/bodyHandle.js';
+import { getRapier, createBodyHandle } from '../adapters/physics/index.js';
 
-export function buildGLBCollisions(world, gltfScene) {
+export function buildGLBCollisions(physicsWorld, gltfScene) {
   const RAPIER = getRapier();
+  const world = physicsWorld.world;
   gltfScene.updateMatrixWorld(true);
 
-  let count = 0;
   const tmp = new Vector3();
 
   gltfScene.traverse((obj) => {
     if (!obj.isMesh) return;
     const geo = obj.geometry;
-    if (!geo?.index) {
-      console.warn(`[GLB collision] skipped non-indexed mesh: "${obj.name}"`);
-      return;
-    }
+    if (!geo?.index) return;
 
     const posAttr = geo.attributes.position;
     const verts = new Float32Array(posAttr.count * 3);
@@ -35,10 +31,6 @@ export function buildGLBCollisions(world, gltfScene) {
         .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS),
       rb,
     );
-    createBodyHandle(rb, world, { userData: { type: 'table' }, colliders: [col] });
-    console.log(`[GLB collision] "${obj.name}" — ${posAttr.count} verts`);
-    count++;
+    createBodyHandle(rb, { userData: { type: 'table' }, colliders: [col] });
   });
-
-  console.log(`[GLB collision] ${count} trimesh collider(s) created`);
 }

@@ -1,7 +1,3 @@
-/**
- * Affichage volume/mute en haut a droite + raccourcis clavier (M, +/-).
- */
-
 const HUD_STYLES = `
 #audio-hud {
   position: fixed; top: 16px; right: 16px; z-index: 10000;
@@ -45,7 +41,6 @@ function pulse() {
   activeTimer = setTimeout(() => hud.classList.remove("active"), 1400);
 }
 
-// Appele par le moteur audio a chaque changement de volume/mute
 export function updateAudioHud({ volume, muted }) {
   if (!hud) return;
   const pct = Math.round(volume * 100);

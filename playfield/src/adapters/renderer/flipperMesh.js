@@ -1,6 +1,3 @@
-/**
- * Playfield — Meshes Three.js des flippers.
- */
 import * as THREE from "three";
 import {
   FLIPPER_LENGTH,

@@ -1,23 +1,18 @@
-/**
- * Tests unitaires — playfield/src/adapters/physics/rapier/ballBody.js
- *
- * Couvre : resetBallBody, launchBallBody, clampBallBody, anti-double-launch.
- * Rapier (`@dimforge/rapier3d-compat`) est mocke via init.js + world fake.
- *
- * Codes Rapier RigidBodyType :
- *   - 0 = Dynamic
- *   - 2 = KinematicPositionBased
- */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock world.js : ballBody.js importe MATERIALS depuis ce module.
-vi.mock("../adapters/physics/rapier/world.js", () => ({
+vi.mock("../adapters/physics/rapier/PhysicsWorld.js", () => ({
   MATERIALS: {
     ball: { friction: 0.3, restitution: 0.35 },
   },
+  createBodyHandle: (rb, { userData = {} } = {}) => ({
+    rb,
+    userData,
+    position: rb._position,
+  }),
+  bodyHandlesByRapierHandle: new Map(),
+  default: class PhysicsWorld {},
 }));
 
-// Mock Rapier — uniquement les primitives utilisees par ballBody.js
 vi.mock("../adapters/physics/rapier/init.js", () => {
   const fakeRapier = {
     RigidBodyDesc: {
@@ -43,26 +38,7 @@ vi.mock("../adapters/physics/rapier/init.js", () => {
   };
 });
 
-// Mock du wrapper bodyHandle pour qu'il expose directement `rb` sans Proxy.
-// `userData` est partage entre createBodyHandle et le caller (createBallBody)
-// pour que `body.userData.launched` soit accessible et mutable cote test.
-vi.mock("../adapters/physics/rapier/bodyHandle.js", () => ({
-  createBodyHandle: (rb, world, { userData = {} } = {}) => ({
-    rb,
-    world,
-    userData,
-    position: rb._position,
-  }),
-  bodyHandlesByRapierHandle: new Map(),
-}));
-
-import {
-  resetBallBody,
-  launchBallBody,
-  clampBallBody,
-  createBallBody,
-  setBallFixedY,
-} from "../adapters/physics/rapier/ballBody.js";
+import BallBody from "../adapters/physics/rapier/BallBody.js";
 import { PLUNGER_SPAWN_X, PLUNGER_SPAWN_Y, PLUNGER_SPAWN_Z } from "../domain/constants.js";
 
 function makeFakeRb() {
@@ -74,7 +50,7 @@ function makeFakeRb() {
     bodyType: 0,
     handle: Math.floor(Math.random() * 1e6),
   };
-  const rb = {
+  return {
     _state: state,
     setTranslation: vi.fn((t) => { state.translation = { ...t }; }),
     setLinvel: vi.fn((v) => { state.linvel = { ...v }; }),
@@ -90,25 +66,29 @@ function makeFakeRb() {
     rotation: () => state.rotation,
     handle: state.handle,
   };
-  return rb;
 }
 
-function makeFakeWorld() {
+function makeFakePhysicsWorld() {
+  const rb = makeFakeRb();
   return {
-    createRigidBody: () => makeFakeRb(),
-    createCollider: vi.fn(),
+    world: {
+      createRigidBody: () => rb,
+      createCollider: vi.fn(() => ({ handle: 0 })),
+    },
+    _rb: rb,
   };
 }
 
 function makeTestBody() {
-  return createBallBody(makeFakeWorld());
+  const pw = makeFakePhysicsWorld();
+  return new BallBody(pw);
 }
 
-describe("resetBallBody", () => {
-  it("1 — place le body au spawn plunger", () => {
+describe("BallBody reset", () => {
+  it("1 - place le body au spawn plunger", () => {
     const body = makeTestBody();
     body.rb.setTranslation.mockClear();
-    resetBallBody(body);
+    body.reset();
 
     expect(body.rb.setTranslation).toHaveBeenCalledWith(
       { x: PLUNGER_SPAWN_X, y: PLUNGER_SPAWN_Y, z: PLUNGER_SPAWN_Z },
@@ -116,88 +96,81 @@ describe("resetBallBody", () => {
     );
   });
 
-  it("2 — remet les velocites a zero", () => {
+  it("2 - remet les velocites a zero", () => {
     const body = makeTestBody();
     body.rb.setLinvel.mockClear();
     body.rb.setAngvel.mockClear();
-    resetBallBody(body);
+    body.reset();
 
     expect(body.rb.setLinvel).toHaveBeenCalledWith({ x: 0, y: 0, z: 0 }, true);
     expect(body.rb.setAngvel).toHaveBeenCalledWith({ x: 0, y: 0, z: 0 }, true);
   });
 
-  it("3 — fige le body en KinematicPositionBased (type 2)", () => {
+  it("3 - fige le body en KinematicPositionBased (type 2)", () => {
     const body = makeTestBody();
     body.rb.setBodyType.mockClear();
-    resetBallBody(body);
+    body.reset();
 
     expect(body.rb.setBodyType).toHaveBeenCalledWith(2, true);
   });
 });
 
-describe("launchBallBody", () => {
-  it("4 — debloque en Dynamic (type 0) et fixe la velocite vers Z-", () => {
+describe("BallBody launch", () => {
+  it("4 - debloque en Dynamic (type 0) et fixe la velocite vers Z-", () => {
     const body = makeTestBody();
-    resetBallBody(body);
+    body.reset();
     body.rb.setBodyType.mockClear();
     body.rb.setLinvel.mockClear();
 
-    const result = launchBallBody(body);
+    const result = body.launch();
     expect(result).toBe(true);
     expect(body.rb.setBodyType).toHaveBeenCalledWith(0, true);
-    // Le dernier setLinvel doit etre l'impulsion plunger (z negatif).
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
     expect(lastV.x).toBeLessThan(0);
     expect(lastV.y).toBe(0);
     expect(lastV.z).toBeLessThan(0);
   });
 
-  it("5 — double launchBallBody refuse", () => {
+  it("5 - double launch refuse", () => {
     const body = makeTestBody();
-    resetBallBody(body);
+    body.reset();
 
-    expect(launchBallBody(body)).toBe(true);
+    expect(body.launch()).toBe(true);
     const callsAfterFirst = body.rb.setLinvel.mock.calls.length;
 
-    expect(launchBallBody(body)).toBe(false);
-    // Aucun setLinvel supplementaire entre le 1er launch et le 2nd refus.
+    expect(body.launch()).toBe(false);
     expect(body.rb.setLinvel.mock.calls.length).toBe(callsAfterFirst);
   });
 
-  it("6 — resetBallBody puis launchBallBody re-autorise", () => {
+  it("6 - reset puis launch re-autorise", () => {
     const body = makeTestBody();
-    resetBallBody(body);
+    body.reset();
 
-    expect(launchBallBody(body)).toBe(true);
-    resetBallBody(body);
-    expect(launchBallBody(body)).toBe(true);
+    expect(body.launch()).toBe(true);
+    body.reset();
+    expect(body.launch()).toBe(true);
   });
 });
 
-describe("clampBallBody", () => {
-  it("verrouille Y a ballFixedY quand la bille s'eloigne du plateau", () => {
-    const TEST_Y = 0.5;
-    setBallFixedY(TEST_Y);
-
+describe("BallBody clamp", () => {
+  it("verrouille Y a PLUNGER_SPAWN_Y quand la bille s eloigne du plateau", () => {
     const body = makeTestBody();
     body.rb._state.translation = { x: 0, y: 5, z: 0 };
     body.rb._state.linvel = { x: 3, y: 10, z: 4 };
 
-    clampBallBody(body);
+    body.clamp();
 
     const lastT = body.rb.setTranslation.mock.calls.at(-1)[0];
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
-    expect(lastT.y).toBe(TEST_Y);
+    expect(lastT.y).toBe(PLUNGER_SPAWN_Y);
     expect(lastV.y).toBe(0);
-
-    setBallFixedY(PLUNGER_SPAWN_Y); // restore
   });
 
   it("plafonne la vitesse quand elle depasse le max", () => {
     const body = makeTestBody();
     body.rb._state.linvel = { x: 35, y: 0, z: 35 };
 
-    clampBallBody(body);
+    body.clamp();
 
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
     const speed = Math.sqrt(lastV.x ** 2 + lastV.z ** 2);
@@ -208,7 +181,7 @@ describe("clampBallBody", () => {
     const body = makeTestBody();
     body.rb._state.linvel = { x: 3, y: 0, z: 4 };
 
-    clampBallBody(body);
+    body.clamp();
 
     const lastV = body.rb.setLinvel.mock.calls.at(-1)[0];
     expect(lastV.x).toBe(3);

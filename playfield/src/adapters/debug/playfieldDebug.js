@@ -9,8 +9,6 @@ import {
   PLUNGER_SPAWN_X, PLUNGER_SPAWN_Y, PLUNGER_SPAWN_Z,
 } from '../../domain/constants.js';
 import { PLAYFIELD_VIEW_DEFAULTS } from '../../domain/viewConfig.js';
-import { applyPhysicsGravity } from '../physics/rapier/world.js';
-import { setBallFixedY } from '../physics/rapier/ballBody.js';
 
 const DEG = Math.PI / 180;
 const RESET_BTN_CSS = 'padding:1px 5px;background:transparent;color:#0ff;border:1px solid #0ff;border-radius:3px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:1.4';
@@ -78,7 +76,7 @@ export function createPlayfieldDebugUI({ gltfModel, gltfInner, flipperBodies, ba
 
   function applyGravity() {
     if (!world) return;
-    applyPhysicsGravity(world, state.gravityTiltDeg, state.gravityMagnitude);
+    world.setGravity(state.gravityTiltDeg, state.gravityMagnitude);
   }
 
   function applyWorldRot() {
@@ -89,7 +87,7 @@ export function createPlayfieldDebugUI({ gltfModel, gltfInner, flipperBodies, ba
 
   function applyBall() {
     if (!ballBody?.rb) return;
-    setBallFixedY(state.spawnY);
+    if (ballBody?.setFixedY) ballBody.setFixedY(state.spawnY);
     ballBody.rb.setBodyType(2, true);
     ballBody.rb.setNextKinematicTranslation({ x: state.spawnX, y: state.spawnY, z: state.spawnZ });
     ballBody.rb.setLinvel({ x: 0, y: 0, z: 0 }, true);

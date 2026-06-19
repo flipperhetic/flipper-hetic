@@ -116,7 +116,7 @@ const AUDIO_DEBUG_STYLES = `
 }
 `;
 
-import { AUDIO_GROUPS } from "../audio.js";
+import { AUDIO_GROUPS } from "../audio/AudioEngine.js";
 
 const GROUPS = Object.entries(AUDIO_GROUPS).map(([label, samples]) => ({ label, samples }));
 

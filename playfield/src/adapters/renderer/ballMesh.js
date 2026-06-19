@@ -1,6 +1,3 @@
-/**
- * Playfield — Mesh Three.js de la bille.
- */
 import * as THREE from "three";
 import { BALL_RADIUS } from "../../domain/constants.js";
 

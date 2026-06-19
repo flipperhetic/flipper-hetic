@@ -1,242 +1,146 @@
-import { createScene } from "./adapters/renderer/scene.js";
-import { createBloom } from "./adapters/renderer/bloom.js";
-import {
-  initRapier,
-  createPhysicsWorld,
-  attachCollisionListener,
-  launchBallBody,
-  resetBallBody,
-  setFlipperActive,
-  openLaunchGate,
-} from "./adapters/physics/index.js";
-import {
-  initNetwork,
-  emitStartGame,
-  emitLaunchBall,
-  emitFlipperLeftDown,
-  emitFlipperLeftUp,
-  emitFlipperRightDown,
-  emitFlipperRightUp,
-  emitCollision,
-  emitBallLost,
-  emitResetHighScore,
-  gameState,
-} from "./adapters/network.js";
-import { createCollisionHandler } from "./usecases/collisionHandler.js";
-import { createActuators } from "./adapters/actuators.js";
-import { createAudioEngine } from "./adapters/audio.js";
-import { mountAudioControls, updateAudioHud } from "./adapters/audio-controls.js";
-import { createGameInputController, bindKeyboardInput, bindExternalInputSource } from "./adapters/input.js";
-import { createCabinetInputSource } from "./adapters/cabinetInput.js";
-import { buildLevel } from "./composition/buildLevel.js";
-import { groupLevelMeshes } from "./composition/levelGroup.js";
-import { startPlayfieldLoop } from "./composition/runGameLoop.js";
-import { createPlayfieldViewRuntime } from "./composition/playfieldViewRuntime.js";
+import PlayfieldScene from './adapters/renderer/PlayfieldScene.js';
+import BloomRenderer from './adapters/renderer/BloomRenderer.js';
+import { initRapier, PhysicsWorld } from './adapters/physics/index.js';
+import NetworkAdapter from './adapters/network/NetworkAdapter.js';
+import CollisionHandler from './usecases/CollisionHandler.js';
+import { createActuators } from './adapters/actuators.js';
+import AudioEngine from './adapters/audio/AudioEngine.js';
+import { mountAudioControls, updateAudioHud } from './adapters/audio-controls.js';
+import InputController from './adapters/input/InputController.js';
+import Level from './composition/Level.js';
+import GameLoop from './composition/GameLoop.js';
+import ViewRuntime from './composition/ViewRuntime.js';
+import { wireCollisions } from './composition/wireCollisions.js';
+import { BUMPER_SERVER_TYPE } from './domain/constants.js';
+
 await initRapier();
 
-const audio = createAudioEngine(updateAudioHud);
+const audio = new AudioEngine(updateAudioHud);
 audio.startTheme(0.18);
 audio.setMuted(true, false);
 mountAudioControls(audio);
-const audioHud = document.getElementById("audio-hud");
-if (audioHud) audioHud.style.display = "none";
+const audioHud = document.getElementById('audio-hud');
+if (audioHud) audioHud.style.display = 'none';
 const actuators = createActuators(audio);
 
-const { scene, camera, renderer, ambientLight, dirLight, pointLights } = createScene();
-const world = createPhysicsWorld();
-const level = await buildLevel({ scene, world });
-const levelGroup = groupLevelMeshes(scene, level.syncPairs);
-levelGroup.add(level.gltfModel);
+const playfieldScene = new PlayfieldScene();
+const { scene, camera, renderer, ambientLight, dirLight, pointLights } = playfieldScene;
+const physicsWorld = new PhysicsWorld();
 
-const viewRuntime = createPlayfieldViewRuntime({
-  camera,
-  renderer,
-  scene,
-  levelGroup,
-  world,
-  dirLight,
+let levelRef = null;
+const collisionHandler = new CollisionHandler({
+  onCollision: (type) => {
+    const serverType = type.startsWith('bumper') ? (BUMPER_SERVER_TYPE[type] ?? 'bumper') : type;
+    network.emitCollision(serverType);
+    if (type.startsWith('bumper')) actuators.onBumperHit();
+    else if (type === 'slingshot') actuators.onSlingshotHit();
+    else if (type === 'tunnel') audio.play('milestone-2');
+    else if (type === 'tunnel-rv') audio.play('milestone-1');
+  },
+  onBallLost: () => {
+    network.emitBallLost();
+    actuators.onBallLost();
+  },
+  onBumperImpulse: (vec3) => levelRef?.ballBody.applyImpulse(vec3),
 });
 
-// attach AFTER apply() has positioned levelGroup — preserves arch world position
-if (level.archMesh) levelGroup.attach(level.archMesh);
+const level = await new Level({
+  scene,
+  physicsWorld,
+  onDrainZChange: (z) => collisionHandler.setDrainThreshold(z),
+}).build();
+levelRef = level;
 
-window.addEventListener("resize", viewRuntime.onResize);
+wireCollisions(physicsWorld, level, collisionHandler);
 
-const { composer, bloomPass, renderPass, onResize: onBloomResize } = createBloom(renderer, scene, camera);
-window.addEventListener("resize", onBloomResize);
+const viewRuntime = new ViewRuntime({ camera, renderer, scene, levelGroup: level.group, world: physicsWorld, dirLight });
+if (level.archMesh) level.group.attach(level.archMesh);
+window.addEventListener('resize', viewRuntime.onResize);
 
-const serverOverlay = document.createElement("div");
+const bloom = new BloomRenderer(renderer, scene, camera);
+const { composer, bloomPass } = bloom;
+window.addEventListener('resize', () => bloom.onResize());
+
+const serverOverlay = document.createElement('div');
 serverOverlay.style.cssText = [
-  "display:none;position:fixed;inset:0;z-index:9999",
-  "background:rgba(0,0,0,.88);align-items:center;justify-content:center",
-  "flex-direction:column;gap:12px",
+  'display:none;position:fixed;inset:0;z-index:9999',
+  'background:rgba(0,0,0,.88);align-items:center;justify-content:center',
+  'flex-direction:column;gap:12px',
   "font-family:'Courier New',monospace;color:#ff4444;font-size:1.1rem;text-align:center",
-].join(";");
-serverOverlay.innerHTML = "<strong>Serveur hors ligne</strong><span>Reconnexion en cours…</span>";
+].join(';');
+serverOverlay.innerHTML = '<strong>Serveur hors ligne</strong><span>Reconnexion en cours…</span>';
 document.body.appendChild(serverOverlay);
-
-let socket;
-
-const readyDebug = async () => {
-  if (!import.meta.env.DEV) return;
-  const { wirePlayfieldDebug } = await import("./adapters/debug/wirePlayfieldDebug.js");
-  wirePlayfieldDebug({
-    viewRuntime,
-    camera,
-    renderer,
-    scene,
-    levelGroup,
-    world,
-    ambientLight,
-    dirLight,
-    pointLights,
-    bloomPass,
-    composer,
-    audio,
-    level,
-    onResetHighScore: () => {
-      if (socket) {
-        emitResetHighScore(socket);
-      }
-    },
-    onResetBall: () => {
-      resetBallBody(level.ballBody);
-      openLaunchGate(level.launchGateBody);
-    },
-    onTriggerSpecialEvent: (type) => {
-      emitCollision(socket, type);
-      if (type === 'tunnel') audio?.play('milestone-2');
-      else if (type === 'tunnel-rv') audio?.play('milestone-1');
-    },
-  });
-};
 
 let pendingLaunchAfterStart = false;
 
-socket = initNetwork({
-  onConnect() { serverOverlay.style.display = "none"; },
-  onConnectionError() { serverOverlay.style.display = "flex"; },
+const network = new NetworkAdapter({
+  onConnect() { serverOverlay.style.display = 'none'; },
+  onConnectionError() { serverOverlay.style.display = 'flex'; },
   onGameStarted() {
-    resetBallBody(level.ballBody);
-    openLaunchGate(level.launchGateBody);
+    level.ballBody.reset();
+    level.launchGateBody.open();
     collisionHandler.resetDrainFlag();
     collisionHandler.resetCollisionCooldowns();
-    setFlipperActive(level.flipperBodies, "left", false);
-    setFlipperActive(level.flipperBodies, "right", false);
-    console.log("[main] game started — bille au spawn");
-
+    level.flipperBodies.setActive('left', false);
+    level.flipperBodies.setActive('right', false);
     if (pendingLaunchAfterStart) {
       pendingLaunchAfterStart = false;
-      if (launchBallBody(level.ballBody)) {
-        audio.play("start");
-        emitLaunchBall(socket);
-      }
+      if (level.ballBody.launch()) { audio.play('start'); network.emitLaunchBall(); }
     }
   },
-  onHighScoreBeat(data) {
-    // Play one random highscore sound (handled by audio engine randomness/persistence)
-    try { audio.playRandom(["highscore-1", "highscore-2"]); } catch (e) { /* ignore */ }
+  onHighScoreBeat() {
+    try { audio.playRandom(['highscore-1', 'highscore-2']); } catch { /* ignore */ }
   },
-  onGameOver(data) {
+  onGameOver() {
     actuators.onGameOver();
-    console.log("[main] game over — score final :", data.score);
   },
 });
 
+const readyDebug = async () => {
+  if (!import.meta.env.DEV) return;
+  const { wirePlayfieldDebug } = await import('./adapters/debug/wirePlayfieldDebug.js');
+  wirePlayfieldDebug({
+    viewRuntime, camera, renderer, scene,
+    levelGroup: level.group, world: physicsWorld,
+    ambientLight, dirLight, pointLights,
+    bloomPass, composer, audio, level,
+    onResetHighScore: () => network.emitResetHighScore(),
+    onResetBall: () => { level.ballBody.reset(); level.launchGateBody.open(); },
+    onTriggerSpecialEvent: (type) => {
+      network.emitCollision(type);
+      if (type === 'tunnel') audio.play('milestone-2');
+      else if (type === 'tunnel-rv') audio.play('milestone-1');
+    },
+  });
+};
 readyDebug();
 
-const BUMPER_SERVER_TYPE = {
-  'bumper-cyl-0':   'bumper_100',
-  'bumper-cyl-1':   'bumper_50',
-  'bumper-cyl-2':   'bumper_25',
-  'bumper-diamond':   'bumper_10',
-  'bumper-diamond-2': 'bumper_10',
-  'bumper-tri-left':  'bumper_10',
-  'bumper-tri-right': 'bumper_10',
-};
-
-const collisionHandler = createCollisionHandler({
-  onCollision: (type) => {
-    const serverType = type.startsWith("bumper")
-      ? (BUMPER_SERVER_TYPE[type] ?? "bumper")
-      : type;
-    emitCollision(socket, serverType);
-    if (type.startsWith("bumper")) actuators.onBumperHit();
-    else if (type === "slingshot") actuators.onSlingshotHit();
-    else if (type === "tunnel") audio?.play('milestone-2');
-    else if (type === "tunnel-rv") audio?.play('milestone-1');
-  },
-  onBallLost: () => {
-    emitBallLost(socket);
-    actuators.onBallLost();
-  },
-  onBumperImpulse: (vec3) => {
-    level.ballBody.applyImpulse(vec3);
-  },
-});
-attachCollisionListener(level.ballBody, collisionHandler);
-
-const inputController = createGameInputController({
-  onStart() {
-    emitStartGame(socket);
-  },
+const inputController = new InputController({
+  onStart() { network.emitStartGame(); },
   onLaunch() {
-    if (gameState.status === "playing") {
-      if (launchBallBody(level.ballBody)) {
-        audio.play("start");
-        emitLaunchBall(socket);
-      }
+    if (network.gameState.status === 'playing') {
+      if (level.ballBody.launch()) { audio.play('start'); network.emitLaunchBall(); }
       return;
     }
-
     pendingLaunchAfterStart = true;
-    emitStartGame(socket);
+    network.emitStartGame();
   },
-  onLeftFlipperDown() {
-    setFlipperActive(level.flipperBodies, "left", true);
-    emitFlipperLeftDown(socket);
-    actuators.onFlipperFire("left");
-  },
-  onLeftFlipperUp() {
-    setFlipperActive(level.flipperBodies, "left", false);
-    emitFlipperLeftUp(socket);
-  },
-  onRightFlipperDown() {
-    setFlipperActive(level.flipperBodies, "right", true);
-    emitFlipperRightDown(socket);
-    actuators.onFlipperFire("right");
-  },
-  onRightFlipperUp() {
-    setFlipperActive(level.flipperBodies, "right", false);
-    emitFlipperRightUp(socket);
-  },
-  onDebugResetBall() {
-    resetBallBody(level.ballBody);
-    openLaunchGate(level.launchGateBody);
-  },
+  onLeftFlipperDown()  { level.flipperBodies.setActive('left', true);  network.emitFlipperLeftDown();  actuators.onFlipperFire('left'); },
+  onLeftFlipperUp()    { level.flipperBodies.setActive('left', false); network.emitFlipperLeftUp(); },
+  onRightFlipperDown() { level.flipperBodies.setActive('right', true); network.emitFlipperRightDown(); actuators.onFlipperFire('right'); },
+  onRightFlipperUp()   { level.flipperBodies.setActive('right', false); network.emitFlipperRightUp(); },
+  onDebugResetBall()   { level.ballBody.reset(); level.launchGateBody.open(); },
 });
+inputController.bindKeyboard();
+inputController.bindCabinet(network.socket);
 
-bindKeyboardInput(inputController);
-
-// Source d'input ESP32 via le bridge/ Docker (relais socket.io). Le bridge lit
-// /dev/ttyUSB0 sur le cabinet et emit "cabinet_button" au server. Ici on traduit
-// chaque ID firmware en action inputController, exactement comme le clavier.
-const cabinetSource = createCabinetInputSource(socket);
-bindExternalInputSource(cabinetSource.subscribe, inputController);
-
-startPlayfieldLoop({
-  world,
+new GameLoop({
+  physicsWorld,
   syncPairs: level.syncPairs,
   collisionHandler,
   ballBody: level.ballBody,
   flipperBodies: level.flipperBodies,
   launchGateBody: level.launchGateBody,
-  renderer,
-  scene,
-  getCamera: viewRuntime.getCamera,
-  gameState,
-  renderFn: () => {
-    renderPass.camera = viewRuntime.getCamera();
-    composer.render();
-  },
-});
+  gameState: network.gameState,
+  renderFn: () => bloom.render(viewRuntime.getCamera()),
+}).start();

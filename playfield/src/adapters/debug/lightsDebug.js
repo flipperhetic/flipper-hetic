@@ -1,5 +1,5 @@
-import { BLOOM_DEFAULTS } from '../renderer/bloom.js';
-import { POINT_LIGHT_DEFAULTS } from '../renderer/scene.js';
+import { BLOOM_DEFAULTS } from '../renderer/BloomRenderer.js';
+import { POINT_LIGHT_DEFAULTS } from '../renderer/PlayfieldScene.js';
 
 const RESET_BTN_CSS = 'padding:1px 5px;background:transparent;color:#ff0;border:1px solid #ff0;border-radius:3px;cursor:pointer;font-size:11px;flex-shrink:0;line-height:1.4';
 

@@ -1,18 +1,15 @@
 /**
- * Tests — playfield/src/adapters/input.js
+ * Tests — playfield/src/adapters/input/InputController.js
  *
- * Couvre le contrat clavier aligné sur l'annexe IoT du sujet HETIC :
- * X / C / D / F + Space / Enter / flèches + R (debug),
- * la symétrie press/release, le filet `blur`, et le cleanup.
+ * Covers the keyboard contract aligned with the HETIC IoT annex:
+ * X / C / D / F + Space / Enter / arrows + R (debug),
+ * press/release symmetry, blur safety net, and cleanup.
  *
- * Le binding est testé sans jsdom : `createFakeTarget()` fournit
- * juste `addEventListener` / `removeEventListener` et `dispatch()`.
+ * Tested without jsdom: `createFakeTarget()` provides just
+ * `addEventListener` / `removeEventListener` and `dispatch()`.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  createGameInputController,
-  bindKeyboardInput,
-} from "../adapters/input.js";
+import InputController from "../adapters/input/InputController.js";
 
 function createFakeTarget() {
   const listeners = new Map();
@@ -52,9 +49,9 @@ let target;
 
 beforeEach(() => {
   actions = createSpyActions();
-  controller = createGameInputController(actions);
+  controller = new InputController(actions);
   target = createFakeTarget();
-  bindKeyboardInput(controller, target);
+  controller.bindKeyboard(target);
 });
 
 describe("mapping annexe IoT HETIC", () => {
@@ -120,7 +117,7 @@ describe("anti-rebond et symétrie press/release", () => {
   });
 
   it("deux keydown distincts pour le même flipper n'émettent qu'un down", () => {
-    // X puis ArrowLeft tous deux mappés sur le flipper gauche
+    // X and ArrowLeft both map to left flipper
     target.dispatch("keydown", { code: "KeyX" });
     target.dispatch("keydown", { code: "ArrowLeft" });
     expect(actions.onLeftFlipperDown).toHaveBeenCalledTimes(1);
@@ -136,10 +133,10 @@ describe("debounce start (anti-rebond switch physique)", () => {
   it("deux start dans la fenêtre debounce n'émettent qu'un start", () => {
     const t = createFakeTarget();
     const a = createSpyActions();
-    const c = createGameInputController(a);
+    const c = new InputController(a);
     const clock = vi.spyOn(performance, "now");
     clock.mockReturnValue(0);
-    bindKeyboardInput(c, t);
+    c.bindKeyboard(t);
 
     clock.mockReturnValue(0);
     t.dispatch("keydown", { code: "KeyD" });
@@ -159,10 +156,10 @@ describe("debounce start (anti-rebond switch physique)", () => {
   it("rebond D→F dans la fenêtre n'émet qu'un start (F = même action)", () => {
     const t = createFakeTarget();
     const a = createSpyActions();
-    const c = createGameInputController(a);
+    const c = new InputController(a);
     const clock = vi.spyOn(performance, "now");
     clock.mockReturnValue(0);
-    bindKeyboardInput(c, t);
+    c.bindKeyboard(t);
 
     clock.mockReturnValue(0);
     t.dispatch("keydown", { code: "KeyD" });
@@ -204,13 +201,14 @@ describe("filet blur (perte de focus)", () => {
 });
 
 describe("cleanup", () => {
-  it("la fonction retournée désabonne tous les listeners", () => {
+  it("dispose() désabonne tous les listeners du clavier", () => {
     const t = createFakeTarget();
-    const unbind = bindKeyboardInput(controller, t);
+    const c = new InputController(actions);
+    c.bindKeyboard(t);
     expect(t.listenerCount("keydown")).toBe(1);
     expect(t.listenerCount("keyup")).toBe(1);
     expect(t.listenerCount("blur")).toBe(1);
-    unbind();
+    c.dispose();
     expect(t.listenerCount("keydown")).toBe(0);
     expect(t.listenerCount("keyup")).toBe(0);
     expect(t.listenerCount("blur")).toBe(0);

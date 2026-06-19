@@ -105,6 +105,17 @@ export const FLIPPER_SPEED = 15;
 // Collisions — cooldown entre deux emissions du meme type (ms)
 export const COLLISION_COOLDOWN_MS = 300;
 
+// Bumpers — correspondance ID local → type événement serveur (score associé)
+export const BUMPER_SERVER_TYPE = {
+  'bumper-cyl-0':     'bumper_100',
+  'bumper-cyl-1':     'bumper_50',
+  'bumper-cyl-2':     'bumper_25',
+  'bumper-diamond':   'bumper_10',
+  'bumper-diamond-2': 'bumper_10',
+  'bumper-tri-left':  'bumper_10',
+  'bumper-tri-right': 'bumper_10',
+};
+
 // Rendu WebGL — cibles machines integrees / ecrans haute densite
 /** Plafonne devicePixelRatio (souvent la cause n°1 des lags sur PC integre). */
 export const MAX_RENDERER_PIXEL_RATIO = 1.5;

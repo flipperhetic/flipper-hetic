@@ -1,8 +1,3 @@
-/**
- * Playfield — Mesh Three.js du one-way gate du tunnel de lancement.
- *
- * Position et orientation suivies par syncPairs depuis le body kinematic.
- */
 import * as THREE from "three";
 import {
   TUNNEL_WIDTH,
