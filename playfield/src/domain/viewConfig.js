@@ -20,8 +20,12 @@ export const PLAYFIELD_VIEW_DEFAULTS = {
   levelRotX: 0,
   levelRotY: 0,
   levelRotZ: 0,
-  gravityTiltDeg: 8,
-  gravityMagnitude: 18,
+  // La bille a son Y verrouille (cf. clampBallBody) : seule la composante Z de
+  // la gravite (g * sin(tilt)) la fait avancer. Sur un plateau profond de 29
+  // unites il faut donc une accel "pente" consequente, d'ou tilt + magnitude
+  // eleves -> g*sin(30) = 40*0.5 = 20 u/s^2 (vs ~2.5 auparavant).
+  gravityTiltDeg: 30,
+  gravityMagnitude: 40,
   ambientIntensity: 0.6,
   dirLightX: 5,
   dirLightY: 15,

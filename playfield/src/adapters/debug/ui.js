@@ -66,7 +66,7 @@ const SLIDERS = {
   },
   "Physique": {
     gravityTiltDeg: { type: "range", min: 0, max: 45, default: PLAYFIELD_VIEW_DEFAULTS.gravityTiltDeg, step: 0.1 },
-    gravityMagnitude: { type: "range", min: 1, max: 50, default: PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude, step: 0.1 },
+    gravityMagnitude: { type: "range", min: 1, max: 60, default: PLAYFIELD_VIEW_DEFAULTS.gravityMagnitude, step: 0.1 },
   },
   "Lumières": {
     ambientIntensity: { type: "range", min: 0, max: 2, default: PLAYFIELD_VIEW_DEFAULTS.ambientIntensity, step: 0.1 },

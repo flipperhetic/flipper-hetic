@@ -32,9 +32,27 @@ export const TUNNEL_WALL_X = TABLE_WIDTH / 2 - TUNNEL_WIDTH - WALL_THICKNESS / 2
 export const TUNNEL_WALL_Z = TABLE_DEPTH / 2 - TUNNEL_LENGTH / 2;
 
 // Spawn bille (couloir de lancement, le long du mur droit en bas du plateau)
-export const PLUNGER_SPAWN_X = 5.0;
+export const PLUNGER_SPAWN_X = 4.65;
 export const PLUNGER_SPAWN_Y = 0.65;
 export const PLUNGER_SPAWN_Z = 13.0;
+
+// Murs du couloir de lancement — encadrent la bille a 0.5 unite de part et d'autre
+export const LAUNCH_WALL_OFFSET_X = 0.5;
+export const LAUNCH_WALL_THICKNESS = 0.15; // plus fins que les murs de contour
+export const LAUNCH_WALL_LENGTH = 22;
+export const LAUNCH_WALL_Z = PLUNGER_SPAWN_Z - LAUNCH_WALL_LENGTH / 2;
+export const LAUNCH_WALL_LEFT_X = PLUNGER_SPAWN_X - LAUNCH_WALL_OFFSET_X;
+export const LAUNCH_WALL_RIGHT_X = PLUNGER_SPAWN_X + LAUNCH_WALL_OFFSET_X;
+
+// Largeur jouable : de la face interne du mur gauche jusqu'a la face gauche du
+// mur gauche du couloir de lancement. Flippers et drain sont centres dessus.
+export const PLAYABLE_LEFT_X = -TABLE_WIDTH / 2;
+export const PLAYABLE_RIGHT_X = LAUNCH_WALL_LEFT_X - LAUNCH_WALL_THICKNESS / 2;
+export const PLAYABLE_CENTER_X = (PLAYABLE_LEFT_X + PLAYABLE_RIGHT_X) / 2;
+// Virage arrondi vers la gauche en haut du couloir (arc approxime par segments)
+export const LAUNCH_BEND_ANGLE_DEG = 90;
+export const LAUNCH_BEND_RADIUS = 2; // rayon de l'axe central du couloir dans le virage
+export const LAUNCH_BEND_SEGMENTS = 6; // segments par mur pour lisser l'arc
 
 // Plunger — force d'impulsion (Z negatif = vers le haut du plateau)
 export const PLUNGER_IMPULSE_FORCE = 38;
@@ -45,8 +63,8 @@ export const FLIPPER_WIDTH = 0.4;
 export const FLIPPER_HEIGHT = 0.3;
 export const FLIPPER_REST_ANGLE = 0.5;   // radians (~28°), battes au repos vers le drain
 export const FLIPPER_PIVOT_X = 2.1;
-export const FLIPPER_OFFSET_X = 0;
-export const FLIPPER_PIVOT_Z = 12.9;
+export const FLIPPER_OFFSET_X = PLAYABLE_CENTER_X; // centre la paire de flippers sur la largeur jouable
+export const FLIPPER_PIVOT_Z = 11.4; // remonte les battes plus haut sur le plateau (etait 12.9)
 export const FLIPPER_PIVOT_Y = 0.55;
 export const FLIPPER_ROT_X = 0.05235987755982989;  // radians (~3°), inclinaison des battes sur l'axe X
 export const FLIPPER_ROT_Z = 0.017453292519943295;  // radians (~1°), inclinaison des battes sur l'axe Z

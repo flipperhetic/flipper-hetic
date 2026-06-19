@@ -154,7 +154,7 @@ export function createPlayfieldDebugUI({ gltfModel, gltfInner, flipperBodies, ba
       title: '▸ Gravity',
       rows: [
         { key: 'gravityTiltDeg',   label: 'Tilt (°)',    min: -45, max: 45, step: 0.5, apply: applyGravity },
-        { key: 'gravityMagnitude', label: 'Magnitude',   min: 0,   max: 40, step: 0.5, apply: applyGravity },
+        { key: 'gravityMagnitude', label: 'Magnitude',   min: 0,   max: 60, step: 0.5, apply: applyGravity },
       ],
     },
     {

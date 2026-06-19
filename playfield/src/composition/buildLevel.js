@@ -2,18 +2,17 @@
  * Playfield — Composition du niveau.
  *
  * Le fond (plateau 9:16) et les murs d'extremite sont des meshes Three.js
- * (buildEnvironment), les obstacles sont des assets GLB poses par-dessus
- * (buildGLBBumpers). La bille, les flippers et la porte de lancement restent
+ * (buildEnvironment). La bille, les flippers et la porte de lancement restent
  * des acteurs code (buildActors).
  */
 import { Mesh, BoxGeometry, MeshBasicMaterial, DoubleSide } from "three";
 import { setFlippersWorldRotY, createStaticBoxBody } from "../adapters/physics/index.js";
 import { buildActors } from "./buildActors.js";
 import { buildEnvironment } from "./buildEnvironment.js";
-import { buildGLBBumpers } from "./buildGLBBumpers.js";
 import {
   DRAIN_Z_THRESHOLD,
   DRAIN_OPENING_WIDTH,
+  PLAYABLE_CENTER_X,
   TABLE_WIDTH,
   TABLE_DEPTH,
 } from "../domain/constants.js";
@@ -38,9 +37,6 @@ export async function buildLevel({ scene, world }) {
   const { ballBody, flipperBodies, launchGateBody, syncPairs: actorPairs } =
     buildActors(world, scene);
 
-  // -- Bumpers GLB ----------------------------------------------------------
-  const { syncPairs: bumperPairs, bumperDefs } = await buildGLBBumpers(world);
-
   // -- Marqueur de drain (visuel debug ; drain reel par seuil Z) -----------
   const drainMesh = new Mesh(
     new BoxGeometry(DRAIN_OPENING_WIDTH, 0.6, 0.5),
@@ -52,7 +48,7 @@ export async function buildLevel({ scene, world }) {
       depthWrite: false,
     }),
   );
-  drainMesh.position.set(0, 0.3, DRAIN_Z_THRESHOLD);
+  drainMesh.position.set(PLAYABLE_CENTER_X, 0.3, DRAIN_Z_THRESHOLD);
   drainMesh.visible = false;
   envGroup.add(drainMesh);
 
@@ -76,12 +72,11 @@ export async function buildLevel({ scene, world }) {
   };
 
   const triggers = [
-    ...bumperDefs,
     {
       name: "Drain Zone",
       body: drainFakeBody,
       mesh: drainMesh,
-      ix: 0,
+      ix: PLAYABLE_CENTER_X,
       iy: 0.3,
       iz: DRAIN_Z_THRESHOLD,
       iry: 0,
@@ -91,7 +86,7 @@ export async function buildLevel({ scene, world }) {
     },
   ];
 
-  const syncPairs = [...actorPairs, ...bumperPairs];
+  const syncPairs = [...actorPairs];
 
   function physicsRotateY(angleDeg) {
     setFlippersWorldRotY(flipperBodies, angleDeg * DEG);
