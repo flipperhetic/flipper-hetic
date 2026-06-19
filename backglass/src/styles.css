@@ -68,6 +68,11 @@ body {
   grid-template-columns: minmax(140px, 200px) auto 1fr;
   gap: 1rem;
   align-items: center;
+  /* Cadre par ligne : regroupe visuellement le libellé et sa valeur. */
+  border: 2px solid rgba(215, 195, 110, 0.4);
+  border-radius: 16px;
+  padding: 0.5rem 1.6rem;
+  background: rgba(20, 10, 4, 0.28);
   /* Animation idle : flottement vertical + dérive latérale, décalé par ligne (effet vague) */
   animation: row-float 7s ease-in-out infinite;
   will-change: transform;
@@ -149,10 +154,27 @@ body {
 
 /* Balls left — sachets de "blue meth" */
 .backglass__balls {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: clamp(0.4rem, 1vw, 1rem);
+}
+
+/* Compteur "X/3" superpose aux sachets pour rendre le nombre de balles explicite */
+.backglass__balls-count {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'BackglassData', sans-serif;
+  font-size: clamp(2.4rem, 3.6vw, 4.4rem);
+  letter-spacing: 0.05em;
+  color: #fff;
+  -webkit-text-stroke: 1.5px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), 0 0 16px rgba(57, 182, 255, 0.6);
+  pointer-events: none;
 }
 
 .backglass__ball {
@@ -169,7 +191,7 @@ body {
 
 /* Balle perdue : le sachet se vide (atténué + désaturé + légèrement réduit) */
 .backglass__ball.lost {
-  opacity: 0.2;
+  opacity: 0.45;
   filter: grayscale(0.85) drop-shadow(0 0 2px rgba(0, 0, 0, 0.4));
   transform: scale(0.88);
 }
@@ -938,4 +960,24 @@ body {
   .backglass__metric-value {
     transition: none;
   }
+}
+
+/* Calque chaud "coucher de soleil" : tinte le FOND du backglass en orange pour
+   le relier au playfield. pointer-events:none. z-index 0 = au-dessus du fond
+   (.backglass__background, z auto) mais SOUS le contenu (.backglass__overlay
+   score/texte, z 1) -> le texte reste net par-dessus la teinte.
+   Le degrade est plus dense en bas-droite, comme la lumiere du playfield. */
+.backglass-warm {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  /* Film orange en blend normal : rechauffe franchement tout l'ecran, plus
+     dense vers le bas-droite (comme la lumiere du playfield). */
+  background: radial-gradient(
+    135% 105% at 72% 110%,
+    rgba(255, 96, 18, 0.5) 0%,
+    rgba(255, 122, 40, 0.32) 48%,
+    rgba(255, 150, 70, 0.18) 100%
+  );
 }

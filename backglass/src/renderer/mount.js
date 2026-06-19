@@ -103,6 +103,7 @@ export function mountBackglassRoot() {
           <div class="backglass__metric-label">lls left</div>
           <div id="ballsLeftValue" class="backglass__balls" role="img" aria-label="Balles restantes">
             ${methBag()}${methBag()}${methBag()}
+            <span id="ballsCount" class="backglass__balls-count">3/3</span>
           </div>
         </div>
       </div>
@@ -153,6 +154,7 @@ export function mountBackglassRoot() {
         <div class="attract-screen__hint">Insert coin · 1 credit</div>
       </div>
     </div>
+    <div id="backglass-warm" class="backglass-warm" aria-hidden="true"></div>
   `;
 
   document.body.append(app);
@@ -161,6 +163,7 @@ export function mountBackglassRoot() {
     root: app,
     scoreValue: document.getElementById("scoreValue"),
     ballsLeftValue: document.getElementById("ballsLeftValue"),
+    ballsCount: document.getElementById("ballsCount"),
     ballIcons: Array.from(app.querySelectorAll(".backglass__ball")),
     highscoreValue: document.getElementById("highscoreValue"),
     highscorePopup: document.getElementById("highscore-popup"),

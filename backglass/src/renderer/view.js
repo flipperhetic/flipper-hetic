@@ -93,7 +93,8 @@ function createCountUp(el, { punch = false } = {}) {
 }
 
 export function createBackglassView(refs) {
-  const { scoreValue, ballsLeftValue, highscoreValue, ballIcons, ballLossOverlay } = refs;
+  const { scoreValue, ballsLeftValue, highscoreValue, ballIcons, ballsCount, ballLossOverlay } = refs;
+  const TOTAL_BALLS = Array.isArray(ballIcons) ? ballIcons.length : 3;
   let prevBallsLeft = null;
   let ballLossTimer = 0;
 
@@ -142,6 +143,9 @@ export function createBackglassView(refs) {
       ballIcons.forEach((icon, index) => {
         icon.classList.toggle("lost", index >= ballsLeft);
       });
+    }
+    if (ballsCount) {
+      ballsCount.textContent = `${Math.max(0, ballsLeft)}/${TOTAL_BALLS}`;
     }
     if (prevBallsLeft !== null && ballsLeft < prevBallsLeft) {
       // Le sachet qui vient d'être perdu est celui d'index `ballsLeft` (0-based).

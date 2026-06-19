@@ -49,6 +49,11 @@ export function createDotMatrixRenderer(canvas) {
     status: "idle",
   };
 
+  // Affichage temporaire "BALL N" : pendant `playing`, prend le pas sur POINTS
+  // jusqu'a `until`, puis l'affichage revient automatiquement aux points.
+  const flashState = { text: null, until: 0 };
+  const BALL_FLASH_MS = 2000;
+
   const scrollState = {
     offsetX: TEXT_MARGIN,
     pauseUntil: 0,
@@ -122,6 +127,19 @@ export function createDotMatrixRenderer(canvas) {
   function getCurrentText() {
     if (scrollState.isTransition) {
       return scrollState.text;
+    }
+    return getTextForStatus(dmdState.status);
+  }
+
+  // Texte affiche en mode statique : le flash "BALL N" prime sur les POINTS
+  // pendant `playing`, le temps de la fenetre `flashState.until`.
+  function getStaticDisplayText() {
+    if (
+      flashState.text &&
+      dmdState.status === "playing" &&
+      performance.now() < flashState.until
+    ) {
+      return flashState.text;
     }
     return getTextForStatus(dmdState.status);
   }
@@ -237,8 +255,9 @@ export function createDotMatrixRenderer(canvas) {
       textWidth = scrollState.textWidth;
       textX = Math.floor(scrollState.offsetX);
     } else {
-      // Otherwise render the canonical text for the current status, centered.
-      text = getTextForStatus(dmdState.status);
+      // Otherwise render the canonical text for the current status (ou le flash
+      // "BALL N" en cours), centré.
+      text = getStaticDisplayText();
       textWidth = measureTextWidth(text);
       textX = Math.round((DOT_COLS - textWidth) / 2);
     }
@@ -350,6 +369,20 @@ export function createDotMatrixRenderer(canvas) {
 
       // For other statuses (playing), just update the stored message so it can
       // be used when returning to idle or for transitions triggered by status.
+      render();
+    },
+
+    /**
+     * Affiche brievement "BALL N" par-dessus les POINTS (pendant `playing`),
+     * puis revient automatiquement aux points a l'expiration de la fenetre.
+     */
+    flashBallMessage(text, ms = BALL_FLASH_MS) {
+      flashState.text = normalizeMessage(text);
+      flashState.until = performance.now() + ms;
+      // Coupe tout scroll/transition en cours pour montrer le flash centre tout
+      // de suite ; le retour aux POINTS se fait via getStaticDisplayText.
+      scrollState.active = false;
+      scrollState.isTransition = false;
       render();
     },
 

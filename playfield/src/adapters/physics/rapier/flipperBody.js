@@ -75,6 +75,9 @@ function createOneFlipperBody(world, side) {
     );
 
   const rb = world.createRigidBody(bodyDesc);
+  // CCD : la batte balaie vite (bout ~30 u/s) -> sans CCD elle traverse la bille
+  // en un pas physique. Active le sweep continu du flipper (la bille a deja CCD).
+  rb.enableCcd(true);
 
   // Box collider decalee : extension geometrique de la batte autour du pivot.
   // Densite 0 pour que le collider ne deplace pas le COM (cf. note ci-dessus).

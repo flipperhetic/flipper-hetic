@@ -19,6 +19,7 @@ describe("wireDmdNetwork", () => {
     renderer = {
       renderScore: vi.fn(),
       updateStatus: vi.fn(),
+      flashBallMessage: vi.fn(),
     };
     callbacks = {};
     initNetwork.mockImplementation((cbs) => { callbacks = cbs; });
@@ -54,5 +55,16 @@ describe("wireDmdNetwork", () => {
     expect(renderer.renderScore).toHaveBeenCalledWith(0);
     expect(renderer.updateStatus).toHaveBeenCalledWith("playing");
     expect(refs.stateStatus.textContent).toBe("state: playing");
+  });
+
+  it("6 — onDmdMessage 'BALL 2' declenche flashBallMessage", () => {
+    callbacks.onDmdMessage("BALL 2");
+    expect(renderer.flashBallMessage).toHaveBeenCalledWith("BALL 2");
+  });
+
+  it("7 — onDmdMessage ignore les messages non-BALL (GAME OVER, PRESS START)", () => {
+    callbacks.onDmdMessage("GAME OVER");
+    callbacks.onDmdMessage("PRESS START");
+    expect(renderer.flashBallMessage).not.toHaveBeenCalled();
   });
 });

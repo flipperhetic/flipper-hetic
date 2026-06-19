@@ -21,9 +21,13 @@ export function wireDmdNetwork({ refs, renderer }) {
     onConnectionError() {
       socketStatus.textContent = "socket: error";
     },
-    onDmdMessage() {
-      // Ignore arbitrary DMD messages so the display remains limited to the
-      // three expected states: PRESS START, POINTS, GAME OVER.
+    onDmdMessage(text) {
+      // On n'affiche que les messages "BALL N" (flash bref a chaque nouvelle
+      // bille, puis retour aux POINTS). Les autres (PRESS START, GAME OVER)
+      // restent pilotes par le `status` via onStateUpdated/onGameOver.
+      if (typeof text === "string" && text.trim().toUpperCase().startsWith("BALL")) {
+        renderer.flashBallMessage(text);
+      }
     },
     onStateUpdated(data) {
       renderer.renderScore(data?.score);
