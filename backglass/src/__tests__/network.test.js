@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("socket.io-client", () => ({
-  io: vi.fn(),
-}));
+// On conserve les vrais noms d'evenements / le codec, mais on stube la fabrique
+// de client temps reel pour capturer les handlers sans vrai WebSocket.
+vi.mock("shared", async (importActual) => {
+  const actual = await importActual();
+  return { ...actual, createRealtimeClient: vi.fn() };
+});
 
-import { io } from "socket.io-client";
+import { createRealtimeClient } from "shared";
 import { initNetwork } from "../adapters/network.js";
 
 describe("initNetwork (backglass)", () => {
@@ -12,8 +15,8 @@ describe("initNetwork (backglass)", () => {
 
   beforeEach(() => {
     handlers = {};
-    io.mockReturnValue({
-      on: (event, handler) => { handlers[event] = handler; },
+    createRealtimeClient.mockReturnValue({
+      on(event, handler) { handlers[event] = handler; return this; },
     });
   });
 

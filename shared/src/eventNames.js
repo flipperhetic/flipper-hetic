@@ -1,5 +1,5 @@
 /**
- * Source unique des noms d'evenements Socket.IO.
+ * Source unique des noms d'evenements (transport WebSocket).
  * Importee par le server et tous les clients.
  */
 

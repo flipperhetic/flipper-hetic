@@ -1,8 +1,8 @@
 /**
- * Playfield — Source d'input ESP32 via le server socket.io.
+ * Playfield — Source d'input ESP32 via le server WebSocket.
  *
  * Le bridge/ Docker lit /dev/ttyUSB0 et emit "cabinet_button" au server,
- * qui broadcast aux autres clients. Ce module ecoute ces events et traduit
+ * qui relaie aux autres clients. Ce module ecoute ces events et traduit
  * chaque ID firmware vers une action inputController (meme chemin que le
  * clavier — cf. adapters/input.js).
  *
@@ -12,7 +12,7 @@ import { CLIENT_EVENTS } from "shared";
 
 /**
  * Renvoie une source compatible `bindExternalInputSource(subscribe, controller)`.
- * @param {import("socket.io-client").Socket} socket
+ * @param {{ on: Function, off: Function, emit: Function }} socket client temps reel
  */
 export function createCabinetInputSource(socket) {
   return {

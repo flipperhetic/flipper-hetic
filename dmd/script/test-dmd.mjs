@@ -1,15 +1,13 @@
-import { io } from "socket.io-client";
+import { createRealtimeClient } from "shared";
 
-const socket = io("http://localhost:3000", {
-  transports: ["websocket"],
-});
+const socket = createRealtimeClient("ws://localhost:3000");
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 socket.on("connect", async () => {
-  console.log("Connecté au serveur:", socket.id);
+  console.log("Connecté au serveur");
 
   // Démarre une partie -> le serveur envoie dmd_message: "BALL 1"
   socket.emit("start_game");
@@ -43,7 +41,7 @@ socket.on("connect", async () => {
   process.exit(0);
 });
 
-socket.on("connect_error", (err) => {
-  console.error("Erreur de connexion:", err.message);
+socket.on("connect_error", () => {
+  console.error("Erreur de connexion");
   process.exit(1);
 });

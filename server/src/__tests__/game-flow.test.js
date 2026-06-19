@@ -6,42 +6,36 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createServer } from "http";
-import { Server } from "socket.io";
-import { io as Client } from "socket.io-client";
+import { WebSocketServer } from "ws";
 import { registerSocketHandlers, resetState } from "../adapters/socketHandlers.js";
+import { WsTestClient } from "./wsTestClient.js";
 
 // ── Helpers ────────────────────────────────────────────
 
 function createTestEnv() {
   return new Promise((resolve) => {
     const httpServer = createServer();
-    const io = new Server(httpServer, { cors: { origin: "*" } });
-    registerSocketHandlers(io);
+    const wss = new WebSocketServer({ server: httpServer });
+    registerSocketHandlers(wss);
 
     httpServer.listen(0, () => {
       const port = httpServer.address().port;
-      const clientA = Client(`http://localhost:${port}`, {
-        forceNew: true,
-        transports: ["websocket"],
-      });
+      const clientA = new WsTestClient(port);
       clientA.once("state_updated", () => {
-        const clientB = Client(`http://localhost:${port}`, {
-          forceNew: true,
-          transports: ["websocket"],
-        });
+        const clientB = new WsTestClient(port);
         clientB.once("state_updated", () => {
-          resolve({ io, httpServer, clientA, clientB, port });
+          resolve({ wss, httpServer, clientA, clientB, port });
         });
       });
     });
   });
 }
 
-function cleanup({ httpServer, clientA, clientB, io }) {
+function cleanup({ httpServer, clientA, clientB, wss }) {
   return new Promise((resolve) => {
     clientA.disconnect();
     clientB.disconnect();
-    io.close();
+    wss.close();
     httpServer.close(resolve);
   });
 }

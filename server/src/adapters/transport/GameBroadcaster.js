@@ -1,67 +1,95 @@
-import { SERVER_EVENTS } from "shared";
+import { SERVER_EVENTS, encodeMessage } from "shared";
 
 /**
- * Couche transport SORTANTE : centralise toutes les emissions vers les clients.
- * Seule cette classe connait l'API d'emission Socket.IO (en phase B, elle sera
- * la seule — avec le controller — a basculer vers WebSocket natif).
+ * Couche transport SORTANTE (WebSocket natif).
+ *
+ * Le WebSocket natif ne fournit ni « emit a tous » ni « broadcast » : il sait
+ * seulement `client.send(string)` vers UN client. Cette classe recree donc les
+ * 3 portees a la main, a partir du Set des clients connectes qu'elle maintient :
+ *   - emitXxx()      -> a TOUS les clients          (#broadcast)
+ *   - emitXxxTo()    -> a UN seul client            (#send, resync a la connexion)
+ *   - relayToOthers()-> a tous SAUF l'emetteur       (relai d'un input local)
+ *
+ * Chaque message part en JSON via le codec d'enveloppe { event, data }.
  */
 export class GameBroadcaster {
-  #io;       // instance Socket.IO (le serveur), injectee : aucune creation ici
-  #presenter; // transforme l'entite GameState en DTO « fil » avant emission
+  #presenter;          // GameState -> DTO « fil »
+  #clients = new Set(); // sockets `ws` des clients connectes
 
-  constructor(io, presenter) {
-    this.#io = io;
+  constructor(presenter) {
     this.#presenter = presenter;
   }
 
-  // ── Emissions GLOBALES : envoyees a TOUS les clients connectes (io.emit) ──
+  // Le controller alimente ce Set sur connexion/deconnexion.
+  addClient(client) {
+    this.#clients.add(client);
+  }
 
-  // Diffuse l'etat courant de la partie (score, billes, statut…) a tout le monde.
+  removeClient(client) {
+    this.#clients.delete(client);
+  }
+
+  // ── Emissions GLOBALES : a TOUS les clients connectes ──
+
   emitState(state) {
-    this.#io.emit(SERVER_EVENTS.STATE_UPDATED, this.#presenter.present(state));
+    this.#broadcast(SERVER_EVENTS.STATE_UPDATED, this.#presenter.present(state));
   }
 
-  // Message du dot-matrix (DMD), ex. "BALL 2" / "GAME OVER".
   emitDmd(text) {
-    this.#io.emit(SERVER_EVENTS.DMD_MESSAGE, { text });
+    this.#broadcast(SERVER_EVENTS.DMD_MESSAGE, { text });
   }
 
-  // Signale le demarrage d'une partie (les clients basculent en mode jeu).
   emitGameStarted(state) {
-    this.#io.emit(SERVER_EVENTS.GAME_STARTED, this.#presenter.present(state));
+    this.#broadcast(SERVER_EVENTS.GAME_STARTED, this.#presenter.present(state));
   }
 
-  // Signale la fin de partie (les clients affichent l'ecran game over).
   emitGameOver(state) {
-    this.#io.emit(SERVER_EVENTS.GAME_OVER, this.#presenter.present(state));
+    this.#broadcast(SERVER_EVENTS.GAME_OVER, this.#presenter.present(state));
   }
 
-  // Collision speciale (tunnel) -> declenche une video/animation cote clients.
   emitSpecialEvent(type) {
-    this.#io.emit(SERVER_EVENTS.SPECIAL_EVENT, { event: type });
+    this.#broadcast(SERVER_EVENTS.SPECIAL_EVENT, { event: type });
   }
 
-  // Record battu en cours de partie -> popup/son cote clients.
   emitHighScoreBeat(score, highScore) {
-    this.#io.emit(SERVER_EVENTS.HIGH_SCORE_BEAT, { score, highScore });
+    this.#broadcast(SERVER_EVENTS.HIGH_SCORE_BEAT, { score, highScore });
   }
 
   // ── Emissions CIBLEES : vers UN seul client (resync a la connexion) ──
-  // Un client qui se connecte en cours de partie doit recevoir l'etat deja en
-  // cours ; inutile de rediffuser a tout le monde, on emet juste vers lui.
 
-  emitStateTo(socket, state) {
-    socket.emit(SERVER_EVENTS.STATE_UPDATED, this.#presenter.present(state));
+  emitStateTo(client, state) {
+    this.#send(client, SERVER_EVENTS.STATE_UPDATED, this.#presenter.present(state));
   }
 
-  emitDmdTo(socket, text) {
-    socket.emit(SERVER_EVENTS.DMD_MESSAGE, { text });
+  emitDmdTo(client, text) {
+    this.#send(client, SERVER_EVENTS.DMD_MESSAGE, { text });
   }
 
-  // ── Relai ──
-  // Broadcast a tous SAUF l'emetteur : un input local (flipper, bouton cabinet)
-  // est rejoue sur les autres ecrans, mais pas renvoye a celui qui l'a produit.
-  relayToOthers(socket, event, payload) {
-    socket.broadcast.emit(event, payload);
+  // ── Relai : a tous SAUF l'emetteur ──
+  // Un input local (flipper, bouton cabinet) est rejoue sur les autres ecrans,
+  // mais pas renvoye a celui qui l'a produit.
+  relayToOthers(sender, event, payload) {
+    const message = encodeMessage(event, payload);
+    for (const client of this.#clients) {
+      if (client !== sender && this.#isOpen(client)) client.send(message);
+    }
+  }
+
+  // ── Helpers prives ──
+
+  #broadcast(event, data) {
+    const message = encodeMessage(event, data);
+    for (const client of this.#clients) {
+      if (this.#isOpen(client)) client.send(message);
+    }
+  }
+
+  #send(client, event, data) {
+    if (this.#isOpen(client)) client.send(encodeMessage(event, data));
+  }
+
+  // OPEN === 1 : on n'ecrit pas sur une socket en cours de connexion/fermeture.
+  #isOpen(client) {
+    return client.readyState === 1;
   }
 }

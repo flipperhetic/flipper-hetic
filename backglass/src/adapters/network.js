@@ -1,21 +1,20 @@
 /**
- * Backglass — Couche reseau Socket.IO.
+ * Backglass — Couche reseau WebSocket.
  * Ecoute les evenements serveur et appelle les callbacks fournis.
  */
-import { io } from "socket.io-client";
-import { SERVER_EVENTS } from "shared";
+import { createRealtimeClient, SERVER_EVENTS } from "shared";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "ws://localhost:3000";
 
 /**
- * Initialise la connexion Socket.IO.
- * `callbacks.onStateUpdated(data)` : appele sur state_updated.
+ * Ouvre la connexion WebSocket.
+ * `callbacks.onStateUpdated(data)` : appele sur state_updated, etc.
  */
 export function initNetwork(callbacks = {}) {
-  const socket = io(SERVER_URL);
+  const socket = createRealtimeClient(SERVER_URL);
 
   socket.on("connect", () => {
-    console.log("[backglass-network] connected", socket.id);
+    console.log("[backglass-network] connected");
     callbacks.onConnect?.();
   });
 
@@ -28,7 +27,7 @@ export function initNetwork(callbacks = {}) {
   });
 
   socket.on(SERVER_EVENTS.STATE_UPDATED, (data) => {
-    console.log("[backglass-network] STATE_UPDATED", data.highScore);
+    console.log("[backglass-network] STATE_UPDATED", data?.highScore);
     callbacks.onStateUpdated?.(data);
   });
 

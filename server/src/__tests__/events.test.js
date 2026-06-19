@@ -6,9 +6,9 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createServer } from "http";
-import { Server } from "socket.io";
-import { io as Client } from "socket.io-client";
+import { WebSocketServer } from "ws";
 import { registerSocketHandlers, resetState } from "../adapters/socketHandlers.js";
+import { WsTestClient } from "./wsTestClient.js";
 
 // ── Helpers ────────────────────────────────────────────
 
@@ -19,27 +19,24 @@ import { registerSocketHandlers, resetState } from "../adapters/socketHandlers.j
 function createTestEnv() {
   return new Promise((resolve) => {
     const httpServer = createServer();
-    const io = new Server(httpServer, { cors: { origin: "*" } });
-    registerSocketHandlers(io);
+    const wss = new WebSocketServer({ server: httpServer });
+    registerSocketHandlers(wss);
 
     httpServer.listen(0, () => {
       const port = httpServer.address().port;
-      const client = Client(`http://localhost:${port}`, {
-        forceNew: true,
-        transports: ["websocket"],
-      });
+      const client = new WsTestClient(port);
       // Attendre le state_updated initial = connexion entierement prete.
       client.once("state_updated", (initialState) => {
-        resolve({ io, httpServer, client, port, initialState });
+        resolve({ wss, httpServer, client, port, initialState });
       });
     });
   });
 }
 
-function cleanup({ httpServer, client, io }) {
+function cleanup({ httpServer, client, wss }) {
   return new Promise((resolve) => {
     client.disconnect();
-    io.close();
+    wss.close();
     httpServer.close(resolve);
   });
 }
@@ -58,10 +55,7 @@ function waitFor(socket, name, timeoutMs = 3000) {
 /** Cree un second client connecte au meme serveur (attend le state_updated initial). */
 function addClient(port) {
   return new Promise((resolve) => {
-    const c = Client(`http://localhost:${port}`, {
-      forceNew: true,
-      transports: ["websocket"],
-    });
+    const c = new WsTestClient(port);
     c.once("state_updated", () => resolve(c));
   });
 }
@@ -356,10 +350,7 @@ describe("Resync a la connexion", () => {
     await startGame(env.client);
 
     // Un nouveau client se connecte mid-game
-    const clientC = Client(`http://localhost:${env.port}`, {
-      forceNew: true,
-      transports: ["websocket"],
-    });
+    const clientC = new WsTestClient(env.port);
 
     const [st, dmd] = await Promise.all([
       waitFor(clientC, "state_updated"),

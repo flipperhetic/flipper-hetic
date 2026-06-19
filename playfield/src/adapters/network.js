@@ -1,13 +1,12 @@
 /**
- * Playfield — Couche reseau Socket.IO.
+ * Playfield — Couche reseau WebSocket.
  *
- * Connexion au serveur, ecoute des evenements serveur,
- * helpers d'emission pour les evenements client.
+ * Connexion au serveur (via le client temps reel partage), ecoute des
+ * evenements serveur, helpers d'emission pour les evenements client.
  */
-import { io } from "socket.io-client";
-import { CLIENT_EVENTS, SERVER_EVENTS } from "shared";
+import { createRealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "ws://localhost:3000";
 
 // Etat local synchronise avec le serveur.
 export const gameState = {
@@ -19,24 +18,24 @@ export const gameState = {
 };
 
 /**
- * Initialise la connexion Socket.io et enregistre les listeners serveur.
+ * Ouvre la connexion WebSocket et enregistre les listeners serveur.
  * `callbacks` est un objet optionnel :
- *   - onGameStarted(data)  : appele sur game_started
- *   - onGameOver(data)     : appele sur game_over
- *   - onStateUpdated(data) : appele sur state_updated
+ *   - onConnect() / onConnectionError()
+ *   - onGameStarted(data) / onGameOver(data) / onStateUpdated(data)
+ *   - onHighScoreBeat(data)
  *
- * Retourne le socket pour les emit directs si besoin.
+ * Retourne le client (API `on`/`off`/`emit`) pour les emit directs si besoin.
  */
 export function initNetwork(callbacks = {}) {
-  const socket = io(SERVER_URL);
+  const socket = createRealtimeClient(SERVER_URL);
 
   socket.on("connect", () => {
-    console.log("[network] connecte", socket.id);
+    console.log("[network] connecte");
     callbacks.onConnect?.();
   });
 
-  socket.on("disconnect", (reason) => {
-    console.log("[network] deconnecte :", reason);
+  socket.on("disconnect", () => {
+    console.log("[network] deconnecte");
     callbacks.onConnectionError?.();
   });
 
@@ -65,7 +64,7 @@ export function initNetwork(callbacks = {}) {
   });
 
   socket.on(SERVER_EVENTS.DMD_MESSAGE, (data) => {
-    console.log("[network] DMD :", data.text);
+    console.log("[network] DMD :", data?.text);
   });
 
   return socket;

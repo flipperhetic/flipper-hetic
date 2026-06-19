@@ -1,34 +1,70 @@
 // bridge/server.js
-// ESP32 boutons cabinet -> server socket.io.
+// ESP32 boutons cabinet -> server WebSocket.
 //
 // Lecture serie : on met la tty en mode raw via `stty` (busybox sur alpine)
 // puis on consomme le device comme un fichier (createReadStream). Pas de
 // dependance native (le binding @serialport casse sous Alpine/Bun).
 //
-// Parse lignes "BTN:<ID>:DOWN|UP" emises par firmware/src/main.cpp et
-// emet "cabinet_button" { id, action } au server. Le server relaie en
-// broadcast aux autres clients (le playfield ecoute via cabinetInput.js).
+// Parse lignes "BTN:<ID>:DOWN|UP" emises par firmware/src/main.cpp et envoie
+// l'enveloppe { event: "cabinet_button", data: { id, action } } au server via
+// WebSocket. Le server relaie aux autres clients (le playfield ecoute via
+// cabinetInput.js).
 //
-// Si le device n'est pas present (ESP32 absent ou pas encore enumere),
-// retry toutes les 3 s — tolere le reboot USB apres flash.
+// Le serie ET le WebSocket retentent toutes les 3 s s'ils tombent (le serveur
+// ou l'ESP32 peuvent redemarrer independamment).
 
 import { createReadStream } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { io } from "socket.io-client";
+import WebSocket from "ws";
 
 const SERIAL_PATH = process.env.SERIAL_PATH ?? "/dev/ttyUSB0";
 const SERIAL_BAUD = process.env.SERIAL_BAUD ?? "115200";
-const SERVER_URL  = process.env.SERVER_URL  ?? "http://server:3000";
+const SERVER_URL  = process.env.SERVER_URL  ?? "ws://server:3000";
 
-const socket = io(SERVER_URL, {
-  transports: ["websocket"],
-  reconnection: true,
-  auth: { role: "bridge" },
-});
+// Enveloppe identique au codec de `shared/src/protocol.js` (le bridge n'est pas
+// un workspace : on l'inline plutot que d'ajouter une dependance).
+const encodeMessage = (event, data) => JSON.stringify({ event, data: data ?? null });
 
-socket.on("connect",        () => console.log("[bridge] socket connected to", SERVER_URL, "id=", socket.id));
-socket.on("disconnect",     (reason) => console.log("[bridge] socket disconnected:", reason));
-socket.on("connect_error",  (err) => console.log("[bridge] connect_error:", err.message));
+let socket = null;
+let socketReady = false;
+let reconnectTimer = null;
+
+function connect() {
+  socket = new WebSocket(SERVER_URL);
+
+  socket.on("open", () => {
+    socketReady = true;
+    console.log("[bridge] websocket connected to", SERVER_URL);
+  });
+
+  socket.on("close", () => {
+    socketReady = false;
+    console.log("[bridge] websocket disconnected — reconnexion dans 3s");
+    scheduleReconnect();
+  });
+
+  socket.on("error", (err) => {
+    console.log("[bridge] websocket error:", err.message);
+    // 'close' suivra et planifiera la reconnexion.
+  });
+}
+
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connect();
+  }, 3000);
+}
+
+function sendCabinetButton(id, action) {
+  if (!socketReady || !socket || socket.readyState !== WebSocket.OPEN) {
+    if (process.env.BRIDGE_VERBOSE) console.log("[bridge] socket non prete, event ignore");
+    return;
+  }
+  socket.send(encodeMessage("cabinet_button", { id, action }));
+  console.log("[bridge] -> cabinet_button", id, action);
+}
 
 function handleLine(raw) {
   const line = raw.trim();
@@ -44,8 +80,7 @@ function handleLine(raw) {
     console.warn("[bridge] action invalide:", JSON.stringify(line));
     return;
   }
-  socket.emit("cabinet_button", { id, action });
-  console.log("[bridge] -> cabinet_button", id, action);
+  sendCabinetButton(id, action);
 }
 
 function openSerial() {
@@ -85,11 +120,12 @@ function openSerial() {
 }
 
 console.log("[bridge] start serverUrl=", SERVER_URL, "path=", SERIAL_PATH);
+connect();
 openSerial();
 
 const shutdown = (signal) => {
   console.log("[bridge] recu", signal, "— shutdown");
-  socket.disconnect();
+  socket?.close();
   process.exit(0);
 };
 process.on("SIGINT",  () => shutdown("SIGINT"));

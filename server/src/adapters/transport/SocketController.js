@@ -1,6 +1,6 @@
-import { CLIENT_EVENTS } from "shared";
+import { CLIENT_EVENTS, decodeMessage } from "shared";
 
-// Flippers : relais purs (pas de logique metier).
+// Flippers : relais purs (pas de logique metier), meme traitement pour les 4.
 const FLIPPER_EVENTS = [
   CLIENT_EVENTS.FLIPPER_LEFT_DOWN,
   CLIENT_EVENTS.FLIPPER_LEFT_UP,
@@ -9,42 +9,64 @@ const FLIPPER_EVENTS = [
 ];
 
 /**
- * Couche transport ENTRANTE : branche les evenements Socket.IO sur les
- * methodes nommees de la session. Aucune logique metier ici — chaque `.on`
- * ne fait que deleguer a une methode de `GameSession`.
+ * Couche transport ENTRANTE (WebSocket natif).
+ *
+ * Le WebSocket natif n'a pas d'evenements nommes : tout arrive sur un seul canal
+ * `message`. On decode l'enveloppe { event, data } puis on aiguille vers la
+ * methode nommee de la session via une TABLE de dispatch (event -> handler) —
+ * pas de gros `switch`, et aucune logique metier ici.
  */
 export class SocketController {
-  #io;       // serveur Socket.IO — injecte
-  #session;  // orchestration metier vers laquelle chaque evenement est delegue
+  #wss;          // serveur WebSocket (lib `ws`) — injecte
+  #session;      // orchestration metier
+  #broadcaster;  // pour (de)referencer les clients connectes
 
-  constructor(io, session) {
-    this.#io = io;
+  constructor(wss, session, broadcaster) {
+    this.#wss = wss;
     this.#session = session;
+    this.#broadcaster = broadcaster;
   }
 
-  // Point d'entree : ecoute les nouvelles connexions clients.
   register() {
-    this.#io.on("connection", (socket) => this.#onConnection(socket));
+    this.#wss.on("connection", (ws) => this.#onConnection(ws));
   }
 
-  // Cable un client fraichement connecte : d'abord la resync, puis un handler
-  // par evenement. IMPORTANT : chaque `.on` ne contient AUCUNE logique — il se
-  // contente d'appeler la methode nommee correspondante de la session. C'est ce
-  // qui garde ce controller mince et la logique testable dans GameSession.
-  #onConnection(socket) {
-    console.log("[socket] client connected", socket.id);
-    this.#session.sendSnapshotTo(socket); // envoie l'etat courant au nouvel arrivant
+  #onConnection(ws) {
+    console.log("[ws] client connected");
+    this.#broadcaster.addClient(ws);   // memorise le client pour les emissions
+    this.#session.sendSnapshotTo(ws);  // resync : etat courant pour le nouvel arrivant
 
-    socket.on(CLIENT_EVENTS.START_GAME, () => this.#session.startGame());
-    socket.on(CLIENT_EVENTS.LAUNCH_BALL, () => this.#session.launchBall());
-    socket.on(CLIENT_EVENTS.COLLISION, (payload) => this.#session.applyCollision(payload));
-    socket.on(CLIENT_EVENTS.BALL_LOST, () => this.#session.loseBall());
-    socket.on(CLIENT_EVENTS.RESET_HIGHSCORE, () => this.#session.resetHighScore());
-    socket.on(CLIENT_EVENTS.CABINET_BUTTON, (payload) => this.#session.relayCabinetButton(socket, payload));
+    const handlers = this.#buildHandlers(ws);
 
-    // Les 4 evenements flipper partagent le meme handler (relai aux autres ecrans).
+    ws.on("message", (raw) => {
+      const msg = decodeMessage(raw);
+      if (!msg) return;                       // trame invalide -> ignoree
+      handlers.get(msg.event)?.(msg.data);    // event inconnu -> ignore
+    });
+
+    ws.on("close", () => {
+      this.#broadcaster.removeClient(ws);
+    });
+  }
+
+  /**
+   * Construit la table event -> handler pour CE client (closure sur `ws`, requis
+   * par les relais qui doivent exclure l'emetteur). Chaque handler delegue a une
+   * methode nommee de la session.
+   */
+  #buildHandlers(ws) {
+    const session = this.#session;
+    const handlers = new Map([
+      [CLIENT_EVENTS.START_GAME, () => session.startGame()],
+      [CLIENT_EVENTS.LAUNCH_BALL, () => session.launchBall()],
+      [CLIENT_EVENTS.COLLISION, (data) => session.applyCollision(data)],
+      [CLIENT_EVENTS.BALL_LOST, () => session.loseBall()],
+      [CLIENT_EVENTS.RESET_HIGHSCORE, () => session.resetHighScore()],
+      [CLIENT_EVENTS.CABINET_BUTTON, (data) => session.relayCabinetButton(ws, data)],
+    ]);
     for (const ev of FLIPPER_EVENTS) {
-      socket.on(ev, (payload) => this.#session.relayFlipper(socket, ev, payload));
+      handlers.set(ev, (data) => session.relayFlipper(ws, ev, data));
     }
+    return handlers;
   }
 }

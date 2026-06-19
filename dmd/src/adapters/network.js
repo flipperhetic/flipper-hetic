@@ -1,23 +1,20 @@
 /**
- * DMD — Couche reseau Socket.IO.
+ * DMD — Couche reseau WebSocket.
  */
-import { io } from "socket.io-client";
-import { SERVER_EVENTS } from "shared";
+import { createRealtimeClient, SERVER_EVENTS } from "shared";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "ws://localhost:3000";
 
 /**
- * Initialise la connexion Socket.IO.
+ * Ouvre la connexion WebSocket.
  * `callbacks` :
- *   - onConnect()
- *   - onDisconnect()
+ *   - onConnect() / onDisconnect() / onConnectionError()
  *   - onDmdMessage(text)
  *   - onStateUpdated(data)
- *   - onGameStarted()
- *   - onGameOver()
+ *   - onGameStarted() / onGameOver()
  */
 export function initNetwork(callbacks = {}) {
-  const socket = io(SERVER_URL);
+  const socket = createRealtimeClient(SERVER_URL);
 
   socket.on("connect", () => {
     callbacks.onConnect?.();

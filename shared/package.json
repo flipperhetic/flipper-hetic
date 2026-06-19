@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/eventNames.js"
+    ".": "./src/index.js"
   }
 }

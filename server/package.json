@@ -13,10 +13,9 @@
   },
   "dependencies": {
     "shared": "0.0.1",
-    "socket.io": "^4.8.3"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "socket.io-client": "^4.8.3",
     "vitest": "^2.1.9"
   }
 }

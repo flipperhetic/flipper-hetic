@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Lit l'ESP32 boutons sur /dev/ttyUSB0 et relaie au server socket.io.",
+  "description": "Lit l'ESP32 boutons sur /dev/ttyUSB0 et relaie au server WebSocket.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "socket.io-client": "^4.8.3"
+    "ws": "^8.18.3"
   }
 }
