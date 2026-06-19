@@ -50,7 +50,7 @@ class PlayfieldScene {
     document.body.style.overflow = "hidden";
     document.body.appendChild(this.#renderer.domElement);
 
-    this.#ambientLight = new THREE.AmbientLight(0xff3d1a, PLAYFIELD_VIEW_DEFAULTS.ambientIntensity);
+    this.#ambientLight = new THREE.AmbientLight(0xffffff, PLAYFIELD_VIEW_DEFAULTS.ambientIntensity);
     this.#scene.add(this.#ambientLight);
 
     this.#hemiLight = new THREE.HemisphereLight(0xff6e12, 0x4d0a00, 1.15);

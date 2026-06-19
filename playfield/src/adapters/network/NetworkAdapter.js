@@ -1,7 +1,6 @@
-import { io } from "socket.io-client";
-import { CLIENT_EVENTS, SERVER_EVENTS } from "shared";
+import { createRealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
-const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "ws://localhost:3000";
 
 class NetworkAdapter {
   #socket;
@@ -16,7 +15,7 @@ class NetworkAdapter {
       lastEvent: null,
     };
 
-    this.#socket = io(SERVER_URL);
+    this.#socket = createRealtimeClient(SERVER_URL);
 
     this.#socket.on("connect", () => {
       onConnect?.();
