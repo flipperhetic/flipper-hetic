@@ -13,6 +13,7 @@ export const AUDIO_GROUPS = {
   "Game Over": ["game-over-1", "game-over-2"],
   "Highscore beat": ["highscore-1", "highscore-2"],
   "Special events": ["milestone-1", "milestone-2"],
+  "Lose ball": ["lose-ball"],
 };
 
 const SAMPLES = {
@@ -27,6 +28,7 @@ const SAMPLES = {
   "game-over-2": `${BASE_URL}/sounds/Game Over/no-dice-breaking-bad-saulgoodman.mp3`,
   "milestone-1": `${BASE_URL}/sounds/Special events/RV/private-domicile.mp3`,
   "milestone-2": `${BASE_URL}/sounds/Special events/Tuco/tight-tight-tight-breaking-bad-tight-tuco-awesome.mp3`,
+  "lose-ball": `${BASE_URL}/sounds/Lose ball/lose-ball.wav`,
   "theme": `${BASE_URL}/sounds/Main theme/Breaking Bad Main Title Theme (Loop).mp3`,
   "highscore-1": `${BASE_URL}/sounds/Highscore beat/You're God damn right.mp3`,
   "highscore-2": `${BASE_URL}/sounds/Highscore beat/breaking-bad-yes.mp3`,

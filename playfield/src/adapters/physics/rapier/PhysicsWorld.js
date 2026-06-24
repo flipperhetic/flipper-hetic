@@ -11,7 +11,7 @@ const MATERIALS = {
   ball:    { name: "ball",    friction: 0.15, restitution: 0.35 },
   static:  { name: "static",  friction: 0.15, restitution: 0.35 },
   table:   { name: "table",   friction: 0.1,  restitution: 0.2  },
-  flipper: { name: "flipper", friction: 0.2,  restitution: 0.85 },
+  flipper: { name: "flipper", friction: 0.2,  restitution: 0.95 },
   bumper:  { name: "bumper",  friction: 0.1,  restitution: 0.9  },
 };
 

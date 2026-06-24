@@ -97,7 +97,7 @@ export const BUMPER_REPULSE_FORCE = 7;
 export const DRAIN_Z_THRESHOLD = 13.4;
 
 // Flippers — vitesse de rotation (rad/s)
-export const FLIPPER_SPEED = 22;
+export const FLIPPER_SPEED = 15;
 
 // Collisions — cooldown entre deux emissions du meme type (ms)
 export const COLLISION_COOLDOWN_MS = 300;

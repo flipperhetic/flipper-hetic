@@ -38,6 +38,7 @@ const collisionHandler = new CollisionHandler({
   onBallLost: () => {
     network.emitBallLost();
     actuators.onBallLost();
+    audio.play('lose-ball');
   },
   onBumperImpulse: (vec3) => levelRef?.ballActor.applyImpulse(vec3),
 });
