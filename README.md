@@ -4,6 +4,10 @@ Flipper virtuel multi-écran : **Playfield** (3D), **Backglass**, **DMD**, synch
 
 Documentation (index unique) : [`docs/README.md`](docs/README.md). Alignement sur le sujet officiel **HETIC Web3** (barème, IoT, livrables) : [`docs/hetic/referentiel-sujet-hetic-web3.md`](docs/hetic/referentiel-sujet-hetic-web3.md).
 
+## Demo
+
+[Vidéo de démonstration](https://drive.google.com/file/d/13VkodJtVlOaUTLCyD5YJKLMhbRPIjARD/view?usp=sharing)
+
 ## Arborescence des packages
 
 ```

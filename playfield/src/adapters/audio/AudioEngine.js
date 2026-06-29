@@ -162,8 +162,11 @@ class AudioEngine {
     if (now - (this.#lastPlayed.get(key) || 0) < COOLDOWN_MS) return;
 
     const grp = this.#sampleToGroup.get(key);
-    const isHeavySound = grp === "Game Over" || grp === "Highscore beat";
-    if (isHeavySound && now < this.#soundLockEndTime) return;
+    const isHeavySound = grp === "Game Over" || grp === "Highscore beat" || grp === "Special events";
+    if (isHeavySound && now < this.#soundLockEndTime) {
+      if (grp === "Highscore beat") setTimeout(() => this.play(key), this.#soundLockEndTime - now);
+      return;
+    }
 
     this.#lastPlayed.set(key, now);
 
