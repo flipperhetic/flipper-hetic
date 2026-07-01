@@ -1,4 +1,4 @@
-import { CLIENT_EVENTS, decodeMessage } from "shared";
+import { CLIENT_EVENTS, MessageProtocol } from "shared";
 
 // Flippers : relais purs (pas de logique metier), meme traitement pour les 4.
 const FLIPPER_EVENTS = [
@@ -39,7 +39,7 @@ export class SocketController {
     const handlers = this.#buildHandlers(ws);
 
     ws.on("message", (raw) => {
-      const msg = decodeMessage(raw);
+      const msg = MessageProtocol.decode(raw);
       if (!msg) return;                       // trame invalide -> ignoree
       handlers.get(msg.event)?.(msg.data);    // event inconnu -> ignore
     });

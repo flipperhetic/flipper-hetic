@@ -1,8 +1,10 @@
-# Socket Contract MVP — Events & Payloads
+# Realtime Contract MVP — Events & Payloads
 
 Source de vérité: `shared/src/eventNames.js` (importé par le serveur et tous les clients).
 
-Ce document centralise les noms d'événements Socket.IO et les payloads attendus pour brancher un client (playfield, backglass, dmd) sans lire le code serveur.
+Transport: **WebSocket natif** (`ws` côté serveur, `WebSocket` du navigateur côté clients). Le module `shared/src/realtimeClient.js` expose une API façon Socket.IO (`on` / `off` / `emit`) au-dessus du WebSocket natif — les noms d'événements ci-dessous transitent dans des trames encodées par `shared/src/protocol.js`.
+
+Ce document centralise les noms d'événements et les payloads attendus pour brancher un client (playfield, backglass, dmd) sans lire le code serveur.
 
 ## CLIENT_EVENTS (client -> serveur)
 
@@ -17,6 +19,7 @@ Ce document centralise les noms d'événements Socket.IO et les payloads attendu
 | `ball_lost` | — | Bille passee dans le drain |
 | `collision` | `{ "type": string }` | Collision detectee (voir types ci-dessous) |
 | `reset_highscore` | — | Remet le meilleur score a zero (debug) |
+| `cabinet_button` | `{ "id": string, "action": "DOWN"\|"UP" }` | Bouton physique cabine (bridge / ESP32) ; relaye en broadcast aux autres clients |
 
 ### Types de collision et scoring
 
@@ -170,7 +173,7 @@ Raccourcis supplémentaires : **Start** aussi `Enter` / `NumpadEnter` ; flippers
 ### Integration future ESP32 / Arduino
 
 Quand les inputs physiques seront disponibles, ils ne devront pas appeler
-directement la logique du playfield ou les emits Socket.
+directement la logique du playfield ou les emits WebSocket.
 
 Ils devront uniquement appeler les actions de la couche input, soit :
 - directement via `controller.<action>()`,

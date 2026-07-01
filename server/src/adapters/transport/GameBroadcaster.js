@@ -1,4 +1,4 @@
-import { SERVER_EVENTS, encodeMessage } from "shared";
+import { SERVER_EVENTS, MessageProtocol } from "shared";
 
 /**
  * Couche transport SORTANTE (WebSocket natif).
@@ -69,7 +69,7 @@ export class GameBroadcaster {
   // Un input local (flipper, bouton cabinet) est rejoue sur les autres ecrans,
   // mais pas renvoye a celui qui l'a produit.
   relayToOthers(sender, event, payload) {
-    const message = encodeMessage(event, payload);
+    const message = MessageProtocol.encode(event, payload);
     for (const client of this.#clients) {
       if (client !== sender && this.#isOpen(client)) client.send(message);
     }
@@ -78,14 +78,14 @@ export class GameBroadcaster {
   // ── Helpers prives ──
 
   #broadcast(event, data) {
-    const message = encodeMessage(event, data);
+    const message = MessageProtocol.encode(event, data);
     for (const client of this.#clients) {
       if (this.#isOpen(client)) client.send(message);
     }
   }
 
   #send(client, event, data) {
-    if (this.#isOpen(client)) client.send(encodeMessage(event, data));
+    if (this.#isOpen(client)) client.send(MessageProtocol.encode(event, data));
   }
 
   // OPEN === 1 : on n'ecrit pas sur une socket en cours de connexion/fermeture.

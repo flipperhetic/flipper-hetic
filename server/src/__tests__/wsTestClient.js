@@ -6,7 +6,7 @@
  * `socket.io-client`.
  */
 import { WebSocket } from "ws";
-import { encodeMessage, decodeMessage } from "shared";
+import { MessageProtocol } from "shared";
 
 export class WsTestClient {
   constructor(port) {
@@ -14,7 +14,7 @@ export class WsTestClient {
     this.handlers = new Map(); // event -> [{ cb, once }]
 
     this.ws.on("message", (raw) => {
-      const msg = decodeMessage(raw);
+      const msg = MessageProtocol.decode(raw);
       if (!msg) return;
       const arr = this.handlers.get(msg.event);
       if (!arr) return;
@@ -27,7 +27,7 @@ export class WsTestClient {
   }
 
   emit(event, data) {
-    this.ws.send(encodeMessage(event, data));
+    this.ws.send(MessageProtocol.encode(event, data));
   }
 
   on(event, cb) {
