@@ -4,7 +4,7 @@
  * Ecoute les evenements serveur et delegue aux callbacks fournis a la
  * construction. Meme contrat que l'adapter reseau du playfield.
  */
-import { createRealtimeClient, SERVER_EVENTS } from "shared";
+import { RealtimeClient, SERVER_EVENTS } from "shared";
 
 const SERVER_URL = "ws://localhost:3000";
 
@@ -19,7 +19,7 @@ export class NetworkAdapter {
    *   - onGameStarted(data) / onGameOver(data)
    */
   constructor(callbacks = {}) {
-    this.#socket = createRealtimeClient(SERVER_URL);
+    this.#socket = new RealtimeClient(SERVER_URL);
 
     this.#socket.on("connect", () => {
       callbacks.onConnect?.();

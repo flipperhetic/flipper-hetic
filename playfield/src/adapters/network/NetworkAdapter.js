@@ -1,4 +1,4 @@
-import { createRealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
+import { RealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
 const SERVER_URL = "ws://localhost:3000";
 
@@ -15,7 +15,7 @@ class NetworkAdapter {
       lastEvent: null,
     };
 
-    this.#socket = createRealtimeClient(SERVER_URL);
+    this.#socket = new RealtimeClient(SERVER_URL);
 
     this.#socket.on("connect", () => {
       onConnect?.();

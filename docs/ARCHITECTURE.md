@@ -19,8 +19,8 @@ Le dépôt regroupe les livrables sous forme de **workspaces npm** :
 
 | Package | Rôle |
 |--------|------|
-| `shared` | Contrat d’événements partagé (`CLIENT_EVENTS`, `SERVER_EVENTS`). |
-| `server` | Serveur Node.js + **Socket.IO** : état de partie, diffusion aux clients. |
+| `shared` | Contrat d’événements (`CLIENT_EVENTS`, `SERVER_EVENTS`) + transport temps réel : `RealtimeClient` (client WebSocket, `on`/`off`/`emit` + reconnexion) et `MessageProtocol` (codec d’enveloppe `{ event, data }`). |
+| `server` | Serveur Node.js + **WebSocket** (`ws`) : état de partie, diffusion aux clients. |
 | `playfield` | Vue **3D** (Three.js) + simulation physique (**Rapier**, WASM). |
 | `backglass` | Affichage score / état (adapter réseau + rendu DOM). |
 | `dmd` | Affichage type **dot matrix** (adapter réseau + rendu canvas). |

@@ -1,6 +1,6 @@
-import { createRealtimeClient } from "shared";
+import { RealtimeClient } from "shared";
 
-const socket = createRealtimeClient("ws://localhost:3000");
+const socket = new RealtimeClient("ws://localhost:3000");
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

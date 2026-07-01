@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// On conserve les vrais noms d'evenements / le codec, mais on stube la fabrique
-// de client temps reel pour capturer les handlers sans vrai WebSocket.
+// On conserve les vrais noms d'evenements / le codec, mais on stube le client
+// temps reel pour capturer les handlers sans vrai WebSocket.
+// Un constructeur mocke qui renvoie un objet fait que `new` retourne cet objet.
 vi.mock("shared", async (importActual) => {
   const actual = await importActual();
-  return { ...actual, createRealtimeClient: vi.fn() };
+  return { ...actual, RealtimeClient: vi.fn() };
 });
 
-import { createRealtimeClient } from "shared";
+import { RealtimeClient } from "shared";
 import { NetworkAdapter } from "../net/NetworkAdapter.js";
 
 describe("NetworkAdapter (backglass)", () => {
@@ -15,7 +16,7 @@ describe("NetworkAdapter (backglass)", () => {
 
   beforeEach(() => {
     handlers = {};
-    createRealtimeClient.mockReturnValue({
+    RealtimeClient.mockReturnValue({
       on(event, handler) { handlers[event] = handler; return this; },
     });
   });

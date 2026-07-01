@@ -4,7 +4,7 @@
  * Ecoute les evenements serveur et delegue aux callbacks fournis a la
  * construction. Expose `socket` pour emettre (ex. start_game) et `emitStartGame`.
  */
-import { createRealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
+import { RealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
 const SERVER_URL = "ws://localhost:3000";
 
@@ -18,7 +18,7 @@ export class NetworkAdapter {
    *   - onHighScoreBeat(data) / onSpecialEvent(data)
    */
   constructor(callbacks = {}) {
-    this.#socket = createRealtimeClient(SERVER_URL);
+    this.#socket = new RealtimeClient(SERVER_URL);
 
     this.#socket.on("connect", () => {
       callbacks.onConnect?.();
