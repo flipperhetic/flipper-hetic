@@ -4,19 +4,16 @@
  */
 import { getPoints, isValidCollisionType } from "./scoring.js";
 
-const INITIAL = {
-  status: "idle",
-  score: 0,
-  ballsLeft: 3,
-  currentBall: 1,
-  highScore: 0,
-  lastEvent: null,
-};
+const INITIAL_BALLS = 3;
 
 export class GameState {
-  constructor() {
-    Object.assign(this, structuredClone(INITIAL));
-  }
+  // ── Attributs de l'entite (valeurs initiales) ──
+  status = "idle";
+  score = 0;
+  ballsLeft = INITIAL_BALLS;
+  currentBall = 1;
+  highScore = 0;
+  lastEvent = null;
 
   get isPlaying() {
     return this.status === "playing";
@@ -27,9 +24,7 @@ export class GameState {
   }
 
   start() {
-    const preservedHigh = this.highScore || 0;
-    Object.assign(this, structuredClone(INITIAL));
-    this.highScore = preservedHigh;
+    this.#resetRound();
     this.status = "playing";
     this.lastEvent = "start_game";
   }
@@ -39,9 +34,7 @@ export class GameState {
    * partie transitoires, mais en preservant le high score.
    */
   resetToIdle() {
-    const preservedHigh = this.highScore || 0;
-    Object.assign(this, structuredClone(INITIAL));
-    this.highScore = preservedHigh;
+    this.#resetRound();
   }
 
   applyCollision(type) {
@@ -67,5 +60,17 @@ export class GameState {
       return "game_over";
     }
     return "ball_lost";
+  }
+
+  /**
+   * Remet les champs de partie a leur valeur initiale. `highScore` est
+   * volontairement preserve (record entre parties).
+   */
+  #resetRound() {
+    this.status = "idle";
+    this.score = 0;
+    this.ballsLeft = INITIAL_BALLS;
+    this.currentBall = 1;
+    this.lastEvent = null;
   }
 }

@@ -7,7 +7,7 @@ Flipper Hetic Breaking Bad est un flipper virtuel qui combine simulation physiqu
 ## Objectifs
 
 1. Simulation physique réaliste : table 3D interactive (Three.js, Rapier) avec collisions, flippers et gravité cohérentes.
-2. Synchronisation temps réel (< 50 ms) de 3 applis (playfield, backglass, DMD) via Socket.io.
+2. Synchronisation temps réel (< 50 ms) de 3 applis (playfield, backglass, DMD) via WebSocket.
 3. Commande au clavier conforme à l’**annexe IoT** du sujet (`X` / `C` / `D` / `F`) et via ESP32 / Arduino en soutenance.
 4. Expérience immersive : retours visuels dynamiques sur DMD et backglass à chaque score.
 

@@ -23,7 +23,7 @@ URLs des ecrans :
 - Playfield : http://localhost:5173 (focus clavier obligatoire)
 - Backglass : http://localhost:5174
 - DMD : http://localhost:5175
-- Serveur Socket.IO : http://localhost:3000
+- Serveur WebSocket : ws://localhost:3000 (santé HTTP sur http://localhost:3000)
 
 Astuce multi-ecran : 3 fenetres cote a cote (playfield focus clavier, backglass, DMD).
 

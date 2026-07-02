@@ -10,7 +10,7 @@ BTN:<ID>:UP
 ```
 
 Le `bridge/` (conteneur Docker dans le cabinet) lit ces lignes et les
-relaie au server socket.io. Le playfield ecoute les events `cabinet_button`
+relaie au serveur via WebSocket. Le playfield ecoute les events `cabinet_button`
 et appelle l'`inputController` (meme chemin que le clavier).
 
 ## Pinout

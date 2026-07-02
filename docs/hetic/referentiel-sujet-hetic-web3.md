@@ -26,7 +26,7 @@ Les sections **CDC technique** de ce dossier (`vision-objectifs.md`, `architectu
 |---------|-------------|---------------------|
 | Frontend 3D | Three.js | **Three.js** (`playfield`) |
 | Physique | Cannon.js ou Ammo.js | **Rapier** (WASM), même objectif « collisions, gravité, rebonds », derrière `PhysicsPort.js` — voir `stack.md` |
-| Temps réel | WebSockets (Socket.io), Node.js | **Socket.IO + Node** (`server`) |
+| Temps réel | WebSockets (Socket.io), Node.js | **WebSocket natif (`ws`) + Node** (`server`) — Socket.IO retiré après migration, voir `stack.md` |
 | Backglass / DMD | Canvas, CSS | **DOM + canvas** (`backglass`, `dmd`) |
 | IoT | Arduino / ESP32 | Prévu : `bindExternalInputSource` + **mapping clavier annexe** (ci-dessous) ; pilotage solénoïdes : `actuators.md` |
 | IA | TensorFlow.js ou Python (scikit-learn) | **Hors MVP** ; pistes dans `BACKLOG.md` (bonus sujet) |
