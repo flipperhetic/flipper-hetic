@@ -12,7 +12,7 @@ Objectif :
 La logique metier ne doit pas dependre des details techniques.
 
 En pratique :
-- le metier (score, statut, ball lost, game over...) ne depend pas de Three.js, Rapier, Socket.io, DOM, clavier,
+- le metier (score, statut, ball lost, game over...) ne depend pas de Three.js, Rapier, WebSocket, DOM, clavier,
 - les details techniques appellent le metier, pas l'inverse.
 
 ## 2) Couches cibles (version adaptee au projet)
@@ -51,7 +51,7 @@ Connecte le monde exterieur au metier :
 Librairies et details techniques :
 - Three.js,
 - moteur physique **Rapier** (`adapters/physics/`, contrat `ports/PhysicsPort.js` pour une extension ou un autre backend),
-- Socket.io,
+- WebSocket (`ws`),
 - Vite.
 
 ## 3) Mapping concret pour ce repo
@@ -95,7 +95,7 @@ réservée au serveur qui porte la logique métier). Découpage par préoccupati
 de front : source de données / logique de présentation / vue.
 
 - `dmd/src/main.js` : composition root
-- `dmd/src/composition/wireDmdNetwork.js` : câblage Socket.IO → renderer
+- `dmd/src/composition/wireDmdNetwork.js` : câblage WebSocket → renderer
 - `dmd/src/net/NetworkAdapter.js` : classe `NetworkAdapter`, source de données temps réel (WebSocket)
 - `dmd/src/presentation/` : logique de présentation pure et testable (view-model)
   - `TextScroller.js` : machine d'états du défilement de texte
@@ -106,10 +106,10 @@ de front : source de données / logique de présentation / vue.
   - `mount.js` : insertion du DOM statique
 
 ### Server
-- `server/src/index.js` : composition root HTTP + Socket.IO
+- `server/src/index.js` : composition root HTTP + WebSocket (`ws`)
 - `server/src/domain/GameState.js`, `scoring.js` : entites pures (zero dependance framework)
 - `server/src/usecases/` : `startGame`, `loseBall`, `applyCollision`
-- `server/src/adapters/socketHandlers.js` : transport Socket.IO uniquement
+- `server/src/adapters/socketHandlers.js` : transport WebSocket uniquement
 
 ### Contrat partage
 - `shared/src/eventNames.js` : source de verite des noms d'evenements

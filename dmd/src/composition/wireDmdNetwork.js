@@ -1,5 +1,5 @@
 /**
- * DMD — Branchement Socket.IO sur le renderer et les indicateurs DOM.
+ * DMD — Branchement réseau (WebSocket) sur le renderer et les indicateurs DOM.
  */
 import { NetworkAdapter } from "../net/NetworkAdapter.js";
 

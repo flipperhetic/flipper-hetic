@@ -18,7 +18,7 @@
 ## Schéma de communication
 
 ```
-SERVEUR (Node.js + Socket.io, Port 3000)
+SERVEUR (Node.js + WebSocket `ws`, Port 3000)
     |
     +- WebSocket connection
     |

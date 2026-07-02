@@ -7,7 +7,7 @@
 //     BTN:<ID>:DOWN
 //     BTN:<ID>:UP
 //
-// Le bridge serial->socket.io (bridge/server.js) parse ces lignes et relaie
+// Le bridge serial->websocket (bridge/server.js) parse ces lignes et relaie
 // les events au server, qui les diffuse aux clients (le playfield mappe les
 // IDs sur des actions flipper/start/launch).
 //

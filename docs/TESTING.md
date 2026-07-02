@@ -33,7 +33,7 @@ npm test --workspace=dmd
 | dmd | `wireDmdNetwork.test.js` | 5 | Unitaire (composition) |
 | **Total** | | **88** | |
 
-> Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via socket.io). Le mapping ID firmware → action vit dans `playfield/src/adapters/cabinetInput.js`.
+> Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via WebSocket). Le mapping ID firmware → action vit dans `playfield/src/adapters/cabinetInput.js`.
 
 ---
 
@@ -90,7 +90,7 @@ Tests sur la machine d'état, le scoring, la gestion des billes, le relay flippe
 
 ## Serveur — `game-flow.test.js`
 
-Tests d'intégration avec Socket.IO en mémoire (2 clients connectés).
+Tests d'intégration avec un serveur WebSocket en mémoire (2 clients connectés).
 
 | # | Test | Résultat attendu |
 |---|------|-----------------|

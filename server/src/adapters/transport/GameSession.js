@@ -13,8 +13,8 @@ const SPECIAL_COLLISION_TYPES = new Set(["tunnel", "tunnel-rv"]);
 
 /**
  * Orchestration applicative : detient l'etat de la partie et enchaine, pour
- * chaque action client, le use case puis l'emission. Ne connait ni Socket.IO
- * (injecte via le broadcaster) ni `fs` (injecte via le repository).
+ * chaque action client, le use case puis l'emission. Ne connait ni le transport
+ * WebSocket (injecte via le broadcaster) ni `fs` (injecte via le repository).
  */
 export class GameSession {
   // ── Etat de la session (encapsule : accessible uniquement via les methodes) ──
