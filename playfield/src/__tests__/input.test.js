@@ -39,7 +39,6 @@ function createSpyActions() {
     onLeftFlipperUp: vi.fn(),
     onRightFlipperDown: vi.fn(),
     onRightFlipperUp: vi.fn(),
-    onDebugResetBall: vi.fn(),
   };
 }
 
@@ -100,11 +99,6 @@ describe("raccourcis dev/accessibilité", () => {
   it("Space déclenche launch", () => {
     target.dispatch("keydown", { code: "Space" });
     expect(actions.onLaunch).toHaveBeenCalledTimes(1);
-  });
-
-  it("R déclenche debugResetBall", () => {
-    target.dispatch("keydown", { code: "KeyR" });
-    expect(actions.onDebugResetBall).toHaveBeenCalledTimes(1);
   });
 });
 

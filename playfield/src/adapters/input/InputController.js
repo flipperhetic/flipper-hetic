@@ -10,8 +10,8 @@ class InputController {
   #actions;
   #cleanups = [];
 
-  constructor({ onStart, onLaunch, onLeftFlipperDown, onLeftFlipperUp, onRightFlipperDown, onRightFlipperUp, onDebugResetBall } = {}) {
-    this.#actions = { onStart, onLaunch, onLeftFlipperDown, onLeftFlipperUp, onRightFlipperDown, onRightFlipperUp, onDebugResetBall };
+  constructor({ onStart, onLaunch, onLeftFlipperDown, onLeftFlipperUp, onRightFlipperDown, onRightFlipperUp } = {}) {
+    this.#actions = { onStart, onLaunch, onLeftFlipperDown, onLeftFlipperUp, onRightFlipperDown, onRightFlipperUp };
   }
 
   bindKeyboard(target = window) {
@@ -77,10 +77,6 @@ class InputController {
         event.preventDefault();
         pressRight();
         return;
-      }
-
-      if (event.code === "KeyR") {
-        this.#actions.onDebugResetBall?.();
       }
     };
 
