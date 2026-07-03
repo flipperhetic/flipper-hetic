@@ -270,19 +270,6 @@ class AudioEngine {
     return Object.keys(SAMPLES);
   }
 
-  // Kept for audio-controls.js compatibility
-  toggleMute() {
-    this.setMuted(!this.#muted);
-  }
-
-  adjustVolume(delta) {
-    this.setVolume(this.#volume + delta);
-  }
-
-  toggleDebugMute() {
-    this.setMuted(!this.#muted, false);
-  }
-
   getState() {
     return {
       volume: this.#volume,

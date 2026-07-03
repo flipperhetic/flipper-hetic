@@ -5,7 +5,6 @@ import NetworkAdapter from './adapters/network/NetworkAdapter.js';
 import CollisionHandler from './usecases/CollisionHandler.js';
 import { createActuators } from './adapters/actuators.js';
 import AudioEngine from './adapters/audio/AudioEngine.js';
-import { mountAudioControls, updateAudioHud } from './adapters/audio-controls.js';
 import InputController from './adapters/input/InputController.js';
 import Level from './composition/Level.js';
 import GameLoop from './composition/GameLoop.js';
@@ -14,16 +13,13 @@ import { wireCollisions } from './composition/wireCollisions.js';
 
 await initRapier();
 
-const audio = new AudioEngine(updateAudioHud);
+const audio = new AudioEngine();
 audio.startTheme(0.18);
 audio.setMuted(true, false);
-mountAudioControls(audio);
-const audioHud = document.getElementById('audio-hud');
-if (audioHud) audioHud.style.display = 'none';
 const actuators = createActuators(audio);
 
 const playfieldScene = new PlayfieldScene();
-const { scene, camera, renderer, ambientLight, dirLight, pointLights } = playfieldScene;
+const { scene, camera, renderer, dirLight } = playfieldScene;
 const physicsWorld = new PhysicsWorld();
 
 let levelRef = null;
@@ -57,7 +53,6 @@ if (level.archMesh) level.group.attach(level.archMesh);
 window.addEventListener('resize', viewRuntime.onResize);
 
 const bloom = new BloomRenderer(renderer, scene, camera);
-const { composer, bloomPass } = bloom;
 window.addEventListener('resize', () => bloom.onResize());
 
 const serverOverlay = document.createElement('div');
@@ -99,25 +94,6 @@ const network = new NetworkAdapter({
   },
 });
 
-const readyDebug = async () => {
-  if (!import.meta.env.DEV) return;
-  const { wirePlayfieldDebug } = await import('./adapters/debug/wirePlayfieldDebug.js');
-  wirePlayfieldDebug({
-    viewRuntime, camera, renderer, scene,
-    levelGroup: level.group, world: physicsWorld,
-    ambientLight, dirLight, pointLights,
-    bloomPass, composer, audio, level,
-    onResetHighScore: () => network.emitResetHighScore(),
-    onResetBall: () => { level.ballActor.reset(); level.launchGateActor.open(); },
-    onTriggerSpecialEvent: (type) => {
-      network.emitCollision(type);
-      if (type === 'tunnel')    audio.play('milestone-2');
-      else if (type === 'tunnel-rv') audio.play('milestone-1');
-    },
-  });
-};
-readyDebug();
-
 const inputController = new InputController({
   onStart() { network.emitStartGame(); },
   onLaunch() {
@@ -133,7 +109,6 @@ const inputController = new InputController({
   onLeftFlipperUp()    { level.flipperActor.setActive('left', false); network.emitFlipperLeftUp(); },
   onRightFlipperDown() { level.flipperActor.setActive('right', true); network.emitFlipperRightDown(); actuators.onFlipperFire(); },
   onRightFlipperUp()   { level.flipperActor.setActive('right', false); network.emitFlipperRightUp(); },
-  onDebugResetBall()   { level.ballActor.reset(); level.launchGateActor.open(); },
 });
 inputController.bindKeyboard();
 inputController.bindCabinet(network.socket);

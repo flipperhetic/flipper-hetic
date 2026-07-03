@@ -346,21 +346,4 @@ export default class Level {
   physicsRotateY = (angleDeg) => {
     this.flipperActor.setWorldRotY(angleDeg * DEG);
   };
-
-  setPhysicsDebugVisible = (v) => {
-    this.#drainMesh.visible = v;
-    this.#gateTriggerMesh.visible = v;
-    this.#tunnelGasMaskMesh.visible = v;
-    this.#tunnelRvMesh.visible = v;
-  };
-
-  // --- Debug UI compatibility getters ---
-  /** playfieldDebug accesses level.ballBody.rb for ball spawn teleport. */
-  get ballBody() { return this.ballActor?.body ?? null; }
-
-  /** playfieldDebug accesses level.flipperBodies.left/right/.setActive()/.setWorldRotY(). */
-  get flipperBodies() { return this.flipperActor ?? null; }
-
-  /** main.js / GameLoop backward-compat (deprecated — prefer launchGateActor directly). */
-  get launchGateBody() { return this.launchGateActor ?? null; }
 }
