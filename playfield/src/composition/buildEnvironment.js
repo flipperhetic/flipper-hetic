@@ -15,6 +15,9 @@ import {
   LAUNCH_BEND_ANGLE_DEG,
   LAUNCH_BEND_RADIUS,
   LAUNCH_BEND_SEGMENTS,
+  OUTLANE_GUIDE_THICKNESS,
+  OUTLANE_GUIDE_LEFT,
+  OUTLANE_GUIDE_RIGHT,
 } from "../domain/constants.js";
 
 export function buildEnvironment(world) {
@@ -164,6 +167,20 @@ export function buildEnvironment(world) {
       const segLen = len * 1.05;
       addWall(lwt, WALL_HEIGHT, segLen, (x0 + x1) / 2, y, (z0 + z1) / 2, Math.atan2(dx, dz), makeRustMetalMaterial(lwt, segLen));
     }
+  }
+
+  // --- Deflecteurs d'outlane : murs a 45° entre chaque flipper et le mur lateral ---
+  const gt = OUTLANE_GUIDE_THICKNESS;
+  for (const g of [OUTLANE_GUIDE_LEFT, OUTLANE_GUIDE_RIGHT]) {
+    const dx = g.inner.x - g.outer.x;
+    const dz = g.inner.z - g.outer.z;
+    const len = Math.hypot(dx, dz);
+    addWall(
+      gt, WALL_HEIGHT, len,
+      (g.outer.x + g.inner.x) / 2, y, (g.outer.z + g.inner.z) / 2,
+      Math.atan2(dx, dz),
+      makeRustMetalMaterial(gt, len),
+    );
   }
 
   return { group };

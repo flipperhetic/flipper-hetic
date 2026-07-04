@@ -15,7 +15,7 @@ await initRapier();
 
 const audio = new AudioEngine();
 audio.startTheme(0.18);
-audio.setMuted(true, false);
+audio.setMuted(false, false);
 const actuators = createActuators(audio);
 
 const playfieldScene = new PlayfieldScene();

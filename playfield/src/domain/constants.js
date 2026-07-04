@@ -77,6 +77,25 @@ export const SLINGSHOT_TOP_OFFSET = 2.4; // distance Z entre l'extremite haute e
 export const CORNER_DEFLECTOR_SIZE = 2;     // longueur d'arete coupee sur X et sur Z
 export const CORNER_DEFLECTOR_DEPTH = 0.25;
 
+// Deflecteurs d'outlane — murs inclines (~45°) entre chaque flipper et le mur
+// lateral (mur gauche du plateau / mur du couloir de lancement), pour reduire
+// les pertes de bille dans les couloirs exterieurs. Chaque mur est defini par
+// ses deux extremites (x,z) ; `outer` cote mur lateral (haut), `inner` cote
+// flipper (bas). La marge `inner` autour du pivot evite de bloquer la batte.
+export const OUTLANE_GUIDE_THICKNESS = 0.3;
+// `outer` est volontairement enfoui dans l'epaisseur du mur lateral : la coupe
+// a 45° du bout est ainsi cachee dans le mur et le guide affleure a ras (pas de
+// coin en biais visible). Seule la partie enfouie change ; la longueur visible
+// (du mur au flipper) reste celle reglee via `inner`.
+export const OUTLANE_GUIDE_LEFT = {
+  outer: { x: -5.775, z: 7.275 },
+  inner: { x: -4.63,  z: 8.42  },
+};
+export const OUTLANE_GUIDE_RIGHT = {
+  outer: { x: 4.225, z: 7.225 },
+  inner: { x: 3.08,  z: 8.37  },
+};
+
 // Arche — arrondi en haut du playfield (positionne via debug sur le GLB Obstacle-arch)
 export const ARCH_RADIUS     = TABLE_WIDTH / 2;
 export const ARCH_CENTER_Z   = -8.5;
