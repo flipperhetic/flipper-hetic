@@ -26,7 +26,6 @@ export class HighScoreRepository {
     try {
       await fs.mkdir(ROOT_DIR, { recursive: true });
       await fs.writeFile(HIGHSCORE_FILE, JSON.stringify({ highScore }), "utf-8");
-      console.log("[highscore] saved", highScore, "->", HIGHSCORE_FILE);
     } catch (e) {
       console.warn("failed to save highscore", e);
     }

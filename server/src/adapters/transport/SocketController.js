@@ -32,7 +32,6 @@ export class SocketController {
   }
 
   #onConnection(ws) {
-    console.log("[ws] client connected");
     this.#broadcaster.addClient(ws);   // memorise le client pour les emissions
     this.#session.sendSnapshotTo(ws);  // resync : etat courant pour le nouvel arrivant
 
