@@ -12,6 +12,26 @@ import ViewRuntime from './composition/ViewRuntime.js';
 import { wireCollisions } from './composition/wireCollisions.js';
 import ModelLoader from './adapters/renderer/modelLoader.js';
 
+// Filet de diagnostic : sur la cabine, le kiosk n'a pas de devtools. Toute erreur
+// d'initialisation (WASM Rapier, WebGL, chargement d'un asset, module…) laisserait
+// sinon un ecran noir muet. On affiche ici l'erreur reelle DIRECTEMENT a l'ecran.
+function showFatalError(detail) {
+  let el = document.getElementById('playfield-fatal');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'playfield-fatal';
+    el.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#160000;color:#ff9a9a;'
+      + "font-family:'Courier New',monospace;font-size:13px;line-height:1.5;padding:22px;overflow:auto;white-space:pre-wrap;word-break:break-word";
+    document.body.appendChild(el);
+  }
+  el.textContent = 'PLAYFIELD — erreur d\'initialisation\n\n' + detail;
+}
+window.addEventListener('error', (e) => showFatalError((e.error && e.error.stack) || e.message || String(e)));
+window.addEventListener('unhandledrejection', (e) => {
+  const r = e.reason;
+  showFatalError((r && (r.stack || r.message)) || String(r));
+});
+
 // #2 — Précharge les GLB en parallèle de l'init WASM Rapier. Le fetch/parse des
 // modèles ne dépend pas de Rapier (seul buildGLBCollisions en a besoin, et il
 // tourne plus tard, une fois Rapier prêt), donc on recouvre les deux coûts.
