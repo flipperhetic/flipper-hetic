@@ -394,7 +394,7 @@ body {
   color: #36e04a; /* bouton vert du flipper */
   border: 2px solid #fff; /* bordure blanche neon */
   border-radius: 8px;
-  padding: 0 0.4em;
+  padding: 0.2em 0.55em;
   margin: 0 0.15em;
   /* bloom vert : halo exterieur + glow interieur */
   text-shadow: 0 0 8px rgba(54, 224, 74, 0.9);
@@ -544,7 +544,7 @@ body {
   color: #36e04a; /* bouton vert du flipper */
   border: 2px solid #fff; /* bordure blanche neon */
   border-radius: 8px;
-  padding: 0 0.4em;
+  padding: 0.2em 0.55em;
   margin: 0 0.15em;
   /* bloom vert plus intense (texte d'accueil plus grand) */
   text-shadow: 0 0 10px rgba(54, 224, 74, 0.95);
