@@ -21,7 +21,7 @@ export class SocketController {
   #session;      // orchestration metier
   #broadcaster;  // pour (de)referencer les clients connectes
 
-  constructor(wss, session, broadcaster) {
+  constructor({ wss, session, broadcaster }) {
     this.#wss = wss;
     this.#session = session;
     this.#broadcaster = broadcaster;
