@@ -4,51 +4,51 @@ Ce guide explique **comment appliquer une Clean Architecture pragmatique** sur c
 
 Objectif :
 - garder le code lisible et testable,
-- eviter les regressions,
-- permettre a l'equipe (et a l'IA) de contribuer sans casser le flux global.
+- éviter les régressions,
+- permettre à l'équipe de contribuer sans casser le flux global.
 
-## 1) Regle cle
+## 1) Règle clé
 
-La logique metier ne doit pas dependre des details techniques.
+La logique métier ne doit pas dépendre des détails techniques.
 
 En pratique :
-- le metier (score, statut, ball lost, game over...) ne depend pas de Three.js, Rapier, WebSocket, DOM, clavier,
-- les details techniques appellent le metier, pas l'inverse.
+- le métier (score, statut, ball lost, game over...) ne dépend pas de Three.js, Rapier, WebSocket, DOM, clavier,
+- les détails techniques appellent le métier, pas l'inverse.
 
-## 2) Couches cibles (version adaptee au projet)
+## 2) Couches cibles (version adaptée au projet)
 
-### Domaine (coeur)
-Contient les regles de jeu pures :
-- transitions d'etat (`idle -> playing -> game_over`),
+### Domaine (cœur)
+Contient les règles de jeu pures :
+- transitions d'état (`idle -> playing -> game_over`),
 - calcul score,
 - gestion des billes restantes,
-- decisions metier (ignorer un event invalide, etc.).
+- décisions métier (ignorer un event invalide, etc.).
 
 Contraintes :
 - pas d'import Three.js / Rapier / Socket,
-- fonctions pures ou services metier facilement testables.
+- fonctions pures ou services métier facilement testables.
 
 ### Application (use-cases)
-Orchestre les actions metier :
+Orchestre les actions métier :
 - start game,
 - launch ball,
 - collision,
 - ball lost,
 - restart.
 
-Depend de :
+Dépend de :
 - domaine,
 - interfaces (ports) abstraites.
 
-### Adapters (entree/sortie)
-Connecte le monde exterieur au metier :
+### Adapters (entrée/sortie)
+Connecte le monde extérieur au métier :
 - clavier / input physique futur (ESP32),
 - WebSocket serveur/client,
 - render DOM/canvas,
 - logs.
 
 ### Infrastructure / Framework
-Librairies et details techniques :
+Librairies et détails techniques :
 - Three.js,
 - moteur physique **Rapier** (`adapters/physics/`, contrat `ports/PhysicsPort.js` pour une extension ou un autre backend),
 - WebSocket (`ws`),
@@ -62,15 +62,15 @@ Librairies et details techniques :
 - `playfield/src/composition/GameLoop.js` : boucle animation / pas physique / rendu.
 - `playfield/src/composition/ViewRuntime.js` : caméra, resize, shake d'écran.
 - `playfield/src/composition/wireCollisions.js` : câblage événements Rapier vers CollisionHandler.
-- `playfield/src/domain/` : constantes du plateau, regles pures
-- `playfield/src/usecases/` : `collisionHandler.js` (use case pur)
-- `playfield/src/adapters/input/InputController.js` : adapter d'entree (clavier + cabinet IoT)
+- `playfield/src/domain/` : constantes du plateau, règles pures
+- `playfield/src/usecases/` : `CollisionHandler.js` (use case pur)
+- `playfield/src/adapters/input/InputController.js` : adapter d'entrée (clavier + cabinet IoT)
 - `playfield/src/adapters/network/NetworkAdapter.js` : adapter Socket
 - `playfield/src/adapters/renderer/` : Three.js (rendu 3D)
 - `playfield/src/adapters/physics/` : moteur physique (Rapier via port)
   - `ports/PhysicsPort.js` : contrat du moteur
   - `rapier/` : backend Rapier actif (`@dimforge/rapier3d-compat`, init WASM async)
-  - `index.js` : barrel selectionnant le backend actif
+  - `index.js` : barrel sélectionnant le backend actif
 - `playfield/src/adapters/actuators.js` : effets sortants (haptique, sons)
 - `playfield/src/domain/viewConfig.js` : config vue production (caméra, gravité, lumières)
 
@@ -107,60 +107,60 @@ de front : source de données / logique de présentation / vue.
 
 ### Server
 - `server/src/index.js` : composition root HTTP + WebSocket (`ws`)
-- `server/src/domain/GameState.js`, `scoring.js` : entites pures (zero dependance framework)
-- `server/src/usecases/` : `startGame`, `loseBall`, `applyCollision`
+- `server/src/domain/GameState.js`, `scoring.js` : entités pures (zéro dépendance framework)
+- `server/src/usecases/` : `startGame`, `loseBall`, `applyCollision`, `launchBall`, `resetHighScore`
 - `server/src/adapters/socketHandlers.js` : transport WebSocket uniquement
 
-### Contrat partage
-- `shared/src/eventNames.js` : source de verite des noms d'evenements
-- `../EVENTS.md` : contrat documentaire (alignee sur eventNames.js)
+### Contrat partagé
+- `shared/src/eventNames.js` : source de vérité des noms d'événements
+- `../EVENTS.md` : contrat documentaire (aligné sur eventNames.js)
 
-## 4) Regles de dev pour l'equipe
+## 4) Règles de dev pour l'équipe
 
 1. **Une feature = un use-case clair**
-   - nommer l'action metier avant de coder.
+   - nommer l'action métier avant de coder.
 
-2. **Ne pas coder la logique metier dans les handlers UI/Socket**
+2. **Ne pas coder la logique métier dans les handlers UI/Socket**
    - le handler appelle une action applicative, point.
 
-3. **Unifier les points d'entree**
-   - clavier et IoT doivent appeler la meme API d'actions (`input controller`).
+3. **Unifier les points d'entrée**
+   - clavier et IoT doivent appeler la même API d'actions (`input controller`).
 
-4. **Contrat d'evenements centralise**
-   - tout changement d'event passe par `../EVENTS.md` + implementation associee.
+4. **Contrat d'événements centralisé**
+   - tout changement d'event passe par `../EVENTS.md` + implémentation associée.
 
-5. **Petits commits scopes**
+5. **Petits commits scopés**
    - un bug physique, un commit ;
-   - une evolution input, un commit ;
-   - doc, commit separe.
+   - une évolution input, un commit ;
+   - doc, commit séparé.
 
-6. **Tests manuels MVP obligatoires apres changement sensible**
+6. **Tests manuels MVP obligatoires après changement sensible**
    - start -> launch -> score -> ball_lost -> game_over -> restart.
 
-## 5) Workflow recommande (rapide)
+## 5) Workflow recommandé (rapide)
 
-1. Definir le use-case (1 phrase).
-2. Identifier couche impactee (domaine/app/adapter/infra).
-3. Implementer du coeur vers l'exterieur.
-4. Mettre a jour `../EVENTS.md` si contrat modifie.
-5. Verifier build + scenario manuel d'integration.
+1. Définir le use-case (1 phrase).
+2. Identifier couche impactée (domaine/app/adapter/infra).
+3. Implémenter du cœur vers l'extérieur.
+4. Mettre à jour `../EVENTS.md` si contrat modifié.
+5. Vérifier build + scénario manuel d'intégration.
 
 ## 6) Checklist review avant merge
 
-- [ ] Le code metier est isole des frameworks autant que possible
-- [ ] Les adapters ne contiennent pas de regles metier complexes
+- [ ] Le code métier est isolé des frameworks autant que possible
+- [ ] Les adapters ne contiennent pas de règles métier complexes
 - [ ] Le mapping input reste unique (clavier + futur IoT)
-- [ ] Le contrat d'evenements est coherent avec `../EVENTS.md`
+- [ ] Le contrat d'événements est cohérent avec `../EVENTS.md`
 - [ ] Le flux MVP complet fonctionne encore
 
-## 7) Niveau d'ambition recommande
+## 7) Niveau d'ambition recommandé
 
-Ne pas viser une purete academique totale pendant le MVP.
+Ne pas viser une pureté académique totale pendant le MVP.
 
-Vise plutot :
+Vise plutôt :
 - architecture stable,
 - modules lisibles,
-- couplage reduit,
-- regressions limitees.
+- couplage réduit,
+- régressions limitées.
 
 C'est le meilleur compromis pour livrer dans les temps tout en gardant un code propre.

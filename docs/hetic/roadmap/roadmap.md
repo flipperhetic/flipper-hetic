@@ -1,4 +1,4 @@
-# Roadmap et questions ouvertes
+# Roadmap
 
 ## Planning
 
@@ -15,6 +15,3 @@ La roadmap s'étale sur 10 semaines : S1 cadre + monorepo ; S2–S8 POC puis MVP
 
 ![Roadmap - Flipper Hetic Breaking Bad](roadmap.png)
 
-## Questions ouvertes
-
-- Protocole ESP32 à valider en POC : Serial ou WiFi pour les commandes et solénoïdes ?

@@ -1,134 +1,106 @@
-# Deploying to the Flipper cabinet
+# Déploiement sur la cabine Flipper
 
-> **Who this is for:** students deploying their pinball apps onto the shared
-> Flipper cabinet. It covers getting onto the network, getting your code, and
-> pushing an app onto the cabinet's screens.
+> **À qui s'adresse ce document :** étudiants déployant leurs applications sur la cabine Flipper partagée. Il couvre la connexion au réseau, la récupération du code et le déploiement sur les écrans de la cabine.
 >
-> **You never need to change the cabinet's configuration.** Building and
-> deploying an app only touches *your own* git repository and two buttons in
-> the dashboard. See the warning at the bottom of this page.
+> **Il n'est jamais nécessaire de modifier la configuration de la cabine.** Construire et déployer une application ne touche que votre propre dépôt git et deux boutons dans le tableau de bord. Voir l'avertissement en bas de page.
 
-## What you'll do
+## Ce que vous allez faire
 
-1. Join the cabinet's private network (Tailscale).
-2. Install git and get a copy of the example app.
-3. Open the dashboard.
-4. Register your app's git repository and load it.
+1. Rejoindre le réseau privé de la cabine (Tailscale).
+2. Installer git et récupérer une copie de l'application exemple.
+3. Ouvrir le tableau de bord.
+4. Enregistrer le dépôt git de votre application et la charger.
 
-Deploying is done entirely from a web dashboard — there is no manual copying of
-files onto the cabinet.
+Le déploiement se fait entièrement depuis un tableau de bord web — aucune copie manuelle de fichiers sur la cabine n'est nécessaire.
 
-## 1. Join the cabinet's network
+## 1. Rejoindre le réseau de la cabine
 
-The cabinet is not on the public internet. It lives on a private Tailscale
-network, and you join that network once.
+La cabine n'est pas sur l'internet public. Elle est sur un réseau Tailscale privé, à rejoindre une seule fois.
 
-1. Open this invite link and accept it:
+1. Ouvrez ce lien d'invitation et acceptez-le :
 
-   <https://login.tailscale.com/admin/invite/zULHNSE1WVQFmrN9iaN521>
+   `<lien d'invitation fourni par l'enseignant>`
 
-2. Sign in when prompted (Google, GitHub, or Microsoft account).
-3. Install the Tailscale client on your computer from
-   <https://tailscale.com/download>, then sign in with the same account.
-4. Leave Tailscale running. While it is connected, your computer can reach the
-   cabinet.
+2. Connectez-vous (compte Google, GitHub ou Microsoft).
+3. Installez le client Tailscale sur votre ordinateur depuis <https://tailscale.com/download>, puis connectez-vous avec le même compte.
+4. Laissez Tailscale actif. Tant qu'il est connecté, votre ordinateur peut atteindre la cabine.
 
-> You only do this once per computer.
+> À faire une seule fois par ordinateur.
 
-## 2. Install git
+## 2. Installer git
 
-Your app is a git repository, and the cabinet deploys it straight from git.
+Votre application est un dépôt git, et la cabine la déploie directement depuis git.
 
-- **Windows:** install from <https://git-scm.com/download/win>
-- **macOS:** run `xcode-select --install`, or install from
-  <https://git-scm.com/download/mac>
-- **Linux:** `sudo apt install git`
+- **Windows :** installer depuis <https://git-scm.com/download/win>
+- **macOS :** exécuter `xcode-select --install`, ou installer depuis <https://git-scm.com/download/mac>
+- **Linux :** `sudo apt install git`
 
-Check it works:
+Vérifier que ça fonctionne :
 
 ```sh
 git --version
 ```
 
-## 3. Get a copy of the example app
+## 3. Récupérer l'application exemple
 
-Start from the example app rather than a blank folder — it already has the
-correct structure.
+Partir de l'application exemple plutôt qu'un dossier vide — elle a déjà la bonne structure.
 
 ```sh
 git clone https://github.com/PANDORMedia/fliphetic-test-2.git
 cd fliphetic-test-2
 ```
 
-Use it as a template for your own app: change the screens, the content, the
-firmware. What each file means is explained in **`STUDENT_GUIDE.md`**.
+L'utiliser comme modèle pour votre propre application : modifier les écrans, le contenu, le firmware. La signification de chaque fichier est expliquée dans **`STUDENT_GUIDE.md`**.
 
-When your app is ready, push it to **your own** public GitHub repository.
+Quand votre application est prête, la pousser sur votre propre dépôt GitHub public.
 
-## 4. Open the dashboard
+## 4. Ouvrir le tableau de bord
 
-With Tailscale connected, open the cabinet dashboard in your browser:
+Avec Tailscale connecté, ouvrir le tableau de bord dans le navigateur :
 
 ```
 http://100.125.185.88:8080
 ```
 
-Log in. If you do not have an account, register on the login page when
-registration is open, or ask your instructor to create one for you.
+Se connecter. Si vous n'avez pas de compte, s'inscrire sur la page de connexion quand l'inscription est ouverte, ou demander à l'enseignant d'en créer un.
 
-## 5. Deploy your app
+## 5. Déployer l'application
 
-From the dashboard:
+Depuis le tableau de bord :
 
-1. Click **+ Register** and paste the git URL of your app's repository.
-2. The cabinet clones your repo and checks it. If the manifest is invalid, the
-   dashboard tells you what to fix.
-3. Your app appears in the **Apps** list. Click **Load** to run it — the
-   cabinet stops the previous app, flashes any ESP32 firmware, starts your
-   Docker services, and points the three screens at your app.
+1. Cliquer sur **+ Register** et coller l'URL git du dépôt de votre application.
+2. La cabine clone votre dépôt et le vérifie. Si le manifeste est invalide, le tableau de bord indique ce qui doit être corrigé.
+3. Votre application apparaît dans la liste **Apps**. Cliquer sur **Load** pour la lancer — la cabine arrête l'application précédente, flashe le firmware ESP32 éventuel, démarre vos services Docker et dirige les trois écrans vers votre application.
 
-To ship a change later: commit and push to GitHub. Within about a minute the
-dashboard shows an **update** badge on your app — click **Load** again to
-switch the cabinet to the new version. The cabinet never loads a new version on
-its own.
+Pour déployer une modification : commiter et pusher sur GitHub. En moins d'une minute, le tableau de bord affiche un badge **update** sur votre application — cliquer à nouveau sur **Load** pour basculer la cabine sur la nouvelle version. La cabine ne charge jamais une nouvelle version automatiquement.
 
-## SSH access (rarely needed)
+## Accès SSH (rarement nécessaire)
 
-Deploying does **not** require SSH — everything above is done from the
-dashboard. If you are specifically asked to open a terminal on the cabinet:
+Le déploiement **ne nécessite pas SSH** — tout ce qui précède se fait depuis le tableau de bord. Si vous devez ouvrir un terminal sur la cabine :
 
 ```sh
 ssh flipper@100.125.185.88
 ```
 
-Password: `dauphin67`
+Mot de passe : `<mot de passe fourni par l'enseignant>`
 
-> Use this only when asked to. A terminal on the cabinet makes it easy to break
-> things for the whole class — see the warning below.
+> À utiliser uniquement sur demande explicite. Un terminal sur la cabine permet de facilement casser quelque chose pour toute la classe — voir l'avertissement ci-dessous.
 
-## On site: the cabinet Wi-Fi
+## Sur site : le Wi-Fi de la cabine
 
-When you are physically next to the cabinet, it also broadcasts its own Wi-Fi:
+Quand vous êtes physiquement à côté de la cabine, elle diffuse son propre réseau Wi-Fi :
 
-- **Network:** `FLIPHETIC_CAB0`
-- **Password:** `dauphin67`
+- **Réseau :** `FLIPHETIC_CAB0`
+- **Mot de passe :** `<mot de passe fourni par l'enseignant>`
 
-This is mainly for ESP32 boards and phones. Your normal deploy workflow uses
-Tailscale, not this Wi-Fi.
+Principalement utile pour les cartes ESP32 et les téléphones. Le déploiement normal utilise Tailscale, pas ce Wi-Fi.
 
-## Do NOT change the cabinet configuration
+## Ne PAS modifier la configuration de la cabine
 
-**This is the one rule that matters.** The cabinet is shared by the whole
-class. Its configuration — the config files, the **System** page (screens,
-ESP32 devices, users), the network settings — is set up once and used by
-everyone.
+**C'est la règle qui compte.** La cabine est partagée par toute la classe. Sa configuration — les fichiers de config, la page **System** (écrans, appareils ESP32, utilisateurs), les paramètres réseau — est définie une fois et utilisée par tout le monde.
 
-- **You never need to touch it.** Building and deploying an app only ever
-  involves your own git repository and the **Register** / **Load** buttons.
-- Changing a setting to fix *your* app can break the cabinet for *everyone
-  else's* app.
-- If the cabinet itself looks misconfigured or broken, **tell your instructor**
-  — do not try to fix it yourself.
+- **Vous n'avez jamais besoin d'y toucher.** Construire et déployer une application ne nécessite que votre propre dépôt git et les boutons **Register** / **Load**.
+- Modifier un paramètre pour corriger *votre* application peut casser la cabine pour *l'application de tout le monde*.
+- Si la cabine semble mal configurée ou cassée, **prévenez l'enseignant** — n'essayez pas de la corriger vous-même.
 
-Stay inside your own repository and the dashboard's Apps page, and you cannot
-break anything for anyone.
+Restez dans votre propre dépôt et la page Apps du tableau de bord, et vous ne pourrez rien casser pour personne.

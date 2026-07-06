@@ -34,9 +34,9 @@ SERVEUR (Node.js + WebSocket `ws`, Port 3000)
 ## Flux de données
 
 ```
-Collision detectee (Rapier cote playfield)
+Collision détectée (Rapier côté playfield)
     --> Playfield envoie au Serveur
         --> Serveur calcule score
             --> Serveur broadcast a tous les clients
-                --> Affichage synchronise sur 3 écrans
+                --> Affichage synchronisé sur 3 écrans
 ```

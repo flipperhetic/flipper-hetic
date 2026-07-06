@@ -14,10 +14,11 @@ Flipper Hetic Breaking Bad est un flipper virtuel qui combine simulation physiqu
 ## Non-objectifs
 
 1. Mode multijoueur en ligne.
-2. Modification de la disposition de la table par l’utilisateur (murs, jumpers…).
+2. Modification de la disposition de la table par l’utilisateur (murs, bumpers…).
 3. Utilisation sur interface mobile.
+4. Tilt : détection des secousses de la machine et pénalité associée (gravityTiltDeg désigne uniquement l’inclinaison fixe du plateau).
 
 ## Personas
 
 - **Léa, 22 ans** — Étudiante dev web à HETIC. Veut un projet qui combine front 3D (Three.js) et logique serveur (WebSockets). Objectif : architecture propre et scalable.
-- **Marc, 45 ans** — Nostalgique de l’arcade, organisateur d’événements. Cherche les sensations du flipper physique (réactivité, bruit, Tilt). Objectif : tester une version moderne connectée en salon.
+- **Marc, 45 ans** — Nostalgique de l’arcade, organisateur d’événements. Cherche les sensations du flipper physique (réactivité, sons, retours physiques). Objectif : tester une version moderne connectée en salon.

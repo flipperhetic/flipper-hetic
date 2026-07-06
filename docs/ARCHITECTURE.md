@@ -39,7 +39,8 @@ Convention commune là où la structure en couches est appliquée :
 | `usecases/` | **Cas d’usage** : fonctions ou fabriques qui appliquent le domaine sans connaître le transport. |
 | `adapters/` | **Bords du système** : WebSocket, clavier / futur IoT, moteur physique, rendu graphique, sorties (actuateurs, etc.). |
 | `composition/` | **Assemblage** transversal (playfield : niveau + boucle ; DMD : branchement réseau → vue). |
-| `renderer/` | **Présentation** : Three.js (playfield) ; montage DOM, feuilles de style et vues (backglass / DMD). |
+| `adapters/renderer/` | **Rendu graphique Three.js** — playfield uniquement. |
+| `view/` | **Présentation DOM** : montage, feuilles de style et vues — backglass et DMD uniquement. |
 
 Les tests unitaires et d’intégration ciblant ces couches se trouvent sous `__tests__/` au plus près du code concerné.
 
@@ -49,8 +50,8 @@ Les tests unitaires et d’intégration ciblant ces couches se trouvent sous `__
 
 - **`index.js`** — Point d’entrée : composition HTTP + WebSocket (`ws`).
 - **`domain/`** — Modèle de partie et règles associées (`GameState`, scoring).
-- **`usecases/`** — Actions métier exposées au transport (`startGame`, `loseBall`, `applyCollision`).
-- **`adapters/socketHandlers.js`** — **Seule** couche WebSocket : réception des événements clients, appel des use cases, émission des réponses et diffusions.
+- **`usecases/`** — Actions métier exposées au transport (`startGame`, `loseBall`, `applyCollision`, `launchBall`, `resetHighScore`).
+- **`adapters/socketHandlers.js`** — Composition root du transport WebSocket : réception des événements clients, appel des use cases, émission des réponses et diffusions (le transport est réparti entre `GameBroadcaster.js`, `GameSession.js` et `SocketController.js`).
 
 **Flux de dépendances :** `socketHandlers` → `usecases` → `domain`.
 
@@ -64,7 +65,7 @@ Les tests unitaires et d’intégration ciblant ces couches se trouvent sous `__
 - **`composition/ViewRuntime.js`** — Caméra, resize, shake d’écran, rendu final.
 - **`composition/wireCollisions.js`** — Câble les événements physiques Rapier vers `CollisionHandler`.
 - **`domain/`** — Constantes et paramètres de plateau (données de conception, seuils).
-- **`usecases/collisionHandler.js`** — Décisions liées aux collisions et au drain **sans** importer le client réseau (injection des effets de bord au niveau composition).
+- **`usecases/CollisionHandler.js`** — Décisions liées aux collisions et au drain **sans** importer le client réseau (injection des effets de bord au niveau composition).
 - **`adapters/renderer/`** — Three.js : scène, caméra, meshes (bille, flippers, bumpers, etc.).
 - **`adapters/physics/`** — Moteur physique **Rapier** (`@dimforge/rapier3d-compat`, WASM) : monde, corps, écoute des contacts ; **`ports/PhysicsPort.js`** définit le contrat attendu d’un backend physique ; **`index.js`** expose le backend actif.
 - **`adapters/network/NetworkAdapter.js`** — Client WebSocket (via `shared`) et état local synchronisé avec le serveur.
@@ -152,7 +153,7 @@ Ce document se limite à la **vision architecturale** ; les procédures de test 
 services:
   server:
     volumes:
-      - ./server/data:/app/data
+      - ./server/highscore.json:/app/server/highscore.json
 ```
 
 Pour ce projet flipper, un fichier JSON local est suffisant. Aucune base de données n'est nécessaire.

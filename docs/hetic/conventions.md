@@ -1,4 +1,4 @@
-## Conventions équipe
+# Conventions équipe
 
 ### Organisation GitHub (repo central + forks)
 - Un repo central (upstream) sert de référence du projet.
@@ -27,7 +27,8 @@
 - Avant d’ouvrir une PR : mettre à jour sa branche avec `main`. Conflits résolus à deux si impact important.
 
 ### Convention de dossier (monorepo)
-- `server/` : serveur Node.js (Socket/WebSocket)
+- `shared/` : contrat d'événements partagé (eventNames, realtimeClient, protocol)
+- `server/` : serveur Node.js (WebSocket natif `ws`)
 - `playfield/` : Three.js + physique
 - `backglass/` : UI score/vies
 - `dmd/` : affichage dot matrix

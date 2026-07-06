@@ -2,8 +2,6 @@
 
 Flipper virtuel multi-écran : **Playfield** (3D), **Backglass**, **DMD**, synchronisés en temps réel via WebSocket.
 
-Documentation (index unique) : [`docs/README.md`](docs/README.md). Alignement sur le sujet officiel **HETIC Web3** (barème, IoT, livrables) : [`docs/hetic/referentiel-sujet-hetic-web3.md`](docs/hetic/referentiel-sujet-hetic-web3.md).
-
 ## Demo
 
 [Vidéo de démonstration](https://drive.google.com/file/d/13VkodJtVlOaUTLCyD5YJKLMhbRPIjARD/view?usp=sharing)
@@ -26,14 +24,18 @@ Documentation (index unique) : [`docs/README.md`](docs/README.md). Alignement su
 │   ├── package.json
 │   └── src/
 │       ├── main.js           # Composition
-│       └── renderer/         # mount.js + view.js (DOM)
+│       ├── view/             # DOM views
+│       ├── net/              # WebSocket connection
+│       └── presentation/     # Score presenters
 │
 └── dmd/
     ├── package.json
     └── src/
         ├── main.js           # Composition
-        ├── composition/      # wireDmdNetwork (Socket → vue)
-        └── renderer/         # mount, dot-matrix, font
+        ├── composition/      # wireDmdNetwork (WebSocket → vue)
+        ├── net/              # WebSocket connection
+        ├── presentation/     # Text presenters
+        └── view/             # mount, dot-matrix, font
 ```
 
 ## Lancement du projet
@@ -50,7 +52,7 @@ npm run dev:all
 | Backglass (Score) | http://localhost:5174 |
 | DMD (Dot Matrix) | http://localhost:5175 |
 
-## 🐳 Docker
+## Docker
 
 Lancement de l'ensemble du projet en une seule commande, sans rien installer localement (hors Docker). Chaque app a un `Dockerfile` dans son workspace : `npm ci` ciblé + copie minimale de `shared/`, plutôt que d’imager tout le monorepo.
 
@@ -96,20 +98,22 @@ Le flux complet `start_game → collision → ball_lost → game_over` doit fonc
 ## Tests
 
 ```bash
-# Tous les workspaces (server + playfield)
+# Tous les workspaces (server, playfield, backglass, dmd)
 npm run test:all
 
-# Un workspace specifique
+# Un workspace spécifique
 npm test --workspace=server
 npm test --workspace=playfield
+npm test --workspace=backglass
+npm test --workspace=dmd
 ```
 
 ## Moteur physique (Rapier)
 
-Le moteur physique est **Rapier** (WASM, `@dimforge/rapier3d-compat`), isolé derrière le port `playfield/src/adapters/physics/ports/PhysicsPort.js` et le barrel `playfield/src/adapters/physics/index.js`. Historique et détails : `playfield/src/adapters/physics/rapier/MIGRATION.md`.
+Le moteur physique est **Rapier** (WASM, `@dimforge/rapier3d-compat`), isolé derrière le port `playfield/src/adapters/physics/ports/PhysicsPort.js` et le barrel `playfield/src/adapters/physics/index.js`.
 
 ## Architecture logicielle
 
-Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (vision globale du monorepo) et [`docs/hetic/clean-architecture.md`](docs/hetic/clean-architecture.md) (guide d’application des couches sur ce repo). Cartographie composants : [`docs/CARTOGRAPHIE.md`](docs/CARTOGRAPHIE.md).
+Voir [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) (vision globale du monorepo) et [`docs/hetic/clean-architecture.md`](docs/hetic/clean-architecture.md) (guide d’application des couches sur ce repo).
 
-Contrat Socket : `shared/src/eventNames.js` (source de vérité) et [`docs/EVENTS.md`](docs/EVENTS.md) (référence documentaire). Index de toute la doc : [`docs/README.md`](docs/README.md).
+Contrat Socket : `shared/src/eventNames.js` (source de vérité) et [`docs/EVENTS.md`](docs/EVENTS.md) (référence documentaire).

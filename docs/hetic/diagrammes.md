@@ -10,7 +10,7 @@ Au minimum 3 diagrammes sont attendus pour le CDC. **Placer dans le dossier** `d
 
 ## 1. Use case (Système Flipper)
 
-Acteurs : Joueur, Système, Arduino. Packages : Actions Joueur, Interactions IoT, Traitements Système. Use cases UC01–UC16 avec relations include/extend.
+Acteurs : Joueur, Système, Arduino. Packages : Actions Joueur, Interactions IoT, Traitements Système. Use cases UC01–UC12 avec relations include/extend.
 
 ![Use case - Système Flipper](diagrammes/usecasediagram.png)
 
@@ -26,6 +26,6 @@ Joueur → Playfield → Serveur (start_game) ; Serveur initialise score, ballsL
 
 ## 3. États — Cycle de vie partie
 
-IDLE → READY (insert_coin) → PLAYING (start_game) → GAME_OVER (ball_lost, ballsLeft=0) ; retours READY/IDLE avec timeout ou start_game.
+IDLE → PLAYING (start_game) → GAME_OVER (ball_lost, ballsLeft=0) ; retour IDLE automatiquement après ~6 secondes ou via start_game. Pas d'état READY ni d'événement insert_coin.
 
 ![États - Cycle de vie partie](diagrammes/statediagram.png)

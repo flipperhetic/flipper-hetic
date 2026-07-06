@@ -8,25 +8,26 @@ Ce document centralise les noms d'événements et les payloads attendus pour bra
 
 ## CLIENT_EVENTS (client -> serveur)
 
-| Evenement | Payload | Description |
+| Événement | Payload | Description |
 |---|---|---|
-| `start_game` | — | Demarre ou redemarre une partie |
+| `start_game` | — | Démarre ou redémarre une partie |
 | `launch_ball` | — | Lance la bille depuis le tunnel |
-| `flipper_left_down` | optionnel | Relay aux autres clients |
-| `flipper_left_up` | optionnel | Relay aux autres clients |
-| `flipper_right_down` | optionnel | Relay aux autres clients |
-| `flipper_right_up` | optionnel | Relay aux autres clients |
-| `ball_lost` | — | Bille passee dans le drain |
-| `collision` | `{ "type": string }` | Collision detectee (voir types ci-dessous) |
-| `reset_highscore` | — | Remet le meilleur score a zero (debug) |
-| `cabinet_button` | `{ "id": string, "action": "DOWN"\|"UP" }` | Bouton physique cabine (bridge / ESP32) ; relaye en broadcast aux autres clients |
+| `flipper_left_down` | optionnel | Relayé aux autres clients |
+| `flipper_left_up` | optionnel | Relayé aux autres clients |
+| `flipper_right_down` | optionnel | Relayé aux autres clients |
+| `flipper_right_up` | optionnel | Relayé aux autres clients |
+| `ball_lost` | — | Bille passée dans le drain |
+| `collision` | `{ "type": string }` | Collision détectée (voir types ci-dessous) |
+| `reset_highscore` | — | Remet le meilleur score à zéro (debug) |
+| `cabinet_button` | `{ "id": string, "action": "DOWN"\|"UP" }` | Bouton physique cabine (bridge / ESP32) ; relayé en broadcast aux autres clients |
 
 ### Types de collision et scoring
 
 | `type` | Points | Description |
 |---|---|---|
-| `bumper_50` | +50 | Bumper barril |
-| `bumper_10` | +10 | Bumper losange / triangle |
+| `bumper_50` | +50 | Bumper barril (utilisé dans le niveau actuel) |
+| `bumper_10` | +10 | Bumper losange / triangle (utilisé dans le niveau actuel) |
+| `bumper` | +100 | Bumper générique (type valide côté serveur, non utilisé dans le niveau actuel) |
 | `tunnel` | +1500 | Zone Gas-Mask (déclenche `special_event`) |
 | `tunnel-rv` | +500 | Zone RV (déclenche `special_event`) |
 | `wall` | +0 | Mur (valide, sans points) |
@@ -34,22 +35,24 @@ Ce document centralise les noms d'événements et les payloads attendus pour bra
 | `drain` | +0 | Drain (valide, sans points) |
 | `triangle` | +0 | Obstacle triangle/arche (valide, sans points) |
 
+> Note : `slingshot` est géré localement par le playfield (actionneurs + son) mais n'est **pas** un type valide côté serveur (`isValidCollisionType` retourne `false`). Le serveur rejette silencieusement les collisions de ce type.
+
 ## SERVER_EVENTS (serveur -> clients)
 
-| Evenement | Description |
+| Événement | Description |
 |---|---|
-| `state_updated` | Etat complet de la partie |
-| `game_started` | Partie demarree (contient l'etat initial) |
-| `game_over` | Fin de partie (contient l'etat final) |
-| `dmd_message` | Message a afficher sur le DMD |
-| `special_event` | Evenement special declenche (tunnel Gas-Mask ou RV) |
+| `state_updated` | État complet de la partie |
+| `game_started` | Partie démarrée (contient l'état initial) |
+| `game_over` | Fin de partie (contient l'état final) |
+| `dmd_message` | Message à afficher sur le DMD |
+| `special_event` | Événement spécial déclenché (tunnel Gas-Mask ou RV) |
 | `highscore_beat` | Nouveau meilleur score atteint pendant la partie |
 
-## Objet d'etat (`state_updated`)
+## Objet d'état (`state_updated`)
 
 Le serveur diffuse `state_updated`:
-- a la connexion d'un client,
-- apres les mises a jour d'etat (start game, launch ball, collision valide, ball lost).
+- à la connexion d'un client,
+- après les mises à jour d'état (start game, launch ball, collision valide, ball lost).
 
 Forme de l'objet:
 
@@ -86,7 +89,7 @@ Valeurs possibles: `"BALL 1"`, `"BALL 2"`, `"BALL 3"`, `"GAME OVER"`, `"PRESS ST
 
 ### `special_event` (serveur -> clients)
 
-Emis par le serveur quand `collision` recoit `type: "tunnel"` ou `type: "tunnel-rv"`.
+Émis par le serveur quand `collision` reçoit `type: "tunnel"` ou `type: "tunnel-rv"`.
 
 ```json
 { "event": "tunnel" }
@@ -98,7 +101,7 @@ Emis par le serveur quand `collision` recoit `type: "tunnel"` ou `type: "tunnel-
 
 ### `highscore_beat` (serveur -> clients)
 
-Emis une seule fois par partie quand le score depasse le meilleur score.
+Émis une seule fois par partie quand le score dépasse le meilleur score.
 
 ```json
 { "score": 5100, "highScore": 5100 }
@@ -130,23 +133,23 @@ Emis une seule fois par partie quand le score depasse le meilleur score.
 
 ## Comportement important
 
-- Si `start_game` est envoye alors que `status === "playing"`, le serveur ignore.
+- Si `start_game` est envoyé alors que `status === "playing"`, le serveur ignore.
 - Si `collision` a un `type` invalide ou inconnu, le serveur ignore.
-- Si `ball_lost` est envoye hors partie (`status !== "playing"`), le serveur ignore.
-- Les events flippers (`flipper_*`) sont relays en broadcast aux autres clients (pas d'emetteur).
-- `highscore_beat` n'est emis qu'une seule fois par partie, meme si le score continue de monter.
-- Apres `game_over`, le serveur repasse automatiquement en `idle` apres ~6 secondes (si le joueur ne relance pas de partie).
+- Si `ball_lost` est envoyé hors partie (`status !== "playing"`), le serveur ignore.
+- Les events flippers (`flipper_*`) sont relayés en broadcast aux autres clients (pas d'émetteur).
+- `highscore_beat` n'est émis qu'une seule fois par partie, même si le score continue de monter.
+- Après `game_over`, le serveur repasse automatiquement en `idle` après ~6 secondes (si le joueur ne relance pas de partie).
 
 ## Couche d'input Playfield (clavier / futur IoT)
 
-Le playfield utilise une couche d'abstraction d'inputs dans `playfield/src/adapters/input.js`.
+Le playfield utilise une couche d'abstraction d'inputs dans `playfield/src/adapters/input/InputController.js`.
 
 But :
-- decoupler la logique de jeu des peripheriques concrets,
+- découpler la logique de jeu des périphériques concrets,
 - garder le clavier comme source actuelle,
 - permettre plus tard de brancher un ESP32/Arduino sans refactor majeur.
 
-### Actions exposees par la couche input
+### Actions exposées par la couche input
 
 - `start()`
 - `launch()`
@@ -154,11 +157,10 @@ But :
 - `leftFlipperUp()`
 - `rightFlipperDown()`
 - `rightFlipperUp()`
-- `debugResetBall()`
 
 ### Mapping clavier (playfield)
 
-Aligné sur l’**annexe IoT** du sujet HETIC Web3 (simulation clavier matériel) :
+Aligné sur l'**annexe IoT** du sujet HETIC Web3 (simulation clavier matériel) :
 
 - Flipper gauche : **`X`**
 - Flipper droit : **`C`**
@@ -168,16 +170,14 @@ Aligné sur l’**annexe IoT** du sujet HETIC Web3 (simulation clavier matériel
 Raccourcis supplémentaires : **Start** aussi `Enter` / `NumpadEnter` ; flippers aussi **`ArrowLeft`** / **`ArrowRight`** (dev / accessibilité).
 
 - Launch : **`Space`**
-- Reset debug : **`R`**
 
-### Integration future ESP32 / Arduino
+### Intégration future ESP32 / Arduino
 
 Quand les inputs physiques seront disponibles, ils ne devront pas appeler
 directement la logique du playfield ou les emits WebSocket.
 
-Ils devront uniquement appeler les actions de la couche input, soit :
-- directement via `controller.<action>()`,
-- ou via `bindExternalInputSource(subscribe, controller)` dans `playfield/src/adapters/input.js`.
+Ils devront uniquement appeler les actions de la couche input directement via
+`controller.<action>()`.
 
 Exemple :
 
@@ -191,9 +191,9 @@ controller.launch();
 ```
 
 Ainsi :
-- le clavier et l'IoT partagent exactement le meme chemin logique,
-- les regles de jeu restent centralisees,
-- le branchement materiel futur se fait sans dupliquer la logique.
+- le clavier et l'IoT partagent exactement le même chemin logique,
+- les règles de jeu restent centralisées,
+- le branchement matériel futur se fait sans dupliquer la logique.
 
 ### Contrat firmware contrôleurs (USB HID clavier)
 

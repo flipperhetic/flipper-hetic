@@ -23,17 +23,21 @@ npm test --workspace=dmd
 |---------|---------|------:|------|
 | server | `events.test.js` | 20 | Unitaire / intégration Socket |
 | server | `game-flow.test.js` | 3 | Intégration bout-en-bout |
+| server | `scoring.test.js` | 25 | Unitaire (domaine pur) |
 | playfield | `collisions.test.js` | 15 | Unitaire (use case) |
 | playfield | `ball.test.js` | 9 | Unitaire (physics body) |
 | playfield | `actuators.test.js` | 5 | Unitaire (adapter) |
-| playfield | `input.test.js` | 18 | Unitaire (adapter input) |
+| playfield | `input.test.js` | 17 | Unitaire (adapter input) |
 | backglass | `view.test.js` | 6 | Unitaire (renderer) |
 | backglass | `network.test.js` | 4 | Unitaire (adapter réseau) |
+| backglass | `ScreenStateMachine.test.js` | 8 | Unitaire (machine d'état) |
+| backglass | `scoreFormat.test.js` | 3 | Unitaire (formatage) |
 | dmd | `font.test.js` | 3 | Unitaire (renderer) |
-| dmd | `wireDmdNetwork.test.js` | 5 | Unitaire (composition) |
-| **Total** | | **88** | |
+| dmd | `wireDmdNetwork.test.js` | 7 | Unitaire (composition) |
+| dmd | `TextScroller.test.js` | 10 | Unitaire (défilement texte) |
+| **Total** | | **135** | |
 
-> Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via WebSocket). Le mapping ID firmware → action vit dans `playfield/src/adapters/cabinetInput.js`.
+> Les inputs ESP32 ne passent plus par Web Serial (navigateur) mais par le service `bridge/` (lit `/dev/ttyUSB0`, relaie via WebSocket). Le mapping ID firmware → action vit dans `bridge/server.js` (service pont) ; `playfield/src/adapters/input/InputController.js` consomme l'événement `cabinet_button`.
 
 ---
 
@@ -100,6 +104,31 @@ Tests d'intégration avec un serveur WebSocket en mémoire (2 clients connectés
 
 ---
 
+## Serveur — `scoring.test.js`
+
+Tests unitaires sur la logique métier pure de `domain/scoring.js` (aucun I/O ni réseau).
+
+### getPoints
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1-9 | Barème par type (`bumper`, `bumper_50`, `bumper_10`, `tunnel`, `tunnel-rv`, `triangle`, `wall`, `flipper`, `drain`) | valeurs correctes (100, 50, 10, 1500, 500, 0, 0, 0, 0) |
+| 10 | Type inconnu | retourne `null` |
+| 11 | Type à 0 point valide vs type inconnu | `wall` → `0`, `autre` → `null` (pas de confusion avec `?? null`) |
+| 12 | `undefined` ou `null` | retourne `null` |
+| 13 | Casse différente (`BUMPER`) | retourne `null` |
+
+### isValidCollisionType
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 14-22 | Les 9 types valides | retourne `true` |
+| 23 | Type inconnu | retourne `false` |
+| 24 | Valeurs non-string (`undefined`, `null`, nombre, objet) | retourne `false` |
+| 25 | Chaîne vide | retourne `false` |
+
+---
+
 ## Playfield — `collisions.test.js`
 
 Tests unitaires sur la détection drain et le debounce collision (use case pur, sans mock physique).
@@ -140,7 +169,7 @@ Tests unitaires sur le cycle de vie de la bille (Rapier mocké via `init.js`).
 
 | # | Test | Résultat attendu |
 |---|------|-----------------|
-| 1 | Position au spawn | `position.set(4.2, 0.26, 6.05)` |
+| 1 | Position au spawn | Position définie dans `domain/constants.js` (`PLUNGER_SPAWN_X/Y/Z`) |
 | 2 | Vélocités à zéro | velocity, angularVelocity, force, torque remis à zéro |
 | 3 | Body figé en KinematicPositionBased | `setBodyType(2, true)` |
 
@@ -178,11 +207,54 @@ Tests unitaires sur l'adapter actuateurs (sons, callbacks).
 
 ## Playfield — `input.test.js`
 
-Tests unitaires sur l'adapter d'entrée clavier.
+Tests unitaires sur l'adapter d'entrée clavier (`InputController`). Testés sans jsdom via un faux EventTarget.
 
-| Fichier | Tests | Couverture |
-|---------|------:|------------|
-| `input.test.js` | 18 | Controller actions, debounce start, blur release flippers |
+### Mapping annexe IoT HETIC
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | `X` → flipper gauche down/up | `onLeftFlipperDown` + `onLeftFlipperUp` appelés |
+| 2 | `C` → flipper droit down/up | `onRightFlipperDown` + `onRightFlipperUp` appelés |
+| 3 | `D` → start | `onStart` appelé |
+| 4 | `F` → start (MVP : pièce = start) | `onStart` appelé |
+
+### Raccourcis dev / accessibilité
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 5 | `Enter` → start | `onStart` appelé |
+| 6 | Flèches → flippers gauche et droit | down + up des deux côtés |
+| 7 | `Space` → launch | `onLaunch` appelé |
+
+### Anti-rebond et symétrie press/release
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 8 | `event.repeat` n'émet pas un second down | `onLeftFlipperDown` une seule fois |
+| 9 | Deux keydown distincts pour le même flipper | un seul down émis |
+| 10 | keyup sans keydown préalable | pas d'up parasite |
+
+### Debounce start (anti-rebond switch physique)
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 11 | Deux starts dans la fenêtre debounce | un seul `onStart` ; hors fenêtre, un second autorisé |
+| 12 | Rebond D→F dans la fenêtre | un seul `onStart` |
+
+### Filet blur (perte de focus)
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 13 | Blur avec flipper gauche maintenu | `onLeftFlipperUp` appelé |
+| 14 | Blur avec deux flippers maintenus | `onLeftFlipperUp` + `onRightFlipperUp` appelés |
+| 15 | Blur sans flipper maintenu | aucun up émis |
+| 16 | Blur puis keyup | pas de double émission |
+
+### Cleanup
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 17 | `dispose()` désabonne tous les listeners | 0 listener sur keydown, keyup, blur |
 
 ---
 
@@ -195,9 +267,57 @@ Tests unitaires sur l'adapter d'entrée clavier.
 
 ---
 
+## Backglass — `ScreenStateMachine.test.js`
+
+Tests unitaires sur la machine d'état d'affichage (attract / backglass / game_over + minuteur de maintien).
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | `playing` → backglass, pas de game_over actif | `onBackglass` appelé, `gameOverActive === false` |
+| 2 | `idle` hors maintien → accueil | `onAttract` appelé |
+| 3 | Premier `game_over` → `onGameOver` avec score/highScore + maintien activé | `onGameOver(1500, 3000)`, `gameOverActive === true` |
+| 4 | `game_over` répété → écran affiché une seule fois | `onGameOver` appelé une fois |
+| 5 | `idle` pendant maintien → ignoré | `onAttract` non appelé, `gameOverActive === true` |
+| 6 | Expiration du minuteur → accueil automatique | `onAttract` appelé, `gameOverActive === false` |
+| 7 | `playing` pendant maintien → annule le minuteur | `onBackglass` appelé, le minuteur ne ramène pas l'accueil |
+| 8 | Nouveau `game_over` après expiration → rouvre l'écran | `onGameOver` appelé deux fois au total |
+
+---
+
+## Backglass — `scoreFormat.test.js`
+
+Tests unitaires sur la fonction `formatScore` (domaine pur, aucun I/O).
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Groupement des milliers par espaces | `12450` → `"12 450"`, `1000000` → `"1 000 000"` |
+| 2 | Petits nombres intacts | `0` → `"0"`, `999` → `"999"` |
+| 3 | `null` / `undefined` traités comme 0 | retourne `"0"` |
+
+---
+
 ## DMD — `font.test.js` et `wireDmdNetwork.test.js`
 
 | Fichier | Tests | Couverture |
 |---------|------:|------------|
 | `font.test.js` | 3 | Pixels FONT_5X7, caractère inconnu, avance curseur |
-| `wireDmdNetwork.test.js` | 5 | Connexion/déconnexion → `socketStatus`, score + status → renderer |
+| `wireDmdNetwork.test.js` | 7 | Connexion/déconnexion → `socketStatus`, score + status → renderer, `flashBallMessage` pour messages `BALL`, ignoré pour `GAME OVER` / `PRESS START` |
+
+---
+
+## DMD — `TextScroller.test.js`
+
+Tests unitaires sur le défilement de texte DMD (`TextScroller`). Horloge contrôlable injectée via `now()`.
+
+| # | Test | Résultat attendu |
+|---|------|-----------------|
+| 1 | Texte court (`reset`) → statique centré, `isDriving === false` | `offsetX` = position centrée, pas de pilotage |
+| 2 | Texte large (`reset`) → boucle active, `isDriving === true` | `offsetX === cols`, `isTransitioning === false` |
+| 3 | `update` après le pas de temps → défilement d'un pixel | `offsetX === cols - 1` |
+| 4 | `update` avant le pas de temps → aucun mouvement | `offsetX` inchangé |
+| 5 | `update` sans défilement actif (texte court) → no-op | `offsetX` inchangé |
+| 6 | Transition vers texte court → se fige centré après animation | `isDriving === false`, `isTransitioning === false`, texte mis à jour |
+| 7 | `interrupt()` coupe le défilement en cours | `isDriving === false` |
+| 8 | `setStatic` met à jour le texte centré hors défilement | texte et position mis à jour |
+| 9 | `setStatic` ignoré pendant une transition | `isTransitioning` toujours `true`, texte inchangé |
+| 10 | `scheduleTransition` vers le même texte → no-op | `isTransitioning === false`, texte inchangé |

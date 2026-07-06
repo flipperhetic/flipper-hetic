@@ -11,9 +11,7 @@ Ce dossier regroupe le Cahier des Charges technique du projet. Pour lancer le co
 | 5. Stack technique | [stack.md](stack.md) |
 | 6. Risques et contraintes | [risk.md](risk.md) |
 | 7. Conventions équipe | [conventions.md](conventions.md) |
-| 8. Roadmap et questions ouvertes | [roadmap/roadmap.md](roadmap/roadmap.md) |
+| 8. Roadmap | [roadmap/roadmap.md](roadmap/roadmap.md) |
 | 9. Guide Clean Architecture | [clean-architecture.md](clean-architecture.md) |
 
 MVP et critères : [mvp.md](mvp.md).
-
-**Alignement sujet officiel HETIC Web3 :** [referentiel-sujet-hetic-web3.md](referentiel-sujet-hetic-web3.md) (barème, livrables, annexe IoT **X / C / D / F**).

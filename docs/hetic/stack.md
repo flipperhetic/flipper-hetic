@@ -8,6 +8,7 @@
 | Communication| WebSocket natif (`ws`) | Synchronisation temps réel multi-écran       | Connexion persistante ; reconnexion auto et multiplexage d'événements fournis par `shared` (`realtimeClient` + `protocol`), broadcast par `GameBroadcaster` |
 | Hardware     | ESP32             | Lecture boutons physiques                        | WiFi intégré, simple à programmer |
 | Outils       | GitHub + Vite + PlantUML | Versioning, dev rapide, UML               | Collaboration efficace et documentation claire |
+| Tests        | Vitest                   | Framework de tests unitaires et d'intégration | Natif ESM, compatible Vite, API proche de Jest |
 
 ## Alternatives écartées
 

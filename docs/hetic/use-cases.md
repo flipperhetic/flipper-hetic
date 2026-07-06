@@ -2,7 +2,7 @@
 
 | ID    | Nom                                      | Acteur   | But |
 |-------|-------------------------------------------|----------|-----|
-| UC01  | Insérer une pièce (optionnel)            | Joueur   | Permettre au joueur de créditer la machine |
+| UC01  | Insérer une pièce (optionnel)            | Joueur   | Démarrer une partie via la touche "pièce" (alias de start_game, sans système de crédit) |
 | UC02  | Démarrer une partie                      | Joueur   | Lancer une nouvelle partie |
 | UC03  | Lancer la bille                          | Joueur   | Envoyer la bille sur le playfield |
 | UC04  | Contrôler le batteur droit               | Joueur   | Activer le batteur droit |
@@ -11,11 +11,9 @@
 | UC07  | Détecter les différents types de collisions | Système | Identifier les collisions dans le jeu |
 | UC08  | Détecter la perte de la bille            | Système  | Identifier que la bille est sortie du playfield |
 | UC09  | Synchroniser les 3 écrans                | Système  | Maintenir la cohérence entre Playfield, Backglass et DMD |
-| UC10  | Gérer les combos                         | Système  | Appliquer des bonus liés aux enchaînements |
-| UC11  | Gérer le score                           | Système  | Calculer et mettre à jour le score |
-| UC12  | Détecter la secousse du flipper          | Système  | Identifier une action de secousse (nudge) |
-| UC13  | Jouer effets sonores                     | Système  | Activer certains sons attribués à certaines interactions |
-| UC14  | Jouer musique de fond                    | Système  | Musique de fond en continu |
+| UC10  | Gérer le score                           | Système  | Calculer et mettre à jour le score |
+| UC11  | Jouer effets sonores                     | Système  | Activer certains sons attribués à certaines interactions |
+| UC12  | Jouer musique de fond                    | Système  | Musique de fond en continu |
 
 ---
 
@@ -31,10 +29,10 @@
 2. Le Playfield envoie `start_game` au serveur.
 3. Le serveur réinitialise score à 0, ballsLeft à 3, state à "playing".
 4. Le serveur broadcast `game_started` aux trois écrans.
-5. Playfield crée la bille sur la rampe, attend 2 s, lance la bille ; Backglass affiche score 0 et billes 3/3 ; DMD affiche "BALL 1" / "READY".
+5. Playfield positionne la bille sur la rampe ; Backglass affiche score 0 et billes 3/3 ; DMD affiche "BALL 1". Le joueur appuie sur Espace pour lancer la bille.
 
 **Extensions :**
-- Partie déjà en cours : demander confirmation avant réinitialisation (ou refuser).
+- Partie déjà en cours : la demande est ignorée (le score en cours est préservé).
 
 **Postconditions :** Partie en état "playing", une bille en jeu, les 3 écrans à jour.
 

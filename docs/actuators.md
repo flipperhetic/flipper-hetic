@@ -6,35 +6,38 @@ Le module `playfield/src/adapters/actuators.js` expose une API d'actionneurs app
 
 ## Mapping événement → actionneur
 
-| Événement de jeu           | Méthode actuateur       | Solénoïde cible (futur) |
-|:---------------------------|:------------------------|:------------------------|
-| Collision `"bumper"`       | `onBumperHit()`         | Bumper pop              |
-| Collision `"slingshot"`    | `onSlingshotHit()`      | Slingshot               |
-| Flipper gauche enfoncé     | `onFlipperFire("left")` | Flipper gauche          |
-| Flipper droit enfoncé      | `onFlipperFire("right")`| Flipper droit           |
-| Bille perdue (drain)       | `onBallLost()`          | Drain / kickback        |
-| Partie démarrée            | `onGameStart()`         | Éjecteur bille          |
+| Événement de jeu           | Méthode actuateur    | Solénoïde cible (futur) |
+|:---------------------------|:---------------------|:------------------------|
+| Collision `"bumper"`       | `onBumperHit()`      | Bumper pop              |
+| Collision `"slingshot"`    | `onSlingshotHit()`   | Slingshot               |
+| Flipper gauche ou droit enfoncé | `onFlipperFire()` | Flipper gauche / droit |
+| Bille perdue (drain)       | `onBallLost()`       | Drain / kickback        |
+| Fin de partie              | `onGameOver()`       | —                       |
+| Partie démarrée (futur)    | `onGameStart()`      | Éjecteur bille          |
 
 ## API
 
 ```js
 import { createActuators } from "./adapters/actuators.js";
 
-const actuators = createActuators();
+const actuators = createActuators(audio); // audio : instance AudioEngine, optionnel
 
-actuators.onBumperHit();           // collision bumper
-actuators.onSlingshotHit();        // collision slingshot
-actuators.onFlipperFire("left");   // "left" | "right"
-actuators.onBallLost();            // bille dans le drain
-actuators.onGameStart();           // début de partie
+actuators.onBumperHit();      // collision bumper
+actuators.onSlingshotHit();   // collision slingshot
+actuators.onFlipperFire();    // flipper gauche ou droit
+actuators.onBallLost();       // bille dans le drain
+actuators.onGameOver();       // fin de partie
+actuators.onGameStart();      // début de partie (futur)
+actuators.onMilestone();      // collision tunnel / milestone (futur)
 ```
 
-## Version simulation
+## Version actuelle
 
 La version actuelle (`adapters/actuators.js`) :
-- écrit dans `console.log` avec le préfixe `[actuator]`
-- incrémente des compteurs internes accessibles via `getCounts()`
-- n'a aucune dépendance externe — pas d'impact si matériel absent
+- délègue entièrement à `AudioEngine` (passé en injection à `createActuators(audio)`)
+- n'a aucune dépendance externe propre — pas d'impact si `audio` est absent (`null`)
+- `onBallLost()` est un no-op intentionnel (géré côté audio dans `main.js`)
+- `onGameStart()` et `onMilestone()` sont présents pour usage futur, non appelés par `main.js` aujourd'hui
 
 ## Intégration future (ESP32 / WebSerial)
 
