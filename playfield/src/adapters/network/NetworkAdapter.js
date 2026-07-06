@@ -1,6 +1,11 @@
 import { RealtimeClient, CLIENT_EVENTS, SERVER_EVENTS } from "shared";
 
-const SERVER_URL = "ws://localhost:3000";
+// Le serveur WebSocket est publie sur le port 3000 du meme hote que les ecrans
+// (cf. docker-compose). On derive l'hote depuis la page courante au lieu de coder
+// "localhost" en dur : ainsi le playfield reste correct que la cabine serve l'ecran
+// en localhost OU via son IP / hostname Tailscale. `wss` si la page est en https.
+const loc = typeof location !== "undefined" ? location : { protocol: "http:", hostname: "localhost" };
+const SERVER_URL = `${loc.protocol === "https:" ? "wss" : "ws"}://${loc.hostname || "localhost"}:3000`;
 
 class NetworkAdapter {
   #socket;

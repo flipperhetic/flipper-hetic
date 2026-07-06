@@ -62,14 +62,20 @@ window.addEventListener('resize', viewRuntime.onResize);
 const bloom = new BloomRenderer(renderer, scene, camera);
 window.addEventListener('resize', () => bloom.onResize());
 
+// Bandeau "hors ligne" NON bloquant : un petit ruban en haut de l'ecran plutot
+// qu'un voile noir plein ecran. Le playfield reste visible et jouable meme si le
+// serveur est injoignable — la perte de connexion ne doit pas simuler un ecran mort.
 const serverOverlay = document.createElement('div');
 serverOverlay.style.cssText = [
-  'display:none;position:fixed;inset:0;z-index:9999',
-  'background:rgba(0,0,0,.88);align-items:center;justify-content:center',
-  'flex-direction:column;gap:12px',
-  "font-family:'Courier New',monospace;color:#ff4444;font-size:1.1rem;text-align:center",
+  'display:none;position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999',
+  'align-items:center;gap:10px;pointer-events:none',
+  'padding:7px 15px;border-radius:9px;border:1px solid rgba(255,68,68,.55)',
+  'background:rgba(24,4,4,.82);box-shadow:0 4px 18px rgba(0,0,0,.4)',
+  "font-family:'Courier New',monospace;color:#ff6b6b;font-size:.8rem;letter-spacing:.02em",
 ].join(';');
-serverOverlay.innerHTML = '<strong>Serveur hors ligne</strong><span>Reconnexion en cours…</span>';
+serverOverlay.innerHTML =
+  '<span style="width:8px;height:8px;border-radius:50%;background:#ff4444;box-shadow:0 0 8px #ff4444"></span>'
+  + '<span><strong>Serveur hors ligne</strong> — reconnexion en cours…</span>';
 document.body.appendChild(serverOverlay);
 
 let pendingLaunchAfterStart = false;
