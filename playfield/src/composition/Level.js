@@ -21,7 +21,6 @@ export default class Level {
   #scene;
   #physicsWorld;
   #onDrainZChange;
-  #extraScenesPromise;
   #drainMesh = null;
   #gateTriggerMesh = null;
   #tunnelGasMaskMesh = null;
@@ -47,20 +46,17 @@ export default class Level {
   triggers      = [];
   decorElements = [];
 
-  constructor({ scene, physicsWorld, onDrainZChange = () => {}, extraScenesPromise = null }) {
+  constructor({ scene, physicsWorld, onDrainZChange = () => {} }) {
     this.#scene = scene;
     this.#physicsWorld = physicsWorld;
     this.#onDrainZChange = onDrainZChange;
-    this.#extraScenesPromise = extraScenesPromise;
   }
 
   async build() {
     const { group: envGroup } = buildEnvironment(this.#physicsWorld);
 
     // --- GLB extra models (bumpers + obstacles) ---
-    // Réutilise le préchargement lancé par la composition root (main.js) si fourni,
-    // sinon charge à la demande (compat. tests / usage direct).
-    const extraScenes = await (this.#extraScenesPromise ?? new ModelLoader().loadExtra());
+    const extraScenes = await new ModelLoader().loadExtra();
     const extrasGroup = new Group();
     extrasGroup.name = 'playfield-extras';
     envGroup.add(extrasGroup);

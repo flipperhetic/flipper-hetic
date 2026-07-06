@@ -28,22 +28,6 @@ const MODEL_FILES = {
   'Bumper-triangle2': 'Bumper-triangle1',
 };
 
-// Ces 4 obstacles embarquaient tous le MÊME jeu de textures "dirt_floor" (3,34 Mo),
-// soit ~10 Mo redondants. On les sert en .gltf avec textures externalisées et
-// partagées (models/obstacles/) : le jeu n'est téléchargé qu'une seule fois.
-// Pixels identiques → aucune perte de qualité.
-const EXTERNALIZED_MODELS = new Set([
-  'Obstacle-arch',
-  'Obstacle-flipper1',
-  'Obstacle-flipper2',
-  'Obstacle-start-tunnel',
-]);
-
-function modelPath(name) {
-  if (EXTERNALIZED_MODELS.has(name)) return `/models/obstacles/${name}.gltf`;
-  return `/models/${MODEL_FILES[name] ?? name}.glb`;
-}
-
 const EXTRA_SCALE_X = 6.372;
 const EXTRA_SCALE_Y = 3.078;
 const EXTRA_SCALE_Z = 3.51;
@@ -134,7 +118,7 @@ class ModelLoader {
     const loader = new GLTFLoader();
     const scenes = await Promise.all(
       EXTRA_MODELS.map(name => new Promise((resolve, reject) =>
-        loader.load(modelPath(name), (gltf) => { gltf.scene.name = name; resolve(gltf.scene); }, undefined, reject),
+        loader.load(`/models/${MODEL_FILES[name] ?? name}.glb`, (gltf) => { gltf.scene.name = name; resolve(gltf.scene); }, undefined, reject),
       )),
     );
 

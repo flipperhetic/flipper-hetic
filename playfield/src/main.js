@@ -10,12 +10,6 @@ import Level from './composition/Level.js';
 import GameLoop from './composition/GameLoop.js';
 import ViewRuntime from './composition/ViewRuntime.js';
 import { wireCollisions } from './composition/wireCollisions.js';
-import ModelLoader from './adapters/renderer/modelLoader.js';
-
-// #2 — Précharge les GLB en parallèle de l'init WASM Rapier. Le fetch/parse des
-// modèles ne dépend pas de Rapier (seul buildGLBCollisions en a besoin, et il
-// tourne plus tard, une fois Rapier prêt), donc on recouvre les deux coûts.
-const extraScenesPromise = new ModelLoader().loadExtra();
 
 await initRapier();
 
@@ -48,7 +42,6 @@ const collisionHandler = new CollisionHandler({
 const level = await new Level({
   scene,
   physicsWorld,
-  extraScenesPromise,
   onDrainZChange: (z) => collisionHandler.setDrainThreshold(z),
 }).build();
 levelRef = level;
