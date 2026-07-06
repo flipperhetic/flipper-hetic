@@ -26,7 +26,7 @@ export function registerSocketHandlers(wss) {
   const repository = new HighScoreRepository();
   session = new GameSession({ broadcaster, highScoreRepository: repository });
   session.init();
-  new SocketController(wss, session, broadcaster).register();
+  new SocketController({ wss, session, broadcaster }).register();
 }
 
 /**
