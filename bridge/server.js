@@ -21,7 +21,7 @@ const SERIAL_PATH = process.env.SERIAL_PATH ?? "/dev/ttyUSB0";
 const SERIAL_BAUD = process.env.SERIAL_BAUD ?? "115200";
 const SERVER_URL  = process.env.SERVER_URL  ?? "ws://server:3000";
 
-// Enveloppe identique au codec de `shared/src/protocol.js` (le bridge n'est pas
+// Enveloppe identique au codec de `shared/src/MessageProtocol.js` (le bridge n'est pas
 // un workspace : on l'inline plutot que d'ajouter une dependance).
 const encodeMessage = (event, data) => JSON.stringify({ event, data: data ?? null });
 
