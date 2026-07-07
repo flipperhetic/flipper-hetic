@@ -2,7 +2,7 @@
 
 Source de vérité: `shared/src/eventNames.js` (importé par le serveur et tous les clients).
 
-Transport: **WebSocket natif** (`ws` côté serveur, `WebSocket` du navigateur côté clients). Le module `shared/src/realtimeClient.js` expose une API façon Socket.IO (`on` / `off` / `emit`) au-dessus du WebSocket natif — les noms d'événements ci-dessous transitent dans des trames encodées par `shared/src/protocol.js`.
+Transport: **WebSocket natif** (`ws` côté serveur, `WebSocket` du navigateur côté clients). Le module `shared/src/realtimeClient.js` expose une API façon Socket.IO (`on` / `off` / `emit`) au-dessus du WebSocket natif — les noms d'événements ci-dessous transitent dans des trames encodées par `shared/src/MessageProtocol.js`.
 
 Ce document centralise les noms d'événements et les payloads attendus pour brancher un client (playfield, backglass, dmd) sans lire le code serveur.
 

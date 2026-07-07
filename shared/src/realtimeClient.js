@@ -1,4 +1,4 @@
-import { MessageProtocol } from "./protocol.js";
+import { MessageProtocol } from "./MessageProtocol.js";
 
 /**
  * Client temps reel : facade au-dessus du `WebSocket` natif du navigateur, qui
